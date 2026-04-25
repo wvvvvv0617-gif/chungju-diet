@@ -1,0 +1,13 @@
+{
+  "월": {
+    "breakfast": "테스트 아침",
+    "lunch": "테스트 점심",
+    "dinner": "테스트 저녁",
+    "nutrition": {
+      "carbs": 70,
+      "protein": 20,
+      "fat": 15,
+      "sugar": 5
+    }
+  }
+}
