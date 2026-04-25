@@ -27,7 +27,7 @@ def get_target_date():
 # =========================
 def get_weather():
     try:
-        API_KEY = "여기에_너_API_KEY"
+        API_KEY = "324c1ff82e3f995801bf309914bdf245"
 
         url = f"https://api.openweathermap.org/data/2.5/weather?q=Chungju,KR&appid={API_KEY}&units=metric&lang=kr"
         res = requests.get(url)
