@@ -101,7 +101,8 @@
     </main>
 
     <script>
-        const now = new Date();
+        // [수정] const 대신 let을 사용하여 외부 시뮬레이션 허용
+        let now = new Date();
         const week = ['일', '월', '화', '수', '목', '금', '토'];
 
         function getHolidayName(date) {
@@ -122,7 +123,6 @@
             const isTodayHoliday = getHolidayName(now) !== null;
             const isTomorrowHoliday = getHolidayName(tomorrow) !== null;
             
-            // 주말 판정: 금요일 18:30 이후부터 일요일 23:59까지
             const isWeekend = (day === 5 && hm >= 1830) || day === 6 || day === 0;
             const isHolidayPeriod = (isTomorrowHoliday && hm >= 1830) || isTodayHoliday;
 
@@ -137,7 +137,6 @@
                 greetingText = "꿀같은 휴일 보내세요! 🎈";
             }
             
-            // 00:00부터 08:29까지는 당일 BREAKFAST 표시
             let mealKey, mealLabel, targetDayOffset = 0;
             if (hm < 830) {
                 mealKey = 'breakfast';
@@ -163,17 +162,21 @@
             };
         }
 
-        const status = getMealStatus();
-        document.getElementById('current-date').innerText = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
-        document.getElementById('meal-type-tag').innerText = status.mealLabel;
-        document.getElementById('greeting').innerText = status.greetingText;
+        function updateHeaderUI(status) {
+            document.getElementById('current-date').innerText = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+            document.getElementById('meal-type-tag').innerText = status.mealLabel;
+            document.getElementById('greeting').innerText = status.greetingText;
+        }
 
         async function loadData() {
+            const status = getMealStatus(); // 매 실행 시 현재 now 기준 상태 재계산
+            updateHeaderUI(status);
+
             const tempElem = document.getElementById('realtime-temp');
             const rainElem = document.getElementById('precipitation');
             
             try {
-                await new Promise(resolve => setTimeout(resolve, 600));
+                await new Promise(resolve => setTimeout(resolve, 300));
                 const response = await fetch('data.json?v=' + Date.now());
                 if (!response.ok) throw new Error('Data load failed');
                 
@@ -182,20 +185,13 @@
                 if (data.weather) {
                     const temp = data.weather.temp;
                     const rain = data.weather.rain;
-                    
-                    if (typeof temp === 'number') {
-                        tempElem.innerText = temp + "°";
-                    }
-                    
+                    if (typeof temp === 'number') tempElem.innerText = temp + "°";
                     if (typeof rain === 'number') {
                         rainElem.innerText = rain + "%";
                         if (rain >= 60) {
                             rainElem.classList.remove('text-blue-200');
                             rainElem.classList.add('text-yellow-300');
                             document.getElementById('greeting').innerText = "비 소식이 있어요! 우산 챙기세요! ☔";
-                            const header = document.getElementById('main-header');
-                            header.classList.remove('from-indigo-600', 'to-blue-500');
-                            header.classList.add('from-slate-600', 'to-slate-500');
                         }
                     }
                 }
@@ -209,6 +205,12 @@
                     document.getElementById('rest-subtitle').innerText = status.isHolidayMsg ? "공휴일에는 식당 이모님들도 쉬어가셔요." : "주말에는 식당 이모님들도 쉬어가셔요.";
                     document.getElementById('return-msg').innerText = status.returnText;
                     return;
+                } else {
+                    // 휴무가 아닐 경우 UI 원복
+                    document.getElementById('meal-content').classList.remove('hidden');
+                    document.getElementById('rating-section').classList.remove('hidden');
+                    document.getElementById('weekend-message').classList.add('hidden');
+                    document.getElementById('main-card').classList.remove('rest-bg');
                 }
 
                 const targetDate = new Date(now);
@@ -218,7 +220,8 @@
 
                 const mealData = data.meals ? data.meals[targetDayName] : null;
                 if (mealData && mealData[status.mealKey] && mealData[status.mealKey] !== "식단 없음") {
-                    const menuItems = mealData[status.mealKey].split(',');
+                    // [수정] 쉼표 대신 공백(' ')으로 메뉴 분리
+                    const menuItems = mealData[status.mealKey].split(' ');
                     document.getElementById('menu-list').innerHTML = menuItems.map(m => 
                         `<li class="flex items-center gap-3 p-3.5 bg-white rounded-2xl text-slate-700 font-bold border border-slate-100 shadow-sm"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m.trim()}</li>`
                     ).join('');
@@ -236,9 +239,7 @@
                 }
             } catch (e) {
                 console.error("Load Error:", e);
-                if (!status.isRest) {
-                    document.getElementById('menu-list').innerHTML = `<li class="p-8 text-center text-rose-400 font-bold">데이터를 불러올 수 없습니다.</li>`;
-                }
+                document.getElementById('menu-list').innerHTML = `<li class="p-8 text-center text-rose-400 font-bold">데이터를 불러올 수 없습니다.</li>`;
             }
         }
 
@@ -257,8 +258,9 @@
             </div>`;
         }
 
-        const ratingKey = `rated_${now.toISOString().split('T')[0]}_${status.mealKey}`;
         function submitRating(score) {
+            const status = getMealStatus();
+            const ratingKey = `rated_${now.toISOString().split('T')[0]}_${status.mealKey}`;
             if (localStorage.getItem(ratingKey)) return;
             localStorage.setItem(ratingKey, score);
             let stats = JSON.parse(localStorage.getItem('admin_stats') || '{"total":0, "count":0}');
@@ -272,7 +274,7 @@
             const stars = document.querySelectorAll('.star-btn');
             stars.forEach((s, i) => { 
                 if (i < score) s.classList.add('star-gold'); 
-                s.classList.add('cursor-default'); 
+                s.classList.add('cursor-default', 'opacity-100'); 
                 s.classList.remove('grayscale', 'opacity-30');
             });
             document.getElementById('star-container').classList.add('disabled-stars');
@@ -291,9 +293,14 @@
             }
         }
 
+        // 초기 실행
         loadData();
-        if (localStorage.getItem(ratingKey)) lockRatingUI(localStorage.getItem(ratingKey));
         updateAdmin();
+        
+        // 별점 초기 상태 로드 (리로드 시)
+        const initStatus = getMealStatus();
+        const initRatingKey = `rated_${now.toISOString().split('T')[0]}_${initStatus.mealKey}`;
+        if (localStorage.getItem(initRatingKey)) lockRatingUI(localStorage.getItem(initRatingKey));
     </script>
 </body>
 </html>
