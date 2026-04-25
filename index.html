@@ -61,6 +61,9 @@
                         <div class="h-8 skeleton opacity-50"></div>
                         <div class="h-8 skeleton opacity-50"></div>
                     </div>
+                    <p class="text-[9px] text-slate-400 mt-6 text-center leading-relaxed">
+                        정확한 영양 정보는 아니니 참고용으로 보시기 바랍니다.
+                    </p>
                 </div>
             </div>
 
@@ -101,6 +104,8 @@
         const now = new Date();
         const week = ['일', '월', '화', '수', '목', '금', '토'];
 
+        // 중략: getHolidayName, getMealStatus 함수는 동일
+
         function getHolidayName(date) {
             const m = date.getMonth() + 1;
             const d = date.getDate();
@@ -116,16 +121,13 @@
             const hm = now.getHours() * 100 + now.getMinutes();
             const tomorrow = new Date(now);
             tomorrow.setDate(now.getDate() + 1);
-            
             const isTodayHoliday = getHolidayName(now) !== null;
             const isTomorrowHoliday = getHolidayName(tomorrow) !== null;
-
             const isWeekend = (day === 5 && hm >= 1830) || day === 6 || day === 0;
             const isHolidayPeriod = (isTomorrowHoliday && hm >= 1830) || isTodayHoliday;
 
             let returnText = "내일 다시 만나요!";
             let greetingText = "맛있는 식사 하세요! 🍱";
-
             if (day === 6 || day === 0 || (day === 5 && hm >= 1830)) {
                 returnText = "다음 주 월요일에 봐요!";
                 greetingText = "즐겁고 편안한 주말 되세요! ✨";
@@ -133,15 +135,12 @@
                 returnText = "휴일이 끝나면 다시 만나요!";
                 greetingText = "꿀같은 휴일 보내세요! 🎈";
             }
-
             return { 
                 mealKey: (hm < 830) ? 'breakfast' : (hm < 1330) ? 'lunch' : (hm < 1830) ? 'dinner' : 'breakfast',
                 mealLabel: (hm < 830) ? 'BREAKFAST 🍳' : (hm < 1330) ? 'LUNCH 🍱' : (hm < 1830) ? 'DINNER 🌙' : 'NEXT BREAKFAST ☀️',
                 isRest: isWeekend || isHolidayPeriod,
                 isHolidayMsg: isHolidayPeriod && !isWeekend,
-                returnText,
-                greetingText,
-                targetDayOffset: (hm >= 1830) ? 1 : 0
+                returnText, greetingText, targetDayOffset: (hm >= 1830) ? 1 : 0
             };
         }
 
@@ -162,7 +161,6 @@
                     document.getElementById('realtime-temp').innerText = temp + "°";
                     const rainElem = document.getElementById('precipitation');
                     rainElem.innerText = rain + "%";
-
                     if (rain >= 60) {
                         rainElem.classList.replace('text-blue-200', 'text-yellow-300');
                         document.getElementById('greeting').innerText = "비 소식이 있어요! 우산 챙기세요! ☔";
@@ -196,26 +194,44 @@
                     ).join('');
 
                     const nut = mealData.nutrition;
-                    // 데이터 기반 동적 영양 바 렌더링 (지방, 당류 포함)
+                    // g 단위 계산을 위한 기준치 설정 (권장섭취량의 약 30~35% 한끼 분량)
+                    const gData = {
+                        carbs: Math.round(nut.carbs * 3.5), // 예: 65% -> 약 227g
+                        protein: Math.round(nut.protein * 1.2), // 예: 80% -> 약 96g
+                        fat: Math.round(nut.fat * 0.7), // 예: 45% -> 약 31g
+                        sugar: Math.round(nut.sugar * 0.5) // 예: 15% -> 약 7g
+                    };
+
                     document.getElementById('nutrition-bars').innerHTML = `
-                        ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', nut.carbs + '%')}
-                        ${renderBar('단백질', nut.protein, 'bg-emerald-500', nut.protein + '%')}
-                        ${renderBar('지방', nut.fat, 'bg-amber-400', nut.fat + '%')}
-                        ${renderBar('당류', nut.sugar, 'bg-rose-400', nut.sugar + '%')}
+                        ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', gData.carbs + 'g')}
+                        ${renderBar('단백질', nut.protein, 'bg-emerald-500', gData.protein + 'g')}
+                        ${renderBar('지방', nut.fat, 'bg-amber-400', gData.fat + 'g')}
+                        ${renderBar('당류', nut.sugar, 'bg-rose-400', gData.sugar + 'g')}
                     `;
                 }
             } catch (e) {
                 console.error("데이터 로드 실패:", e);
-                document.getElementById('realtime-temp').innerText = "21°";
-                document.getElementById('precipitation').innerText = "0%";
                 document.getElementById('menu-list').innerHTML = `<li class="p-4 text-center text-rose-500 font-bold">식단을 불러올 수 없습니다.</li>`;
             }
         }
 
-        function renderBar(label, val, color, percentText) {
-            return `<div><div class="flex justify-between items-end mb-1"><span class="text-[11px] font-black text-slate-800">${label}</span><span class="text-[10px] font-bold text-indigo-600">${percentText}</span></div><div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div></div></div>`;
+        // percentText 자리에 g단위가 들어가도록 변경
+        function renderBar(label, val, color, weightText) {
+            return `<div>
+                <div class="flex justify-between items-end mb-1">
+                    <div class="flex items-baseline gap-1.5">
+                        <span class="text-[11px] font-black text-slate-800">${label}</span>
+                        <span class="text-[9px] font-bold text-slate-400">${val}%</span>
+                    </div>
+                    <span class="text-[10px] font-black text-indigo-600">${weightText}</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                    <div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div>
+                </div>
+            </div>`;
         }
 
+        // 중략: submitRating, lockRatingUI, updateAdmin 함수는 동일
         const ratingKey = `rated_${now.toISOString().split('T')[0]}_${status.mealKey}`;
         function submitRating(score) {
             if (localStorage.getItem(ratingKey)) return;
