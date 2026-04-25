@@ -10,7 +10,7 @@
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         .star-gold { color: #fbbf24; filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4)); transform: scale(1.1); }
         .disabled-stars { pointer-events: none; opacity: 0.6; }
-        /* 휴무 카드 그라데이션 */
+        /* 휴무 카드 그라데이션: 부드러운 핑크톤 */
         .rest-bg { background: linear-gradient(135deg, #fff5f5 0%, #fff0f6 100%) !important; }
     </style>
 </head>
@@ -55,8 +55,8 @@
                     <h2 id="rest-title" class="text-2xl font-black text-slate-800 mb-2">식당도 쿨쿨 자는 중!</h2>
                     <p id="rest-subtitle" class="text-base text-slate-500 leading-relaxed font-medium"></p>
                 </div>
-                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-rose-200 shadow-sm">
-                    <p id="return-msg" class="text-sm font-black text-rose-700"></p>
+                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-indigo-100 shadow-sm">
+                    <p id="return-msg" class="text-sm font-black text-indigo-600"></p>
                 </div>
             </div>
         </section>
@@ -105,6 +105,7 @@
             const isTodayHoliday = getHolidayName(now) !== null;
             const isTomorrowHoliday = getHolidayName(tomorrow) !== null;
 
+            // 주말 및 휴일 판정 로직
             const isWeekend = (day === 5 && hm >= 1830) || day === 6 || day === 0;
             const isHolidayPeriod = (isTomorrowHoliday && hm >= 1830) || isTodayHoliday;
 
@@ -177,7 +178,7 @@
                     `;
                 }
             } catch (e) {
-                console.error("로드 실패:", e);
+                console.error("데이터 로드 실패:", e);
                 document.getElementById('realtime-temp').innerText = "연결안됨";
             }
         }
