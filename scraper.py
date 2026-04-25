@@ -23,12 +23,11 @@ def get_target_date():
     return target.strftime("%Y-%m-%d")
 
 # =========================
-# 🌦️ OpenWeather (핵심)
+# 🌦️ OpenWeather
 # =========================
 def get_weather():
     try:
-        # 👉 여기에 너 API 키 넣기
-        API_KEY = "324c1ff82e3f995801bf309914bdf245"
+        API_KEY = "여기에_너_API_KEY"
 
         url = f"https://api.openweathermap.org/data/2.5/weather?q=Chungju,KR&appid={API_KEY}&units=metric&lang=kr"
         res = requests.get(url)
@@ -37,10 +36,24 @@ def get_weather():
         # 기온
         temp = round(data["main"]["temp"])
 
-        # 강수 (비 없으면 0)
+        # 강수 확률 느낌으로 변환 (안정형)
         rain = 0
+
+        # 비가 실제로 내리는 경우
         if "rain" in data and "1h" in data["rain"]:
-            rain = int(data["rain"]["1h"] * 10)  # mm → % 느낌으로 변환
+            rain = min(int(data["rain"]["1h"] * 20), 100)
+
+        # 눈도 고려 (겨울 대비)
+        if "snow" in data and "1h" in data["snow"]:
+            rain = min(int(data["snow"]["1h"] * 20), 100)
+
+        # 날씨 상태 기반 보정 (비 안와도 흐리면 약간 줌)
+        weather_main = data["weather"][0]["main"]
+        if rain == 0:
+            if weather_main in ["Clouds"]:
+                rain = 20
+            elif weather_main in ["Rain", "Drizzle", "Thunderstorm"]:
+                rain = 60
 
         return {
             "temp": temp,
@@ -98,14 +111,9 @@ def crawl():
                     "dinner": menus[2],
                     "nutrition": estimate(" ".join(menus))
                 }
-                print(f"✅ {d}요일 수집 완료")
 
-    # 🌦️ 날씨 가져오기
     weather = get_weather()
 
-    # =========================
-    # 📦 최종 데이터
-    # =========================
     final_data = {
         "weather": {
             "temp": weather["temp"],
