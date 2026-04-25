@@ -10,13 +10,16 @@
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         .star-gold { color: #fbbf24; filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4)); transform: scale(1.1); }
         .disabled-stars { pointer-events: none; opacity: 0.6; }
-        /* 휴무 카드 그라데이션: 부드러운 핑크톤 */
+        /* 휴무 카드 그라데이션 */
         .rest-bg { background: linear-gradient(135deg, #fff5f5 0%, #fff0f6 100%) !important; }
+        /* 스켈레톤 애니메이션 */
+        @keyframes shimmer { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        .skeleton { animation: shimmer 1.5s infinite ease-in-out; background-color: #e2e8f0; border-radius: 1rem; }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen bg-white shadow-2xl pb-10">
 
-    <header class="p-8 bg-gradient-to-br from-indigo-600 to-blue-500 text-white rounded-b-[50px] shadow-xl relative z-10">
+    <header id="main-header" class="p-8 bg-gradient-to-br from-indigo-600 to-blue-500 text-white rounded-b-[50px] shadow-xl relative z-10 transition-all duration-700">
         <div class="flex justify-between items-start">
             <div>
                 <p id="current-date" class="text-indigo-100 text-sm font-bold mb-1"></p>
@@ -28,7 +31,7 @@
                     <span id="realtime-temp" class="text-lg font-black italic leading-none">--°</span>
                 </div>
                 <div class="flex flex-col">
-                    <span class="text-[9px] opacity-80 font-bold tracking-tighter">강수량</span>
+                    <span class="text-[9px] opacity-80 font-bold tracking-tighter">강수</span>
                     <span id="precipitation" class="text-sm font-black text-blue-200 leading-none">--%</span>
                 </div>
             </div>
@@ -46,12 +49,17 @@
                 <div class="space-y-4 mb-8">
                     <h2 class="text-2xl font-black text-gray-800 flex items-center gap-2">오늘의 메뉴</h2>
                     <ul id="menu-list" class="grid grid-cols-1 gap-2">
-                        <li class="p-4 bg-gray-50 rounded-2xl animate-pulse text-gray-300 border border-gray-100 text-center">식단을 가져오는 중...</li>
+                        <li class="h-14 skeleton"></li>
+                        <li class="h-14 skeleton"></li>
+                        <li class="h-14 skeleton"></li>
                     </ul>
                 </div>
                 <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner">
                     <h3 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest text-center">Nutrition Report</h3>
-                    <div id="nutrition-bars" class="space-y-5"></div>
+                    <div id="nutrition-bars" class="space-y-5">
+                        <div class="h-8 skeleton opacity-50"></div>
+                        <div class="h-8 skeleton opacity-50"></div>
+                    </div>
                 </div>
             </div>
 
@@ -143,22 +151,29 @@
 
         async function loadData() {
             try {
+                // 데이터 로딩 지연 효과 (스켈레톤 확인용 - 운영 시에는 생략 가능)
+                await new Promise(resolve => setTimeout(resolve, 800));
+
                 const response = await fetch('data.json?v=' + Math.random());
                 const data = await response.json();
                 
+                // 날씨 정보 및 동적 배경 처리
                 if (data.weather) {
-                    if (data.weather.temp) document.getElementById('realtime-temp').innerText = data.weather.temp + "°";
-                    if (data.weather.rain !== undefined) {
-                        const rainElem = document.getElementById('precipitation');
-                        rainElem.innerText = data.weather.rain + "%";
-                        if (data.weather.rain >= 60) {
-                            rainElem.classList.replace('text-blue-200', 'text-yellow-300');
-                            document.getElementById('greeting').innerText = "비 소식이 있어요! 우산 챙기세요! ☔";
-                        }
+                    const temp = data.weather.temp || 21;
+                    const rain = data.weather.rain || 0;
+                    document.getElementById('realtime-temp').innerText = temp + "°";
+                    
+                    const rainElem = document.getElementById('precipitation');
+                    rainElem.innerText = rain + "%";
+
+                    // 비가 60% 이상 올 때 테마 변경
+                    if (rain >= 60) {
+                        rainElem.classList.replace('text-blue-200', 'text-yellow-300');
+                        document.getElementById('greeting').innerText = "비 소식이 있어요! 우산 챙기세요! ☔";
+                        const header = document.getElementById('main-header');
+                        header.classList.replace('from-indigo-600', 'from-slate-600');
+                        header.classList.replace('to-blue-500', 'to-slate-500');
                     }
-                } else {
-                    document.getElementById('realtime-temp').innerText = "21°";
-                    document.getElementById('precipitation').innerText = "0%";
                 }
 
                 if (status.isRest) {
@@ -193,8 +208,9 @@
                 }
             } catch (e) {
                 console.error("데이터 로드 실패:", e);
-                document.getElementById('realtime-temp').innerText = "ERR";
-                document.getElementById('precipitation').innerText = "--%";
+                document.getElementById('realtime-temp').innerText = "21°";
+                document.getElementById('precipitation').innerText = "0%";
+                document.getElementById('menu-list').innerHTML = `<li class="p-4 text-center text-rose-500 font-bold">식단을 불러올 수 없습니다.</li>`;
             }
         }
 
