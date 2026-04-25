@@ -7,111 +7,152 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
-        body { font-family: 'Pretendard', sans-serif; background-color: #f9fafb; }
-        .star-active { transform: scale(1.2); transition: transform 0.2s; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; }
+        .star-gold { color: #fbbf24; transform: scale(1.1); }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
-<body class="max-w-md mx-auto min-h-screen shadow-2xl bg-white">
+<body class="max-w-md mx-auto min-h-screen bg-white shadow-2xl">
 
-    <header class="p-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-b-3xl shadow-lg">
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 id="greeting" class="text-2xl font-bold">맛있는 하루 되세요! 👋</h1>
-                <p id="weather" class="text-sm opacity-90">☀️ 충주는 지금 맑음, 기분 좋은 한 끼!</p>
+    <header class="p-6 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-b-[40px] shadow-xl">
+        <div class="flex justify-between items-start">
+            <div class="fade-in">
+                <h1 id="greeting" class="text-2xl font-bold tracking-tight">맛있는 하루 되세요! 👋</h1>
+                <p class="text-sm opacity-80 mt-1">☀️ 충주는 지금 맑음, 기분 좋은 점심!</p>
             </div>
-            <div class="text-4xl">🌡️ 22°</div>
+            <div class="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-center min-w-[60px]">
+                <span class="text-xs block opacity-70">현재기온</span>
+                <span class="text-xl font-bold">22°</span>
+            </div>
         </div>
     </header>
 
-    <main class="p-4 space-y-6">
-        <section class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-            <div class="p-5">
-                <div class="flex items-center space-y-1 mb-4">
-                    <span class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-bold uppercase">Today's Lunch</span>
-                </div>
-                
-                <div class="space-y-3 mb-6">
-                    <h2 class="text-xl font-extrabold text-gray-800 flex items-center gap-2">
-                        🍱 오늘 점심 메뉴
-                    </h2>
-                    <ul id="menu-list" class="text-gray-600 space-y-2 pl-1">
-                        <li class="flex items-center gap-2">🍚 쌀밥</li>
-                        <li class="flex items-center gap-2">🥘 청국장찌개</li>
-                        <li class="flex items-center gap-2">🥬 섞박지</li>
-                        <li class="flex items-center gap-2">🥤 떠먹는 요거트</li>
-                    </ul>
-                </div>
+    <main class="p-5 -mt-6 space-y-6">
+        <section class="bg-white rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50">
+            <div class="flex items-center gap-2 mb-5">
+                <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">Today's Lunch</span>
+            </div>
+            
+            <div class="space-y-4 mb-8">
+                <h2 class="text-2xl font-black text-gray-800 flex items-center gap-2">🍱 오늘 점심 메뉴</h2>
+                <ul id="menu-list" class="grid grid-cols-1 gap-3">
+                    <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl text-gray-700 font-medium border border-gray-100">
+                        <span class="text-xl">🍚</span> 쌀밥
+                    </li>
+                    <li class="flex items-center gap-3 p-3 bg-blue-50/50 rounded-2xl text-gray-700 font-medium border border-blue-100">
+                        <span class="text-xl">🥘</span> 청국장찌개
+                    </li>
+                    <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl text-gray-700 font-medium border border-gray-100">
+                        <span class="text-xl">🥬</span> 섞박지
+                    </li>
+                    <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl text-gray-700 font-medium border border-gray-100">
+                        <span class="text-xl">🥤</span> 떠먹는 요거트
+                    </li>
+                </ul>
+            </div>
 
-                <div class="bg-gray-50 p-4 rounded-2xl space-y-3">
-                    <h3 class="text-sm font-bold text-gray-500">영양 성분 리포트</h3>
-                    <div class="space-y-2">
-                        <div>
-                            <div class="flex justify-between text-xs mb-1"><span>탄수화물</span><span class="font-bold">70g</span></div>
-                            <div class="w-full bg-gray-200 rounded-full h-1.5"><div class="bg-blue-400 h-1.5 rounded-full" style="width: 70%"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-xs mb-1"><span>단백질</span><span class="font-bold">25g</span></div>
-                            <div class="w-full bg-gray-200 rounded-full h-1.5"><div class="bg-green-400 h-1.5 rounded-full" style="width: 50%"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-xs mb-1"><span>지방</span><span class="font-bold">15g</span></div>
-                            <div class="w-full bg-gray-200 rounded-full h-1.5"><div class="bg-yellow-400 h-1.5 rounded-full" style="width: 30%"></div></div>
-                        </div>
+            <div class="bg-gray-50 p-5 rounded-[24px] space-y-4">
+                <div class="flex justify-between items-end">
+                    <h3 class="text-sm font-bold text-gray-400">영양 성분 분석</h3>
+                    <span class="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-0.5 rounded-md">정확도 95%</span>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-xs font-bold mb-1.5 text-gray-600"><span>탄수화물</span><span>70g (54%)</span></div>
+                        <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full shadow-sm" style="width: 70%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-bold mb-1.5 text-gray-600"><span>단백질</span><span>25g (19%)</span></div>
+                        <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-emerald-500 h-2 rounded-full shadow-sm" style="width: 50%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-bold mb-1.5 text-gray-600"><span>지방</span><span>15g (27%)</span></div>
+                        <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-amber-400 h-2 rounded-full shadow-sm" style="width: 30%"></div></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="p-4 text-center">
-            <p class="text-gray-500 text-sm mb-2">오늘 식사는 어떠셨나요?</p>
-            <div id="star-container" class="flex justify-center gap-2 text-3xl">
-                <button onclick="submitRate(1)" class="hover:scale-125 transition">⭐</button>
-                <button onclick="submitRate(2)" class="hover:scale-125 transition">⭐</button>
-                <button onclick="submitRate(3)" class="hover:scale-125 transition">⭐</button>
-                <button onclick="submitRate(4)" class="hover:scale-125 transition">⭐</button>
-                <button onclick="submitRate(5)" class="hover:scale-125 transition">⭐</button>
+        <section class="text-center py-4 bg-white rounded-3xl border border-gray-100 shadow-sm mx-2">
+            <p class="text-gray-400 text-sm font-bold mb-4 uppercase tracking-tighter">오늘 식사는 어떠셨나요?</p>
+            <div id="star-rating" class="flex justify-center gap-3 text-4xl mb-2">
+                <button onclick="saveRating(1)" class="star transition-all duration-200 grayscale opacity-40 hover:grayscale-0 hover:opacity-100">⭐</button>
+                <button onclick="saveRating(2)" class="star transition-all duration-200 grayscale opacity-40 hover:grayscale-0 hover:opacity-100">⭐</button>
+                <button onclick="saveRating(3)" class="star transition-all duration-200 grayscale opacity-40 hover:grayscale-0 hover:opacity-100">⭐</button>
+                <button onclick="saveRating(4)" class="star transition-all duration-200 grayscale opacity-40 hover:grayscale-0 hover:opacity-100">⭐</button>
+                <button onclick="saveRating(5)" class="star transition-all duration-200 grayscale opacity-40 hover:grayscale-0 hover:opacity-100">⭐</button>
             </div>
-            <p id="thanks-msg" class="text-blue-500 text-xs mt-2 hidden">평가가 반영되었습니다! 감사합니다.</p>
+            <p id="feedback-msg" class="text-blue-600 text-xs font-bold mt-2 opacity-0 transition-opacity">✅ 평가 감사합니다!</p>
         </section>
 
-        <section id="admin-view" class="hidden border-t-2 border-dashed border-gray-200 pt-4 mt-8 px-4">
-            <h4 class="text-red-500 font-bold text-sm mb-2 uppercase tracking-widest">Dev Admin Dashboard</h4>
-            <div class="bg-gray-900 text-green-400 p-4 rounded-xl text-xs font-mono shadow-inner">
-                <p>> 실시간 만족도 평균: <span id="avg-display" class="text-white font-bold">0.0</span>/5.0</p>
-                <p>> 총 참여 인원: <span id="count-display" class="text-white font-bold">0</span>명</p>
-                <p class="mt-2 text-gray-500">_데이터는 현재 세션에서만 임시 저장됩니다.</p>
+        <section id="admin-view" class="hidden mx-2 p-5 bg-slate-900 rounded-3xl text-xs font-mono shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="text-emerald-400 font-black">🛠️ ADMIN DASHBOARD</h4>
+                <button onclick="clearData()" class="text-[8px] bg-red-900/50 text-red-300 px-2 py-1 rounded">RESET</button>
+            </div>
+            <div class="space-y-2 text-gray-400">
+                <p>> 실시간 만족도 평균: <span id="admin-avg" class="text-white font-bold">0.0</span> / 5.0</p>
+                <p>> 총 평가 참여 횟수: <span id="admin-count" class="text-white font-bold">0</span>회</p>
+                <div class="mt-4 pt-3 border-t border-slate-800 text-[10px]">
+                    <p class="text-emerald-500/50 italic">// 데이터는 브라우저 로컬 저장소에 보관 중</p>
+                </div>
             </div>
         </section>
     </main>
 
     <script>
-        // 별점 데이터 관리 변수
-        let totalScore = 0;
-        let rateCount = 0;
+        // 평가 저장 기능
+        function saveRating(score) {
+            // 별 색상 변경
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((s, idx) => {
+                if (idx < score) {
+                    s.classList.remove('grayscale', 'opacity-40');
+                    s.classList.add('star-gold');
+                } else {
+                    s.classList.add('grayscale', 'opacity-40');
+                    s.classList.remove('star-gold');
+                }
+            });
 
-        function submitRate(score) {
-            totalScore += score;
-            rateCount++;
+            // 메시지 노출
+            const msg = document.getElementById('feedback-msg');
+            msg.style.opacity = '1';
+            setTimeout(() => { msg.style.opacity = '0'; }, 2000);
 
-            // 평균 계산 및 대시보드 반영
-            const avg = (totalScore / rateCount).toFixed(1);
-            document.getElementById('avg-display').innerText = avg;
-            document.getElementById('count-display').innerText = rateCount;
+            // 데이터 저장 (누적)
+            let ratings = JSON.parse(localStorage.getItem('lunch_ratings') || '[]');
+            ratings.push({ score: score, time: new Date().toISOString() });
+            localStorage.setItem('lunch_ratings', JSON.stringify(ratings));
 
-            // 피드백 효과
-            document.getElementById('thanks-msg').classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('thanks-msg').classList.add('hidden');
-            }, 2000);
-
-            console.log(`새로운 평가: ${score}점 | 현재 평균: ${avg}`);
+            updateAdminDashboard();
         }
 
-        // 개발자 모드 켜는 법: 브라우저 주소창 끝에 ?admin=true 를 붙이세요
+        // 관리자 대시보드 업데이트
+        function updateAdminDashboard() {
+            let ratings = JSON.parse(localStorage.getItem('lunch_ratings') || '[]');
+            if (ratings.length > 0) {
+                const total = ratings.reduce((sum, item) => sum + item.score, 0);
+                const avg = (total / ratings.length).toFixed(1);
+                document.getElementById('admin-avg').innerText = avg;
+                document.getElementById('admin-count').innerText = ratings.length;
+            }
+        }
+
+        function clearData() {
+            if(confirm('모든 평가 데이터를 초기화할까요?')) {
+                localStorage.removeItem('lunch_ratings');
+                location.reload();
+            }
+        }
+
+        // 관리자 모드 체크
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('admin') === 'true') {
             document.getElementById('admin-view').classList.remove('hidden');
+            updateAdminDashboard();
         }
-    </header>
+    </script>
 </body>
 </html>
