@@ -130,3 +130,4 @@ def crawl():
 
 if __name__ == "__main__":
     crawl()
+    print("🔥 이 코드 실행됨")
