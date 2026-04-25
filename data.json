@@ -2,7 +2,7 @@
   "weather": {
     "temp": 19,
     "rain": 0,
-    "last_update": "2026-04-26 08:37"
+    "last_update": "2026-04-26 08:53"
   },
   "meals": {
     "월": {
@@ -10,11 +10,24 @@
       "lunch": "쌀밥 , 뼈없는감자탕 , 주꾸미채소볶음 , 달걀찜 , 양념깻잎무침/청경채겉절이 , 배추김치",
       "dinner": "쌀밥 , 닭개장 , 두부달걀부침 , 해물볶음우동 , 오이지무침 , 배추김치",
       "nutrition": {
-        "carbs": 72,
-        "protein": 24,
-        "fat": 14,
-        "sugar": 5,
-        "kcal": 800
+        "breakfast": {
+          "carbs": 50,
+          "protein": 25,
+          "fat": 10,
+          "sugar": 5
+        },
+        "lunch": {
+          "carbs": 50,
+          "protein": 25,
+          "fat": 10,
+          "sugar": 5
+        },
+        "dinner": {
+          "carbs": 65,
+          "protein": 40,
+          "fat": 20,
+          "sugar": 13
+        }
       }
     },
     "화": {
@@ -22,11 +35,24 @@
       "lunch": "쌀밥 , 알탕 , 돈육버섯볶음 , 옥수수김치전 , 마늘종어묵볶음 , 섞박지(총각김치)",
       "dinner": "하이라이스 , 얼갈이된장국 , 생선커틀릿 , 고추지양념무침 , 음료 , 배추김치",
       "nutrition": {
-        "carbs": 72,
-        "protein": 24,
-        "fat": 14,
-        "sugar": 5,
-        "kcal": 800
+        "breakfast": {
+          "carbs": 50,
+          "protein": 25,
+          "fat": 10,
+          "sugar": 5
+        },
+        "lunch": {
+          "carbs": 60,
+          "protein": 20,
+          "fat": 15,
+          "sugar": 5
+        },
+        "dinner": {
+          "carbs": 45,
+          "protein": 40,
+          "fat": 20,
+          "sugar": 5
+        }
       }
     },
     "수": {
@@ -34,11 +60,24 @@
       "lunch": "쌀밥 , 크림스프 , 멘치가스 , 토마토스파게티 , 메추리알샐러드 , 배추김치",
       "dinner": "쌀밥 , 동태국 , 돈육고추장볶음 , 숙주무침 , 도시락김 , 배추김치",
       "nutrition": {
-        "carbs": 72,
-        "protein": 24,
-        "fat": 14,
-        "sugar": 5,
-        "kcal": 800
+        "breakfast": {
+          "carbs": 45,
+          "protein": 40,
+          "fat": 20,
+          "sugar": 5
+        },
+        "lunch": {
+          "carbs": 50,
+          "protein": 25,
+          "fat": 10,
+          "sugar": 5
+        },
+        "dinner": {
+          "carbs": 50,
+          "protein": 25,
+          "fat": 10,
+          "sugar": 5
+        }
       }
     },
     "목": {
@@ -46,11 +85,24 @@
       "lunch": "나물비빔밥&약고추장 , 팽이버섯된장국 , 순살치킨강정 , 요거트 , 배추김치",
       "dinner": "떡만두라면 , 쌀밥 , 음료 , 단무지 , 배추김치",
       "nutrition": {
-        "carbs": 72,
-        "protein": 24,
-        "fat": 14,
-        "sugar": 5,
-        "kcal": 800
+        "breakfast": {
+          "carbs": 60,
+          "protein": 20,
+          "fat": 15,
+          "sugar": 5
+        },
+        "lunch": {
+          "carbs": 65,
+          "protein": 40,
+          "fat": 20,
+          "sugar": 13
+        },
+        "dinner": {
+          "carbs": 60,
+          "protein": 20,
+          "fat": 15,
+          "sugar": 5
+        }
       }
     },
     "금": {
@@ -58,11 +110,24 @@
       "lunch": "식단 없음",
       "dinner": "식단 없음",
       "nutrition": {
-        "carbs": 0,
-        "protein": 0,
-        "fat": 0,
-        "sugar": 0,
-        "kcal": 0
+        "breakfast": {
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
+        },
+        "lunch": {
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
+        },
+        "dinner": {
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
+        }
       }
     }
   }
