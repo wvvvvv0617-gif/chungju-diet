@@ -11,9 +11,7 @@
         .star-gold { color: #fbbf24; filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4)); transform: scale(1.1); }
         .disabled-stars { pointer-events: none; opacity: 0.6; }
         .rest-bg { background: linear-gradient(135deg, #fff5f5 0%, #fff0f6 100%) !important; }
-        .nav-btn:active { transform: scale(0.85); transition: 0.1s; }
-        /* 버튼 그림자 효과 */
-        .side-nav { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05)); }
+        .nav-btn:active { transform: scale(0.9); transition: 0.1s; }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen bg-white shadow-2xl pb-10">
@@ -26,32 +24,31 @@
             </div>
             <div class="bg-white/20 backdrop-blur-md p-2.5 rounded-2xl text-center min-w-[70px] border border-white/10">
                 <span class="text-[10px] block opacity-80 font-bold mb-0.5">충주 기온</span>
-                <span id="realtime-temp" class="text-xl font-black italic">--°</span>
+                <span id="realtime-temp" class="text-xl font-black italic">loading</span>
             </div>
         </div>
     </header>
 
     <main class="p-5 relative z-20 mt-4 space-y-6">
-        <section id="main-card" class="bg-white rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50 overflow-hidden min-h-[450px] flex flex-col transition-all duration-500 relative">
-            
+        <section id="main-card" class="bg-white rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50 overflow-hidden min-h-[420px] flex flex-col transition-all duration-500">
             <div id="card-header" class="flex justify-between items-center mb-6">
                 <span id="meal-type-tag" class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">LUNCH</span>
-                <span id="display-day-tag" class="text-[10px] text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-md">요일 식단</span>
+                
+                <div class="flex items-center gap-3 bg-blue-50 px-3 py-1 rounded-xl border border-blue-100">
+                    <button id="prev-day" onclick="changeDay(-1)" class="nav-btn text-blue-500 font-black px-1">❮</button>
+                    <span id="display-day-tag" class="text-[10px] text-blue-600 font-bold min-w-[55px] text-center"></span>
+                    <button id="next-day" onclick="changeDay(1)" class="nav-btn text-blue-500 font-black px-1">❯</button>
+                </div>
             </div>
             
-            <div id="meal-content" class="relative flex-1">
-                <button id="prev-day" onclick="changeDay(-1)" class="side-nav nav-btn absolute -left-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full flex items-center justify-center text-indigo-600 font-black shadow-lg">❮</button>
-                
-                <button id="next-day" onclick="changeDay(1)" class="side-nav nav-btn absolute -right-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full flex items-center justify-center text-indigo-600 font-black shadow-lg">❯</button>
-
-                <div class="px-2 space-y-4 mb-8">
+            <div id="meal-content">
+                <div class="space-y-4 mb-8">
                     <h2 id="menu-title" class="text-2xl font-black text-gray-800 flex items-center gap-2">오늘의 메뉴</h2>
                     <ul id="menu-list" class="grid grid-cols-1 gap-2">
                         <li class="p-4 bg-gray-50 rounded-2xl animate-pulse text-gray-300 border border-gray-100 text-center">식단을 가져오는 중...</li>
                     </ul>
                 </div>
-
-                <div class="mx-2 bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner">
+                <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner">
                     <h3 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest text-center">Nutrition Report</h3>
                     <div id="nutrition-bars" class="space-y-5"></div>
                 </div>
@@ -87,7 +84,6 @@
         const now = new Date();
         const weekNames = ['일', '월', '화', '수', '목', '금', '토'];
         
-        // 현재 요일 상태 관리
         let currentViewDay = now.getDay();
         const hm = now.getHours() * 100 + now.getMinutes();
         
@@ -106,13 +102,15 @@
             const isWeekend = (day === 5 && hm >= 1830) || day === 6 || day === 0;
             const isHolidayPeriod = isTodayHoliday;
 
+            let returnText = (day === 6 || day === 0 || (day === 5 && hm >= 1830)) ? "다음 주 월요일에 봐요!" : "내일 다시 만나요!";
+            let greetingText = isWeekend ? "즐겁고 편안한 주말 되세요! ✨" : "맛있는 식사 하세요! 🍱";
+
             return { 
                 mealKey: (hm < 830) ? 'breakfast' : (hm < 1330) ? 'lunch' : (hm < 1830) ? 'dinner' : 'breakfast',
                 mealLabel: (hm < 830) ? 'BREAKFAST 🍳' : (hm < 1330) ? 'LUNCH 🍱' : (hm < 1830) ? 'DINNER 🌙' : 'NEXT BREAKFAST ☀️',
                 isRest: isWeekend || isHolidayPeriod,
                 isHolidayMsg: isHolidayPeriod && !isWeekend,
-                returnText: (day >= 5 || day === 0) ? "다음 주 월요일에 봐요!" : "내일 다시 만나요!",
-                greetingText: isWeekend ? "즐겁고 편안한 주말 되세요! ✨" : "맛있는 식사 하세요! 🍱"
+                returnText, greetingText
             };
         }
 
@@ -124,33 +122,26 @@
         async function loadData() {
             try {
                 const response = await fetch('data.json?v=' + Math.random());
-                if (!response.ok) throw new Error();
                 cachedData = await response.json();
-                
                 if (cachedData.weather && cachedData.weather.temp) {
                     document.getElementById('realtime-temp').innerText = cachedData.weather.temp + "°";
                 }
                 renderMealCard();
             } catch (e) {
-                document.getElementById('realtime-temp').innerText = "--°";
-                document.getElementById('menu-list').innerHTML = `<li class="p-4 text-slate-400 text-center">데이터를 불러올 수 없습니다.</li>`;
+                document.getElementById('realtime-temp').innerText = "ERR";
             }
         }
 
         function renderMealCard() {
             if (!cachedData) return;
             const targetDayName = weekNames[currentViewDay];
-            
-            // 요일 태그 및 화살표 가시성
             document.getElementById('display-day-tag').innerText = targetDayName + "요일 식단";
-            document.getElementById('prev-day').style.display = (currentViewDay <= 1) ? 'none' : 'flex';
-            document.getElementById('next-day').style.display = (currentViewDay >= 5) ? 'none' : 'flex';
+            document.getElementById('prev-day').style.visibility = (currentViewDay <= 1) ? 'hidden' : 'visible';
+            document.getElementById('next-day').style.visibility = (currentViewDay >= 5) ? 'hidden' : 'visible';
 
-            // 제목 설정
             const isActuallyToday = (currentViewDay === now.getDay());
             document.getElementById('menu-title').innerText = isActuallyToday ? "오늘의 메뉴" : `${targetDayName}요일 메뉴`;
 
-            // 휴무일 체크 (현재 날짜가 휴무일이고, 보고 있는 요일이 현재 요일일 때만)
             if (status.isRest && isActuallyToday) {
                 showRestUI();
                 return;
@@ -185,8 +176,11 @@
         }
 
         function changeDay(offset) {
-            currentViewDay += offset;
-            renderMealCard();
+            const newDay = currentViewDay + offset;
+            if (newDay >= 1 && newDay <= 5) {
+                currentViewDay = newDay;
+                renderMealCard();
+            }
         }
 
         function renderBar(label, val, color, percent) {
@@ -205,7 +199,6 @@
             const stars = document.querySelectorAll('.star-btn');
             stars.forEach((s, i) => { 
                 if (i < score) s.classList.add('star-gold'); 
-                s.classList.add('cursor-default'); 
                 s.classList.remove('grayscale', 'opacity-30');
             });
             document.getElementById('star-container').classList.add('disabled-stars');
