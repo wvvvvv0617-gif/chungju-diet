@@ -23,37 +23,44 @@ def get_target_date():
     return target.strftime("%Y-%m-%d")
 
 # =========================
-# 🌦️ OpenWeather
+# 🌦️ OpenWeather (안정화 버전)
 # =========================
 def get_weather():
     try:
-        API_KEY = "324c1ff82e3f995801bf309914bdf245"
+        API_KEY = "여기에_진짜_API_KEY_넣기"
 
         url = f"https://api.openweathermap.org/data/2.5/weather?q=Chungju,KR&appid={API_KEY}&units=metric&lang=kr"
-        res = requests.get(url)
+        res = requests.get(url, timeout=10)
         data = res.json()
+
+        # ❗ API 오류 체크 (핵심)
+        if res.status_code != 200 or "main" not in data:
+            print("❌ 날씨 API 실패:", data)
+            return {"temp": 22, "rain": 0}
 
         # 기온
         temp = round(data["main"]["temp"])
 
-        # 강수 확률 느낌으로 변환 (안정형)
+        # 강수 계산
         rain = 0
 
-        # 비가 실제로 내리는 경우
         if "rain" in data and "1h" in data["rain"]:
             rain = min(int(data["rain"]["1h"] * 20), 100)
 
-        # 눈도 고려 (겨울 대비)
         if "snow" in data and "1h" in data["snow"]:
             rain = min(int(data["snow"]["1h"] * 20), 100)
 
-        # 날씨 상태 기반 보정 (비 안와도 흐리면 약간 줌)
         weather_main = data["weather"][0]["main"]
+
         if rain == 0:
-            if weather_main in ["Clouds"]:
+            if weather_main == "Clouds":
                 rain = 20
             elif weather_main in ["Rain", "Drizzle", "Thunderstorm"]:
                 rain = 60
+            else:
+                rain = 0
+
+        print(f"🌤️ 날씨: {temp}° / {rain}%")
 
         return {
             "temp": temp,
@@ -126,7 +133,7 @@ def crawl():
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(final_data, f, ensure_ascii=False, indent=2)
 
-    print("🚀 데이터 갱신 완료!")
+    print("🚀 data.json 생성 완료!")
 
 if __name__ == "__main__":
     crawl()
