@@ -4,27 +4,32 @@ fetch('data.json')
 
     const result = getMeal(data);
 
-    document.getElementById("meal").innerText = result.data;
+    document.getElementById("meal").innerText =
+        result.data || "데이터 없음";
 
     document.getElementById("carb").innerText = result.nutrition?.carbs ?? 0;
     document.getElementById("protein").innerText = result.nutrition?.protein ?? 0;
     document.getElementById("fat").innerText = result.nutrition?.fat ?? 0;
     document.getElementById("sugar").innerText = result.nutrition?.sugar ?? 0;
 
+})
+.catch(err => {
+    document.getElementById("meal").innerText = "데이터 로드 실패";
+    console.error(err);
 });
 
 function getMeal(data) {
 
     const now = new Date();
     const day = now.getDay();
-    const time = now.getHours() * 60 + now.getMinutes();
+    const time = now.getHours()*60 + now.getMinutes();
 
-    const LUNCH = 13 * 60 + 30;
-    const DINNER = 18 * 60 + 30;
+    const LUNCH = 13*60+30;
+    const DINNER = 18*60+30;
 
     const days = ["일","월","화","수","목","금","토"];
 
-    // 금요일 저녁 → 월요일 조식
+    // 금요일 저녁 → 월요일
     if (day === 5 && time >= DINNER) {
         return {
             data: data["월"]?.breakfast,
@@ -32,7 +37,7 @@ function getMeal(data) {
         };
     }
 
-    // 주말 → 월요일 조식
+    // 주말 → 월요일
     if (day === 6 || day === 0) {
         return {
             data: data["월"]?.breakfast,
