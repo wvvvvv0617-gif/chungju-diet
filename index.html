@@ -22,7 +22,7 @@
             </div>
             <div class="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-center min-w-[64px]">
                 <span class="text-[10px] block opacity-80 font-bold">충주 기온</span>
-                <span class="text-xl font-black">22°</span>
+                <span id="realtime-temp" class="text-xl font-black">--°</span>
             </div>
         </div>
     </header>
@@ -37,18 +37,18 @@
             <div class="space-y-4 mb-8">
                 <h2 class="text-2xl font-black text-gray-800 flex items-center gap-2">오늘의 메뉴</h2>
                 <ul id="menu-list" class="grid grid-cols-1 gap-2">
-                    <li class="p-4 bg-gray-50 rounded-2xl animate-pulse text-gray-300">식단을 확인하는 중...</li>
+                    <li class="p-4 bg-gray-50 rounded-2xl animate-pulse text-gray-300 border border-gray-100">식단을 확인하는 중...</li>
                 </ul>
             </div>
 
-            <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100">
+            <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner">
                 <h3 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest text-center">Nutrition Report</h3>
-                <div id="nutrition-bars" class="space-y-4"></div>
+                <div id="nutrition-bars" class="space-y-5"></div>
             </div>
         </section>
 
         <section id="rating-section" class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm text-center">
-            <p id="rating-title" class="text-gray-400 text-xs font-black mb-4 uppercase tracking-widest">오늘 식사는 어떠셨나요?</p>
+            <p id="rating-title" class="text-slate-800 text-xs font-black mb-4 uppercase tracking-widest">오늘 식사는 어떠셨나요?</p>
             <div id="star-container" class="flex justify-center gap-3 text-4xl">
                 <button onclick="submitRating(1)" class="star-btn grayscale opacity-30 hover:opacity-100 transition-all">⭐</button>
                 <button onclick="submitRating(2)" class="star-btn grayscale opacity-30 hover:opacity-100 transition-all">⭐</button>
@@ -56,13 +56,15 @@
                 <button onclick="submitRating(4)" class="star-btn grayscale opacity-30 hover:opacity-100 transition-all">⭐</button>
                 <button onclick="submitRating(5)" class="star-btn grayscale opacity-30 hover:opacity-100 transition-all">⭐</button>
             </div>
-            <p id="feedback-msg" class="text-blue-600 text-xs font-bold mt-4 h-4 opacity-0 transition-opacity">평가가 성공적으로 반영되었습니다!</p>
+            <p id="feedback-msg" class="text-indigo-600 text-[11px] font-bold mt-4 h-4 opacity-0 transition-opacity">✅ 평가가 성공적으로 반영되었습니다!</p>
         </section>
 
-        <section id="admin-view" class="hidden p-5 bg-slate-900 rounded-[24px] text-xs font-mono text-slate-300">
-            <h4 class="text-emerald-400 font-bold mb-2">🛠️ SYSTEM ADMIN</h4>
-            <p>> 누적 평점: <span id="admin-avg" class="text-white">0.0</span></p>
-            <p>> 총 투표수: <span id="admin-count" class="text-white">0</span>회</p>
+        <section id="admin-view" class="hidden p-5 bg-slate-900 rounded-[24px] text-xs font-mono text-slate-300 shadow-2xl">
+            <h4 class="text-emerald-400 font-bold mb-2 tracking-tighter">🛠️ SYSTEM ADMIN DASHBOARD</h4>
+            <div class="space-y-1">
+                <p>> 누적 평점: <span id="admin-avg" class="text-white font-bold">0.0</span></p>
+                <p>> 총 투표수: <span id="admin-count" class="text-white font-bold">0</span>회</p>
+            </div>
         </section>
     </main>
 
@@ -70,12 +72,12 @@
         const now = new Date();
         const week = ['일', '월', '화', '수', '목', '금', '토'];
         
-        // 1. 날짜 및 요일 로직 수정 (주말이면 금요일 식단 표시)
+        // 1. 날짜 표시 및 주말 로직
         let displayDayIndex = now.getDay();
         let isWeekendText = "";
 
-        if (displayDayIndex === 0 || displayDayIndex === 6) { // 토(6) 또는 일(0)
-            displayDayIndex = 5; // 금요일로 고정
+        if (displayDayIndex === 0 || displayDayIndex === 6) { 
+            displayDayIndex = 5; // 주말엔 금요일 식단 고정
             isWeekendText = "(금요일 식단)";
         }
 
@@ -83,8 +85,16 @@
         document.getElementById('current-date').innerText = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
         document.getElementById('display-day-tag').innerText = todayName + "요일 메뉴 " + isWeekendText;
 
+        // 2. 가변 기온 로직 (시간대에 따라 변함)
+        const hour = now.getHours();
+        let temp = 22; 
+        if (hour < 8) temp = 14;
+        else if (hour < 14) temp = 26;
+        else if (hour < 20) temp = 21;
+        else temp = 17;
+        document.getElementById('realtime-temp').innerText = temp + "°";
+
         function getMealType() {
-            const hour = now.getHours();
             if (hour < 9) return { key: 'breakfast', label: 'Breakfast 🍳' };
             if (hour < 14) return { key: 'lunch', label: 'Lunch 🍱' };
             return { key: 'dinner', label: 'Dinner 🌙' };
@@ -92,7 +102,7 @@
         const currentMeal = getMealType();
         document.getElementById('meal-type-tag').innerText = currentMeal.label;
 
-        // 2. 식단 데이터 로드
+        // 3. 식단 데이터 로드 및 렌더링
         async function loadMenu() {
             try {
                 const response = await fetch('data.json');
@@ -101,15 +111,13 @@
 
                 if (todayData && todayData[currentMeal.key]) {
                     const menuHtml = todayData[currentMeal.key].split(',').map(m => 
-                        `<li class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl text-gray-700 font-semibold border border-gray-100 shadow-sm transition-all hover:bg-blue-50">
-                            <span class="w-2 h-2 bg-blue-400 rounded-full"></span>${m.trim()}
+                        `<li class="flex items-center gap-3 p-3.5 bg-white rounded-2xl text-slate-700 font-bold border border-slate-100 shadow-sm transition-all hover:scale-[1.02] active:scale-95">
+                            <span class="w-2.5 h-2.5 bg-indigo-400 rounded-full shadow-inner"></span>${m.trim()}
                         </li>`
                     ).join('');
                     document.getElementById('menu-list').innerHTML = menuHtml;
 
-                    // 영양 성분 표시 (일일 권장량 % 계산식 복구)
                     const nut = todayData.nutrition;
-                    // 성인 남성 일일 권장량 기준 (탄:300g, 단:60g, 지:50g) 대략적 예시
                     const nutHtml = `
                         ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', '70g', '23%')}
                         ${renderBar('단백질', nut.protein, 'bg-emerald-500', '25g', '42%')}
@@ -118,21 +126,24 @@
                     document.getElementById('nutrition-bars').innerHTML = nutHtml;
                 }
             } catch (e) {
-                document.getElementById('menu-list').innerHTML = "<li class='p-4 text-gray-400'>식단 정보가 없습니다.</li>";
+                document.getElementById('menu-list').innerHTML = "<li class='p-4 text-gray-400 text-center'>식단 정보를 가져올 수 없습니다.</li>";
             }
         }
 
+        // 가독성을 높인 바 렌더링 함수
         function renderBar(label, val, color, unit, percent) {
             return `<div>
-                <div class="flex justify-between text-[11px] font-bold mb-1.5 text-slate-600">
-                    <span>${label} <span class="text-slate-300 font-normal ml-1">${unit}</span></span>
-                    <span class="text-blue-600">권장량의 ${percent}</span>
+                <div class="flex justify-between items-end mb-2">
+                    <span class="text-sm font-black text-slate-800">${label} <span class="text-slate-400 font-medium text-xs ml-1">${unit}</span></span>
+                    <span class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md text-right">일일 목표의 ${percent} 채움</span>
                 </div>
-                <div class="w-full bg-slate-200 rounded-full h-2"><div class="${color} h-2 rounded-full shadow-sm" style="width: ${val}%"></div></div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5 shadow-inner">
+                    <div class="${color} h-2.5 rounded-full shadow-sm transition-all duration-1000" style="width: ${val}%"></div>
+                </div>
             </div>`;
         }
 
-        // 3. 평가 시스템 (1회 제한 로직 유지)
+        // 4. 평가 시스템 (1회 제한 고도화)
         const ratingKey = `rated_${now.toISOString().split('T')[0]}_${currentMeal.key}`;
 
         function submitRating(score) {
@@ -150,9 +161,14 @@
 
         function lockRatingUI(score) {
             const stars = document.querySelectorAll('.star-btn');
-            stars.forEach((s, i) => { if (i < score) s.classList.add('star-gold'); s.classList.add('cursor-default'); });
+            stars.forEach((s, i) => { 
+                if (i < score) s.classList.add('star-gold'); 
+                s.classList.add('cursor-default'); 
+                s.classList.remove('grayscale', 'opacity-30');
+            });
             document.getElementById('star-container').classList.add('disabled-stars');
-            document.getElementById('rating-title').innerText = "평가가 완료되었습니다";
+            document.getElementById('rating-title').innerText = "이미 평가를 완료한 식단입니다";
+            document.getElementById('rating-title').classList.replace('text-gray-400', 'text-indigo-500');
             updateAdmin();
         }
 
