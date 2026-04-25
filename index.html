@@ -61,7 +61,7 @@
                         <div class="h-8 skeleton opacity-50"></div>
                         <div class="h-8 skeleton opacity-50"></div>
                     </div>
-                    <p class="text-[9px] text-slate-400 mt-6 text-center leading-relaxed">
+                    <p class="text-[9px] text-slate-400 mt-6 text-center leading-relaxed font-medium">
                         정확한 영양 정보는 아니니 참고용으로 보시기 바랍니다.
                     </p>
                 </div>
@@ -103,8 +103,6 @@
     <script>
         const now = new Date();
         const week = ['일', '월', '화', '수', '목', '금', '토'];
-
-        // 중략: getHolidayName, getMealStatus 함수는 동일
 
         function getHolidayName(date) {
             const m = date.getMonth() + 1;
@@ -155,12 +153,14 @@
                 const response = await fetch('data.json?v=' + Math.random());
                 const data = await response.json();
                 
+                // [수정] 날씨 데이터 처리를 최상단으로 이동 (휴일 여부 상관없이 항상 노출)
                 if (data.weather) {
-                    const temp = data.weather.temp || 21;
-                    const rain = data.weather.rain || 0;
+                    const temp = data.weather.temp !== undefined ? data.weather.temp : 21;
+                    const rain = data.weather.rain !== undefined ? data.weather.rain : 0;
                     document.getElementById('realtime-temp').innerText = temp + "°";
                     const rainElem = document.getElementById('precipitation');
                     rainElem.innerText = rain + "%";
+
                     if (rain >= 60) {
                         rainElem.classList.replace('text-blue-200', 'text-yellow-300');
                         document.getElementById('greeting').innerText = "비 소식이 있어요! 우산 챙기세요! ☔";
@@ -194,12 +194,14 @@
                     ).join('');
 
                     const nut = mealData.nutrition;
-                    // g 단위 계산을 위한 기준치 설정 (권장섭취량의 약 30~35% 한끼 분량)
+                    // [수정] 한 끼 식사에 적절한 현실적 g 수치로 계산식 변경
+                    // 단백질: 성인 한 끼 권장량 약 20~25g 기준 (최대 30g 내외)
+                    // 탄수화물: 성인 한 끼 권장량 약 100g 기준
                     const gData = {
-                        carbs: Math.round(nut.carbs * 3.5), // 예: 65% -> 약 227g
-                        protein: Math.round(nut.protein * 1.2), // 예: 80% -> 약 96g
-                        fat: Math.round(nut.fat * 0.7), // 예: 45% -> 약 31g
-                        sugar: Math.round(nut.sugar * 0.5) // 예: 15% -> 약 7g
+                        carbs: Math.round(nut.carbs * 1.5),  // 65%일 때 약 98g
+                        protein: Math.round(nut.protein * 0.35), // 80%일 때 약 28g (매우 현실적임)
+                        fat: Math.round(nut.fat * 0.4),      // 45%일 때 약 18g
+                        sugar: Math.round(nut.sugar * 0.6)   // 15%일 때 약 9g
                     };
 
                     document.getElementById('nutrition-bars').innerHTML = `
@@ -215,7 +217,6 @@
             }
         }
 
-        // percentText 자리에 g단위가 들어가도록 변경
         function renderBar(label, val, color, weightText) {
             return `<div>
                 <div class="flex justify-between items-end mb-1">
@@ -231,7 +232,6 @@
             </div>`;
         }
 
-        // 중략: submitRating, lockRatingUI, updateAdmin 함수는 동일
         const ratingKey = `rated_${now.toISOString().split('T')[0]}_${status.mealKey}`;
         function submitRating(score) {
             if (localStorage.getItem(ratingKey)) return;
