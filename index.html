@@ -24,11 +24,11 @@
             </div>
             <div class="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-center min-w-[75px] border border-white/10 flex flex-col gap-1.5">
                 <div class="flex flex-col border-b border-white/10 pb-1">
-                    <span class="text-[9px] opacity-80 font-bold uppercase tracking-tighter">Temp</span>
+                    <span class="text-[9px] opacity-80 font-bold tracking-tighter">기온</span>
                     <span id="realtime-temp" class="text-lg font-black italic leading-none">--°</span>
                 </div>
                 <div class="flex flex-col">
-                    <span class="text-[9px] opacity-80 font-bold uppercase tracking-tighter">Rain</span>
+                    <span class="text-[9px] opacity-80 font-bold tracking-tighter">강수량</span>
                     <span id="precipitation" class="text-sm font-black text-blue-200 leading-none">--%</span>
                 </div>
             </div>
@@ -61,8 +61,8 @@
                     <h2 id="rest-title" class="text-2xl font-black text-slate-800 mb-2">식당도 쿨쿨 자는 중!</h2>
                     <p id="rest-subtitle" class="text-base text-slate-500 leading-relaxed font-medium"></p>
                 </div>
-                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-rose-100 shadow-sm">
-                    <p id="return-msg" class="text-sm font-black text-rose-600"></p>
+                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-orange-100 shadow-sm">
+                    <p id="return-msg" class="text-sm font-black text-orange-600"></p>
                 </div>
             </div>
         </section>
@@ -146,13 +146,11 @@
                 const response = await fetch('data.json?v=' + Math.random());
                 const data = await response.json();
                 
-                // 날씨 정보 로드 (기온 & 강수 확률)
                 if (data.weather) {
                     if (data.weather.temp) document.getElementById('realtime-temp').innerText = data.weather.temp + "°";
                     if (data.weather.rain !== undefined) {
                         const rainElem = document.getElementById('precipitation');
                         rainElem.innerText = data.weather.rain + "%";
-                        // 비 올 확률이 높으면(60% 이상) 경고 의미로 색상 강조 (노란색)
                         if (data.weather.rain >= 60) {
                             rainElem.classList.replace('text-blue-200', 'text-yellow-300');
                             document.getElementById('greeting').innerText = "비 소식이 있어요! 우산 챙기세요! ☔";
