@@ -10,12 +10,12 @@
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         .star-gold { color: #fbbf24; filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4)); transform: scale(1.1); }
         .disabled-stars { pointer-events: none; opacity: 0.6; }
-        .weekend-bg { background: linear-gradient(135deg, #fff5f5 0%, #fff0f6 100%); }
+        .rest-bg { background: linear-gradient(135deg, #fff5f5 0%, #fff0f6 100%); }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen bg-white shadow-2xl pb-10">
 
-    <header class="p-6 bg-gradient-to-br from-indigo-600 to-blue-500 text-white rounded-b-[40px] shadow-xl">
+    <header class="p-6 bg-gradient-to-br from-indigo-600 to-blue-500 text-white rounded-b-[40px] shadow-xl relative z-10">
         <div class="flex justify-between items-start">
             <div>
                 <p id="current-date" class="text-indigo-100 text-sm font-bold mb-1"></p>
@@ -28,9 +28,9 @@
         </div>
     </header>
 
-    <main class="p-5 -mt-6 space-y-6">
-        <section id="main-card" class="bg-white rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50 overflow-hidden">
-            <div class="flex justify-between items-center mb-5">
+    <main class="p-5 relative z-20 -mt-6 space-y-6">
+        <section id="main-card" class="bg-white rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50 overflow-hidden transition-all duration-500">
+            <div id="card-header" class="flex justify-between items-center mb-5">
                 <span id="meal-type-tag" class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">LUNCH</span>
                 <span id="display-day-tag" class="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-1 rounded-md"></span>
             </div>
@@ -49,10 +49,11 @@
                 </div>
             </div>
 
-            <div id="weekend-message" class="hidden py-12 text-center space-y-4">
+            <div id="weekend-message" class="hidden py-10 mt-4 text-center space-y-4">
                 <div class="text-6xl animate-bounce">😴</div>
-                <h2 class="text-xl font-black text-slate-800">식당도 쿨쿨 자는 중!</h2>
-                <p class="text-sm text-slate-500 leading-relaxed">주말에는 식당 이모님들도 쉬어가셔요.<br>월요일 00:02에 맛난 메뉴로 찾아올게요! 냥!</p>
+                <h2 id="rest-title" class="text-xl font-black text-slate-800">식당도 쿨쿨 자는 중!</h2>
+                <p id="rest-subtitle" class="text-sm text-slate-500 leading-relaxed"></p>
+                <p class="text-xs font-bold text-indigo-400 mt-2">다음 주 월요일에 봐요!</p>
             </div>
         </section>
 
@@ -81,7 +82,19 @@
         const now = new Date();
         const week = ['일', '월', '화', '수', '목', '금', '토'];
 
-        // 1. 시간 및 요일 판정 로직 (정의하신 기준 반영)
+        // [추가] 매년 바뀌는 공휴일(양력) 및 간단 판정 로직
+        function getHolidayName(date) {
+            const m = date.getMonth() + 1;
+            const d = date.getDate();
+            const solarHolidays = {
+                '1-1': '신정', '3-1': '삼일절', '5-5': '어린이날', '6-6': '현충일',
+                '8-15': '광복절', '10-3': '개천절', '10-9': '한글날', '12-25': '성탄절'
+            };
+            // 음력 공휴일은 매년 날짜가 달라지므로 실제 서비스시는 API 연동이 좋으나,
+            // 여기서는 주요 양력 공휴일과 주말을 우선 처리합니다.
+            return solarHolidays[`${m}-${d}`] || null;
+        }
+
         function getMealStatus() {
             const day = now.getDay(); 
             const hm = now.getHours() * 100 + now.getMinutes();
@@ -90,7 +103,6 @@
             let mealLabel = 'LUNCH 🍱';
             let targetDayOffset = 0;
 
-            // 식단 전환 시간대 설정
             if (hm < 830) {
                 mealKey = 'breakfast'; mealLabel = 'BREAKFAST 🍳';
             } else if (hm < 1330) {
@@ -98,60 +110,69 @@
             } else if (hm < 1830) {
                 mealKey = 'dinner'; mealLabel = 'DINNER 🌙';
             } else {
-                // 18:30 이후는 다음 날 아침
                 mealKey = 'breakfast'; mealLabel = 'NEXT BREAKFAST ☀️';
                 targetDayOffset = 1;
             }
 
-            // 주말 판정 (금요일 18:30 이후 ~ 일요일 23:59까지)
-            const isWeekend = (day === 5 && hm >= 1830) || day === 6 || day === 0;
+            // 내일이 휴일인지 체크
+            const tomorrow = new Date(now);
+            tomorrow.setDate(now.getDate() + 1);
+            const isTomorrowHoliday = getHolidayName(tomorrow) !== null;
+            const isTodayHoliday = getHolidayName(now) !== null;
 
-            return { mealKey, mealLabel, targetDayOffset, isWeekend };
+            // 주말 혹은 공휴일 판정 (공휴일 전날 18:30 이후 포함)
+            const isWeekend = (day === 5 && hm >= 1830) || day === 6 || day === 0;
+            const isHolidayPeriod = (isTomorrowHoliday && hm >= 1830) || isTodayHoliday;
+
+            return { mealKey, mealLabel, targetDayOffset, isWeekend, isHolidayPeriod, isTodayHoliday };
         }
 
         const status = getMealStatus();
 
-        // 2. 초기 텍스트 설정
+        // 초기 설정
         document.getElementById('current-date').innerText = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
         document.getElementById('meal-type-tag').innerText = status.mealLabel;
 
-        // 3. 데이터 로드 및 렌더링
         async function loadData() {
             try {
                 const response = await fetch('data.json');
                 const data = await response.json();
                 
-                // 날씨 정보 (scraper.py가 저장한 데이터)
                 if (data.weather) {
                     document.getElementById('realtime-temp').innerText = data.weather.temp + "°";
                 }
 
-                // 주말일 경우 화면 처리
-                if (status.isWeekend) {
+                // 주말 또는 공휴일 화면 처리
+                if (status.isWeekend || status.isHolidayPeriod) {
                     document.getElementById('meal-content').classList.add('hidden');
                     document.getElementById('rating-section').classList.add('hidden');
                     document.getElementById('weekend-message').classList.remove('hidden');
-                    document.getElementById('main-card').classList.add('weekend-bg');
+                    document.getElementById('main-card').classList.add('rest-bg');
                     document.getElementById('display-day-tag').innerText = "REST DAY";
+
+                    // 멘트 분기 처리
+                    const subTitle = document.getElementById('rest-subtitle');
+                    if (status.isHolidayPeriod && !status.isWeekend) {
+                        subTitle.innerHTML = "공휴일에는 식당 이모님들도 쉬어가셔요.";
+                    } else {
+                        subTitle.innerHTML = "주말에는 식당 이모님들도 쉬어가셔요.";
+                    }
                     return;
                 }
 
-                // 타겟 날짜 요일 계산
                 const targetDate = new Date();
                 targetDate.setDate(now.getDate() + status.targetDayOffset);
                 const targetDayName = week[targetDate.getDay()];
-                
                 document.getElementById('display-day-tag').innerText = targetDayName + "요일 식단";
 
                 const mealData = data.meals[targetDayName];
                 if (mealData && mealData[status.mealKey]) {
                     const menuItems = mealData[status.mealKey].split(',');
-                    const menuHtml = menuItems.map(m => 
+                    document.getElementById('menu-list').innerHTML = menuItems.map(m => 
                         `<li class="flex items-center gap-3 p-3.5 bg-white rounded-2xl text-slate-700 font-bold border border-slate-100 shadow-sm transition-all hover:scale-[1.02]">
                             <span class="w-2.5 h-2.5 bg-indigo-400 rounded-full shadow-inner"></span>${m.trim()}
                         </li>`
                     ).join('');
-                    document.getElementById('menu-list').innerHTML = menuHtml;
 
                     const nut = mealData.nutrition;
                     document.getElementById('nutrition-bars').innerHTML = `
@@ -159,11 +180,9 @@
                         ${renderBar('단백질', nut.protein, 'bg-emerald-500', '25g', '42%')}
                         ${renderBar('지방', nut.fat, 'bg-amber-400', '15g', '27%')}
                     `;
-                } else {
-                    document.getElementById('menu-list').innerHTML = "<li class='p-4 text-gray-400 text-center'>식단 정보가 없습니다.</li>";
                 }
             } catch (e) {
-                document.getElementById('menu-list').innerHTML = "<li class='p-4 text-gray-400 text-center'>데이터 로딩 실패 (data.json 확인)</li>";
+                console.error(e);
             }
         }
 
@@ -179,18 +198,14 @@
             </div>`;
         }
 
-        // 4. 평가 시스템 로직
+        // 평가 시스템
         const ratingKey = `rated_${now.toISOString().split('T')[0]}_${status.mealKey}`;
-
         function submitRating(score) {
             if (localStorage.getItem(ratingKey)) return;
             localStorage.setItem(ratingKey, score);
-            
             let stats = JSON.parse(localStorage.getItem('admin_stats') || '{"total":0, "count":0}');
-            stats.total += score;
-            stats.count += 1;
+            stats.total += score; stats.count += 1;
             localStorage.setItem('admin_stats', JSON.stringify(stats));
-
             lockRatingUI(score);
             document.getElementById('feedback-msg').style.opacity = '1';
         }
@@ -203,8 +218,7 @@
                 s.classList.remove('grayscale', 'opacity-30');
             });
             document.getElementById('star-container').classList.add('disabled-stars');
-            document.getElementById('rating-title').innerText = "평가 완료! 맛있게 드셨길 바라요.";
-            document.getElementById('rating-title').classList.add('text-indigo-500');
+            document.getElementById('rating-title').innerText = "평가 완료! 내일도 기대해 주세요.";
             updateAdmin();
         }
 
@@ -219,7 +233,6 @@
             }
         }
 
-        // 실행
         loadData();
         if (localStorage.getItem(ratingKey)) lockRatingUI(localStorage.getItem(ratingKey));
         updateAdmin();
