@@ -22,9 +22,15 @@
                 <p id="current-date" class="text-indigo-100 text-sm font-bold mb-1"></p>
                 <h1 id="greeting" class="text-2xl font-bold tracking-tight leading-tight">맛있는 식사 하세요! 🍱</h1>
             </div>
-            <div class="bg-white/20 backdrop-blur-md p-2.5 rounded-2xl text-center min-w-[70px] border border-white/10">
-                <span class="text-[10px] block opacity-80 font-bold mb-0.5">충주 기온</span>
-                <span id="realtime-temp" class="text-xl font-black italic">loading</span>
+            <div class="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-center min-w-[75px] border border-white/10 flex flex-col gap-1.5">
+                <div class="flex flex-col border-b border-white/10 pb-1">
+                    <span class="text-[9px] opacity-80 font-bold uppercase tracking-tighter">Temp</span>
+                    <span id="realtime-temp" class="text-lg font-black italic leading-none">--°</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-[9px] opacity-80 font-bold uppercase tracking-tighter">Rain</span>
+                    <span id="precipitation" class="text-sm font-black text-blue-200 leading-none">--%</span>
+                </div>
             </div>
         </div>
     </header>
@@ -55,8 +61,8 @@
                     <h2 id="rest-title" class="text-2xl font-black text-slate-800 mb-2">식당도 쿨쿨 자는 중!</h2>
                     <p id="rest-subtitle" class="text-base text-slate-500 leading-relaxed font-medium"></p>
                 </div>
-                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-indigo-100 shadow-sm">
-                    <p id="return-msg" class="text-sm font-black text-indigo-600"></p>
+                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-rose-100 shadow-sm">
+                    <p id="return-msg" class="text-sm font-black text-rose-600"></p>
                 </div>
             </div>
         </section>
@@ -105,7 +111,6 @@
             const isTodayHoliday = getHolidayName(now) !== null;
             const isTomorrowHoliday = getHolidayName(tomorrow) !== null;
 
-            // 주말 및 휴일 판정 로직
             const isWeekend = (day === 5 && hm >= 1830) || day === 6 || day === 0;
             const isHolidayPeriod = (isTomorrowHoliday && hm >= 1830) || isTodayHoliday;
 
@@ -141,10 +146,21 @@
                 const response = await fetch('data.json?v=' + Math.random());
                 const data = await response.json();
                 
-                if (data.weather && data.weather.temp) {
-                    document.getElementById('realtime-temp').innerText = data.weather.temp + "°";
+                // 날씨 정보 로드 (기온 & 강수 확률)
+                if (data.weather) {
+                    if (data.weather.temp) document.getElementById('realtime-temp').innerText = data.weather.temp + "°";
+                    if (data.weather.rain !== undefined) {
+                        const rainElem = document.getElementById('precipitation');
+                        rainElem.innerText = data.weather.rain + "%";
+                        // 비 올 확률이 높으면(60% 이상) 경고 의미로 색상 강조 (노란색)
+                        if (data.weather.rain >= 60) {
+                            rainElem.classList.replace('text-blue-200', 'text-yellow-300');
+                            document.getElementById('greeting').innerText = "비 소식이 있어요! 우산 챙기세요! ☔";
+                        }
+                    }
                 } else {
                     document.getElementById('realtime-temp').innerText = "21°";
+                    document.getElementById('precipitation').innerText = "0%";
                 }
 
                 if (status.isRest) {
@@ -172,18 +188,19 @@
 
                     const nut = mealData.nutrition;
                     document.getElementById('nutrition-bars').innerHTML = `
-                        ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', '70g', '23%')}
-                        ${renderBar('단백질', nut.protein, 'bg-emerald-500', '25g', '42%')}
-                        ${renderBar('지방', nut.fat, 'bg-amber-400', '15g', '27%')}
+                        ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', '23%')}
+                        ${renderBar('단백질', nut.protein, 'bg-emerald-500', '42%')}
+                        ${renderBar('지방', nut.fat, 'bg-amber-400', '27%')}
                     `;
                 }
             } catch (e) {
                 console.error("데이터 로드 실패:", e);
-                document.getElementById('realtime-temp').innerText = "연결안됨";
+                document.getElementById('realtime-temp').innerText = "ERR";
+                document.getElementById('precipitation').innerText = "--%";
             }
         }
 
-        function renderBar(label, val, color, unit, percent) {
+        function renderBar(label, val, color, percent) {
             return `<div><div class="flex justify-between items-end mb-1"><span class="text-[11px] font-black text-slate-800">${label}</span><span class="text-[10px] font-bold text-indigo-600">${percent}</span></div><div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div></div></div>`;
         }
 
