@@ -55,8 +55,8 @@
                     <h2 id="rest-title" class="text-2xl font-black text-slate-800 mb-2">식당도 쿨쿨 자는 중!</h2>
                     <p id="rest-subtitle" class="text-base text-slate-500 leading-relaxed font-medium"></p>
                 </div>
-                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-rose-100 shadow-sm">
-                    <p id="return-msg" class="text-sm font-black text-rose-500"></p>
+                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-rose-200 shadow-sm">
+                    <p id="return-msg" class="text-sm font-black text-rose-700"></p>
                 </div>
             </div>
         </section>
@@ -108,7 +108,6 @@
             const isWeekend = (day === 5 && hm >= 1830) || day === 6 || day === 0;
             const isHolidayPeriod = (isTomorrowHoliday && hm >= 1830) || isTodayHoliday;
 
-            // 멘트 및 상단 그리팅 결정
             let returnText = "내일 다시 만나요!";
             let greetingText = "맛있는 식사 하세요! 🍱";
 
@@ -132,22 +131,19 @@
         }
 
         const status = getMealStatus();
-
-        // 멘트 적용
         document.getElementById('current-date').innerText = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
         document.getElementById('meal-type-tag').innerText = status.mealLabel;
         document.getElementById('greeting').innerText = status.greetingText;
 
         async function loadData() {
             try {
-                // 캐시 방지를 위해 랜덤 쿼리 추가
                 const response = await fetch('data.json?v=' + Math.random());
                 const data = await response.json();
                 
                 if (data.weather && data.weather.temp) {
                     document.getElementById('realtime-temp').innerText = data.weather.temp + "°";
                 } else {
-                    document.getElementById('realtime-temp').innerText = "21°"; // 데이터 없을 시 기본값
+                    document.getElementById('realtime-temp').innerText = "21°";
                 }
 
                 if (status.isRest) {
@@ -181,7 +177,7 @@
                     `;
                 }
             } catch (e) {
-                console.error("데이터 로드 실패:", e);
+                console.error("로드 실패:", e);
                 document.getElementById('realtime-temp').innerText = "연결안됨";
             }
         }
@@ -190,7 +186,6 @@
             return `<div><div class="flex justify-between items-end mb-1"><span class="text-[11px] font-black text-slate-800">${label}</span><span class="text-[10px] font-bold text-indigo-600">${percent}</span></div><div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div></div></div>`;
         }
 
-        // 별점 로직 동일
         const ratingKey = `rated_${now.toISOString().split('T')[0]}_${status.mealKey}`;
         function submitRating(score) {
             if (localStorage.getItem(ratingKey)) return;
