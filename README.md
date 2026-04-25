@@ -1,1 +1,0 @@
-# chungju-diet
