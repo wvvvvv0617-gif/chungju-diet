@@ -51,6 +51,7 @@
                         <li class="h-14 skeleton"></li>
                         <li class="h-14 skeleton"></li>
                         <li class="h-14 skeleton"></li>
+                        <li class="h-14 skeleton"></li>
                     </ul>
                 </div>
                 <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner">
@@ -91,17 +92,13 @@
             <p id="feedback-msg" class="text-indigo-600 text-[11px] font-bold mt-4 h-4 opacity-0 transition-opacity">✅ 평가가 반영되었습니다!</p>
         </section>
 
-        <section id="admin-view" class="hidden p-5 bg-slate-900 rounded-[24px] text-xs font-mono text-slate-300 shadow-2xl">
-            <h4 class="text-emerald-400 font-bold mb-2 tracking-tighter">🛠️ SYSTEM ADMIN DASHBOARD</h4>
-            <div class="space-y-1">
-                <p>> 누적 평점: <span id="admin-avg" class="text-white font-bold">0.0</span></p>
-                <p>> 총 투표수: <span id="admin-count" class="text-white font-bold">0</span>회</p>
-            </div>
-        </section>
+        <section id="admin-view" class="hidden p-6 bg-slate-900 rounded-[32px] text-xs font-mono text-slate-300 shadow-2xl border border-slate-700"></section>
     </main>
 
     <script>
-        // 1. let 선언으로 외부 시간 조작 허용
+        // 1. 관리자 설정
+        const ADMIN_PASSWORD = "0617"; // 비밀번호 변경 가능
+
         let now = new Date();
         const week = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -154,8 +151,7 @@
             }
 
             return { 
-                mealKey, 
-                mealLabel,
+                mealKey, mealLabel,
                 isRest: isWeekend || isHolidayPeriod,
                 isHolidayMsg: isHolidayPeriod && !isWeekend,
                 returnText, greetingText, targetDayOffset 
@@ -182,7 +178,6 @@
                 
                 const data = await response.json();
                 
-                // 날씨 처리
                 if (data.weather) {
                     const temp = data.weather.temp;
                     const rain = data.weather.rain;
@@ -197,7 +192,6 @@
                     }
                 }
 
-                // 휴무 처리
                 if (status.isRest) {
                     document.getElementById('meal-content').classList.add('hidden');
                     document.getElementById('rating-section').classList.add('hidden');
@@ -221,8 +215,6 @@
 
                 const mealData = data.meals ? data.meals[targetDayName] : null;
                 if (mealData && mealData[status.mealKey] && mealData[status.mealKey] !== "식단 없음") {
-                    
-                    // [핵심수정] 쉼표(,)나 공백( ) 무엇으로 구분되어 있든 깔끔하게 자르고 빈 칸은 제거합니다.
                     const menuItems = mealData[status.mealKey].split(/[, ]+/).filter(item => item.trim() !== "");
                     
                     document.getElementById('menu-list').innerHTML = menuItems.map(m => 
@@ -285,14 +277,45 @@
             updateAdmin();
         }
 
+        // [핵심] 수정된 관리자 업데이트 함수 (비밀번호 & 초기화 포함)
         function updateAdmin() {
-            const stats = JSON.parse(localStorage.getItem('admin_stats') || '{"total":0, "count":0}');
-            if (stats.count > 0) {
-                document.getElementById('admin-avg').innerText = (stats.total / stats.count).toFixed(1);
-                document.getElementById('admin-count').innerText = stats.count;
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('admin') === 'true') {
+                if (sessionStorage.getItem('admin_auth') !== 'true') {
+                    const pw = prompt("관리자 비밀번호를 입력하세요:");
+                    if (pw === ADMIN_PASSWORD) {
+                        sessionStorage.setItem('admin_auth', 'true');
+                    } else {
+                        alert("권한이 없습니다.");
+                        window.location.href = window.location.pathname;
+                        return;
+                    }
+                }
+
+                const stats = JSON.parse(localStorage.getItem('admin_stats') || '{"total":0, "count":0}');
+                const adminView = document.getElementById('admin-view');
+                adminView.innerHTML = `
+                    <h4 class="text-emerald-400 font-bold mb-3 tracking-tighter">🛠️ SYSTEM ADMIN DASHBOARD</h4>
+                    <div class="space-y-1 mb-5">
+                        <p>> 누적 평점: <span class="text-white font-bold">${stats.count > 0 ? (stats.total / stats.count).toFixed(1) : '0.0'}</span></p>
+                        <p>> 총 투표수: <span class="text-white font-bold">${stats.count}회</span></p>
+                    </div>
+                    <button onclick="resetStats()" class="w-full py-2.5 bg-rose-500/20 hover:bg-rose-500/40 text-rose-400 border border-rose-500/50 rounded-xl font-bold transition-all">
+                        데이터 초기화 (RESET)
+                    </button>
+                `;
+                adminView.classList.remove('hidden');
             }
-            if (new URLSearchParams(window.location.search).get('admin') === 'true') {
-                document.getElementById('admin-view').classList.remove('hidden');
+        }
+
+        function resetStats() {
+            if (confirm("정말로 모든 투표 데이터를 삭제하시겠습니까?")) {
+                localStorage.removeItem('admin_stats');
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('rated_')) localStorage.removeItem(key);
+                });
+                alert("초기화되었습니다.");
+                location.reload();
             }
         }
 
