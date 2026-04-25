@@ -97,7 +97,7 @@
 
     <script>
         // 1. 관리자 설정
-        const ADMIN_PASSWORD = "0617"; // 비밀번호 변경 가능
+        const ADMIN_PASSWORD = "0617"; 
 
         let now = new Date();
         const week = ['일', '월', '화', '수', '목', '금', '토'];
@@ -221,16 +221,25 @@
                         `<li class="flex items-center gap-3 p-3.5 bg-white rounded-2xl text-slate-700 font-bold border border-slate-100 shadow-sm"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m.trim()}</li>`
                     ).join('');
 
-                    const nut = mealData.nutrition;
-                    document.getElementById('nutrition-bars').innerHTML = `
-                        ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', nut.carbs + 'g')}
-                        ${renderBar('단백질', nut.protein, 'bg-emerald-500', nut.protein + 'g')}
-                        ${renderBar('지방', nut.fat, 'bg-amber-400', nut.fat + 'g')}
-                        ${renderBar('당류', nut.sugar, 'bg-rose-400', nut.sugar + 'g')}
-                    `;
+                    // [영양성분 다양화 적용] 식사별 데이터 매칭
+                    let nut = null;
+                    if (mealData.nutrition) {
+                        nut = mealData.nutrition[status.mealKey] || mealData.nutrition;
+                    }
+
+                    if (nut && typeof nut === 'object' && nut.carbs !== undefined) {
+                        document.getElementById('nutrition-bars').innerHTML = `
+                            ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', nut.carbs + 'g')}
+                            ${renderBar('단백질', nut.protein, 'bg-emerald-500', nut.protein + 'g')}
+                            ${renderBar('지방', nut.fat, 'bg-amber-400', nut.fat + 'g')}
+                            ${renderBar('당류', nut.sugar, 'bg-rose-400', nut.sugar + 'g')}
+                        `;
+                    } else {
+                        document.getElementById('nutrition-bars').innerHTML = `<p class="text-center text-xs text-slate-300 py-4 italic">이 식사의 영양 정보가 없습니다.</p>`;
+                    }
                 } else {
                     document.getElementById('menu-list').innerHTML = `<li class="p-8 text-center text-slate-400 font-medium">아직 등록된 식단이 없습니다.</li>`;
-                    document.getElementById('nutrition-bars').innerHTML = `<p class="text-center text-xs text-slate-300">영양 정보 없음</p>`;
+                    document.getElementById('nutrition-bars').innerHTML = `<p class="text-center text-xs text-slate-300 py-4 italic">영양 정보 없음</p>`;
                 }
             } catch (e) {
                 console.error("Load Error:", e);
@@ -277,7 +286,6 @@
             updateAdmin();
         }
 
-        // [핵심] 수정된 관리자 업데이트 함수 (비밀번호 & 초기화 포함)
         function updateAdmin() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('admin') === 'true') {
