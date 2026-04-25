@@ -4,104 +4,85 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 
 def get_target_date():
-    # 현재 KST(한국 표준시) 기준 시간 구하기
-    # GitHub Actions는 UTC 기준이므로 9시간을 더합니다.
     now = datetime.utcnow() + timedelta(hours=9)
-    
-    # 요일 (0:월, 1:화, 2:수, 3:목, 4:금, 5:토, 6:일)
     weekday = now.weekday()
     hour = now.hour
     minute = now.minute
 
-    # 조건: 금요일(4) 18:30 이후이거나 토요일(5), 일요일(6)인 경우
+    # 금요일 18:30 이후 ~ 일요일까지는 다음 주 월요일 기준
     if (weekday == 4 and (hour > 18 or (hour == 18 and minute >= 30))) or weekday > 4:
-        # 다음 주 월요일 날짜 계산
         next_monday = now + timedelta(days=(7 - weekday))
         return next_monday.strftime("%Y-%m-%d")
-    
-    # 그 외 평일에는 오늘 날짜 기준
     return now.strftime("%Y-%m-%d")
 
 def estimate(text):
-    """메뉴 텍스트를 분석하여 영양 성분을 추정합니다."""
-    carbs, protein, fat, sugar = 65, 20, 15, 5 # 기본값
-    
-    if not text or "등록된 식단이 없습니다" in text:
+    if not text or "등록된" in text or len(text) < 2:
         return {"carbs": 0, "protein": 0, "fat": 0, "sugar": 0}
-
-    if "고기" in text or "제육" in text or "돈까스" in text or "치킨" in text:
+    
+    # 기본 칼로리 베이스
+    carbs, protein, fat, sugar = 65, 20, 15, 5
+    if any(keyword in text for keyword in ["고기", "제육", "돈까스", "치킨", "계란"]):
         protein += 15
+        fat += 5
+    if any(keyword in text for keyword in ["튀김", "까스", "전"]):
         fat += 10
-    if "튀김" in text or "볶음" in text:
-        fat += 10
-    if "밥" in text or "비빔밥" in text:
-        carbs += 10
-    if "떡" in text or "빵" in text:
-        sugar += 10
-
-    return {
-        "carbs": carbs,
-        "protein": protein,
-        "fat": fat,
-        "sugar": sugar
-    }
+    return {"carbs": carbs, "protein": protein, "fat": fat, "sugar": sugar}
 
 def crawl():
     target_date = get_target_date()
-    # 특정 날짜가 포함된 주차의 식단을 가져오는 URL
     url = f"https://www.kopo.ac.kr/chungju/content.do?menu=2830&search_day={target_date}"
     
-    print(f"🕒 기준 날짜: {target_date}")
-    print(f"🔗 접속 URL: {url}")
-
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    print(f"🔍 확인 날짜: {target_date}")
+    headers = {"User-Agent": "Mozilla/5.0"}
     
-    try:
-        res = requests.get(url, headers=headers)
-        res.raise_for_status()
-        soup = BeautifulSoup(res.text, "html.parser")
+    res = requests.get(url, headers=headers)
+    soup = BeautifulSoup(res.text, "html.parser")
 
-        tables = soup.find_all("table")
-        if not tables:
-            print("❌ 식단 테이블을 찾을 수 없습니다.")
-            return
+    # '식단표'라는 글자가 포함된 테이블을 찾거나 첫 번째 테이블 선택
+    table = soup.find("table", {"class": "t_type01"}) or soup.find("table")
+    
+    if not table:
+        print("❌ 테이블을 찾지 못했습니다.")
+        return
 
-        table = tables[0]
-        rows = table.find_all("tr")
+    result = {}
+    days = ["월", "화", "수", "목", "금"]
+    rows = table.find_all("tr")
+
+    # 실제 데이터 행 추출 (보통 첫 행은 요일/조식/중식 등 제목)
+    for i, row in enumerate(rows):
+        cols = row.find_all(["td", "th"])
+        if len(cols) < 4: continue
         
-        days = ["월", "화", "수", "목", "금"]
-        result = {}
-
-        # 첫 번째 행(Header)을 제외하고 월~금 데이터 순회
-        data_rows = rows[1:]
-
-        for i in range(min(5, len(data_rows))):
-            cols = data_rows[i].find_all(["td", "th"])
-            if len(cols) < 4: continue
-
-            # 각 끼니별 텍스트 추출
-            br = cols[1].get_text(separator=" ", strip=True)
-            lc = cols[2].get_text(separator=" ", strip=True)
-            dn = cols[3].get_text(separator=" ", strip=True)
-
-            # 영양 성분 계산 (세 끼 합산 기준)
-            combined_text = br + lc + dn
-            nutri = estimate(combined_text)
-
-            result[days[i]] = {
-                "breakfast": br if br else "등록된 식단이 없습니다",
-                "lunch": lc if lc else "등록된 식단이 없습니다",
-                "dinner": dn if dn else "등록된 식단이 없습니다",
-                "nutrition": nutri
+        # 첫 번째 열에 '월', '화' 등의 글자가 있는지 확인 (요일 행 찾기)
+        row_text = cols[0].get_text()
+        found_day = None
+        for d in days:
+            if d in row_text:
+                found_day = d
+                break
+        
+        if found_day:
+            br = cols[1].get_text(" ", strip=True)
+            lc = cols[2].get_text(" ", strip=True)
+            dn = cols[3].get_text(" ", strip=True)
+            
+            result[found_day] = {
+                "breakfast": br if br else "식단 없음",
+                "lunch": lc if lc else "식단 없음",
+                "dinner": dn if dn else "식단 없음",
+                "nutrition": estimate(br + lc + dn)
             }
 
-        with open("data.json", "w", encoding="utf-8") as f:
-            json.dump(result, f, ensure_ascii=False, indent=2)
+    # 만약 결과가 비어있다면 강제로 월~금 틀이라도 생성
+    if not result:
+        print("⚠️ 데이터를 찾지 못해 빈 틀을 생성합니다.")
+        for d in days:
+            result[d] = {"breakfast": "정보 없음", "lunch": "정보 없음", "dinner": "정보 없음", "nutrition": estimate("")}
 
-        print("✅ data.json 업데이트 및 영양 성분 계산 완료")
-
-    except Exception as e:
-        print(f"❌ 오류 발생: {e}")
+    with open("data.json", "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+    print("✅ data.json 저장 완료")
 
 if __name__ == "__main__":
     crawl()
