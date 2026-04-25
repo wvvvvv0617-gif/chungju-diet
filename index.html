@@ -10,9 +10,7 @@
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         .star-gold { color: #fbbf24; filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4)); transform: scale(1.1); }
         .disabled-stars { pointer-events: none; opacity: 0.6; }
-        /* 휴무 카드 그라데이션 */
         .rest-bg { background: linear-gradient(135deg, #fff5f5 0%, #fff0f6 100%) !important; }
-        /* 스켈레톤 애니메이션 */
         @keyframes shimmer { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
         .skeleton { animation: shimmer 1.5s infinite ease-in-out; background-color: #e2e8f0; border-radius: 1rem; }
     </style>
@@ -52,11 +50,14 @@
                         <li class="h-14 skeleton"></li>
                         <li class="h-14 skeleton"></li>
                         <li class="h-14 skeleton"></li>
+                        <li class="h-14 skeleton"></li>
                     </ul>
                 </div>
                 <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner">
                     <h3 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest text-center">Nutrition Report</h3>
                     <div id="nutrition-bars" class="space-y-5">
+                        <div class="h-8 skeleton opacity-50"></div>
+                        <div class="h-8 skeleton opacity-50"></div>
                         <div class="h-8 skeleton opacity-50"></div>
                         <div class="h-8 skeleton opacity-50"></div>
                     </div>
@@ -151,22 +152,17 @@
 
         async function loadData() {
             try {
-                // 데이터 로딩 지연 효과 (스켈레톤 확인용 - 운영 시에는 생략 가능)
                 await new Promise(resolve => setTimeout(resolve, 800));
-
                 const response = await fetch('data.json?v=' + Math.random());
                 const data = await response.json();
                 
-                // 날씨 정보 및 동적 배경 처리
                 if (data.weather) {
                     const temp = data.weather.temp || 21;
                     const rain = data.weather.rain || 0;
                     document.getElementById('realtime-temp').innerText = temp + "°";
-                    
                     const rainElem = document.getElementById('precipitation');
                     rainElem.innerText = rain + "%";
 
-                    // 비가 60% 이상 올 때 테마 변경
                     if (rain >= 60) {
                         rainElem.classList.replace('text-blue-200', 'text-yellow-300');
                         document.getElementById('greeting').innerText = "비 소식이 있어요! 우산 챙기세요! ☔";
@@ -187,7 +183,7 @@
                     return;
                 }
 
-                const targetDate = new Date();
+                const targetDate = new Date(now);
                 targetDate.setDate(now.getDate() + status.targetDayOffset);
                 const targetDayName = week[targetDate.getDay()];
                 document.getElementById('display-day-tag').innerText = targetDayName + "요일 식단";
@@ -200,10 +196,12 @@
                     ).join('');
 
                     const nut = mealData.nutrition;
+                    // 데이터 기반 동적 영양 바 렌더링 (지방, 당류 포함)
                     document.getElementById('nutrition-bars').innerHTML = `
-                        ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', '23%')}
-                        ${renderBar('단백질', nut.protein, 'bg-emerald-500', '42%')}
-                        ${renderBar('지방', nut.fat, 'bg-amber-400', '27%')}
+                        ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', nut.carbs + '%')}
+                        ${renderBar('단백질', nut.protein, 'bg-emerald-500', nut.protein + '%')}
+                        ${renderBar('지방', nut.fat, 'bg-amber-400', nut.fat + '%')}
+                        ${renderBar('당류', nut.sugar, 'bg-rose-400', nut.sugar + '%')}
                     `;
                 }
             } catch (e) {
@@ -214,8 +212,8 @@
             }
         }
 
-        function renderBar(label, val, color, percent) {
-            return `<div><div class="flex justify-between items-end mb-1"><span class="text-[11px] font-black text-slate-800">${label}</span><span class="text-[10px] font-bold text-indigo-600">${percent}</span></div><div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div></div></div>`;
+        function renderBar(label, val, color, percentText) {
+            return `<div><div class="flex justify-between items-end mb-1"><span class="text-[11px] font-black text-slate-800">${label}</span><span class="text-[10px] font-bold text-indigo-600">${percentText}</span></div><div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div></div></div>`;
         }
 
         const ratingKey = `rated_${now.toISOString().split('T')[0]}_${status.mealKey}`;
