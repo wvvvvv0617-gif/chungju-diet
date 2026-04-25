@@ -4,33 +4,40 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 
 def get_target_date():
+    # 한국 시간 기준 (UTC+9)
     now = datetime.utcnow() + timedelta(hours=9)
     weekday = now.weekday()
-    # 금요일 18:30 이후부터 주말 동안은 무조건 다음 주 월요일 기준
+    # 금요일 저녁 6시 이후부터 주말 동안은 무조건 '다음 주 월요일' 날짜를 타겟으로 잡음
     if (weekday == 4 and now.hour >= 18) or weekday > 4:
-        next_monday = now + timedelta(days=(7 - weekday))
-        return next_monday.strftime("%Y-%m-%d")
-    return now.strftime("%Y-%m-%d")
+        target = now + timedelta(days=(7 - weekday))
+    else:
+        target = now
+    return target.strftime("%Y-%m-%d")
 
 def estimate(text):
     if not text or len(text) < 5:
         return {"carbs": 0, "protein": 0, "fat": 0, "sugar": 0}
+    # 기본 영양소 설정
     return {"carbs": 70, "protein": 25, "fat": 15, "sugar": 8}
 
 def crawl():
     target_date = get_target_date()
+    # URL에 직접 날짜를 넣어 해당 주차의 데이터를 강제로 호출
     url = f"https://www.kopo.ac.kr/chungju/content.do?menu=2830&search_day={target_date}"
     
-    print(f"🔍 접속 URL: {url}")
+    print(f"🔍 타겟 날짜: {target_date}")
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     
     res = requests.get(url, headers=headers)
     soup = BeautifulSoup(res.text, "html.parser")
 
-    # 모든 테이블 행(tr)을 다 가져와서 검사
-    rows = soup.find_all("tr")
+    table = soup.select_one(".t_type01") or soup.find("table")
+    if not table:
+        return
+
     result = {}
-    days = ["월", "화", "수", "목", "금"]
+    rows = table.find_all("tr")
+    days_map = {"월": "월요일", "화": "화요일", "수": "수요일", "목": "목요일", "금": "금요일"}
 
     for row in rows:
         cols = row.find_all(["td", "th"])
@@ -38,33 +45,30 @@ def crawl():
         
         row_text = cols[0].get_text(strip=True)
         
-        # 요일 찾기 (더 유연하게 검색)
-        for day in days:
-            if day in row_text:
-                br = cols[1].get_text(" ", strip=True)
-                lc = cols[2].get_text(" ", strip=True)
-                dn = cols[3].get_text(" ", strip=True)
+        for key in days_map:
+            # 행의 날짜 정보에 우리가 찾는 'target_date'의 일부라도 포함되어 있는지 확인
+            # 예: '2026-04-27 월요일'에 '월'이 있는지 확인
+            if key in row_text:
+                # 텍스트 추출 시 불필요한 공백과 줄바꿈 정제
+                br = " ".join(cols[1].get_text(" ", strip=True).split())
+                lc = " ".join(cols[2].get_text(" ", strip=True).split())
+                dn = " ".join(cols[3].get_text(" ", strip=True).split())
                 
-                # '등록된' 글자가 포함되면 무시
-                br_final = br if "등록된" not in br and len(br) > 1 else "식단 없음"
-                lc_final = lc if "등록된" not in lc and len(lc) > 1 else "식단 없음"
-                dn_final = dn if "등록된" not in dn and len(dn) > 1 else "식단 없음"
+                # '등록된' 혹은 너무 짧은 텍스트 제외
+                def clean(t):
+                    return t if "등록된" not in t and len(t) > 2 else "식단 없음"
 
-                result[day] = {
-                    "breakfast": br_final,
-                    "lunch": lc_final,
-                    "dinner": dn_final,
-                    "nutrition": estimate(br_final + lc_final + dn_final)
+                result[key] = {
+                    "breakfast": clean(br),
+                    "lunch": clean(lc),
+                    "dinner": clean(dn),
+                    "nutrition": estimate(br + lc + dn)
                 }
-                print(f"✅ {day}요일 식단 저장 성공!")
-
-    # 만약 하나도 못 찾았다면 비상용 더미 데이터라도 생성 (테스트 확인용)
-    if not result:
-        print("⚠️ 식단을 찾지 못해 테스트용 데이터를 생성합니다.")
-        result["월"] = {"breakfast": "데이터 확인 필요", "lunch": "데이터 확인 필요", "dinner": "데이터 확인 필요", "nutrition": estimate("")}
+                print(f"✅ {key}요일 데이터 성공: {clean(br)[:10]}...")
 
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
+    print("🚀 data.json 저장 완료")
 
 if __name__ == "__main__":
     crawl()
