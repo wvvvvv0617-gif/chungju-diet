@@ -10,28 +10,28 @@
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         .star-gold { color: #fbbf24; filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4)); transform: scale(1.1); }
         .disabled-stars { pointer-events: none; opacity: 0.6; }
-        /* 휴무 카드 전용 부드러운 핑크 그라데이션 */
+        /* 휴무 카드 그라데이션 */
         .rest-bg { background: linear-gradient(135deg, #fff5f5 0%, #fff0f6 100%) !important; }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen bg-white shadow-2xl pb-10">
 
-    <header class="p-6 bg-gradient-to-br from-indigo-600 to-blue-500 text-white rounded-b-[40px] shadow-xl relative z-10">
+    <header class="p-8 bg-gradient-to-br from-indigo-600 to-blue-500 text-white rounded-b-[50px] shadow-xl relative z-10">
         <div class="flex justify-between items-start">
             <div>
                 <p id="current-date" class="text-indigo-100 text-sm font-bold mb-1"></p>
-                <h1 id="greeting" class="text-2xl font-bold tracking-tight">맛있는 식사 하세요! 🍱</h1>
+                <h1 id="greeting" class="text-2xl font-bold tracking-tight leading-tight">맛있는 식사 하세요! 🍱</h1>
             </div>
-            <div class="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-center min-w-[64px]">
-                <span class="text-[10px] block opacity-80 font-bold">충주 기온</span>
-                <span id="realtime-temp" class="text-xl font-black">--°</span>
+            <div class="bg-white/20 backdrop-blur-md p-2.5 rounded-2xl text-center min-w-[70px] border border-white/10">
+                <span class="text-[10px] block opacity-80 font-bold mb-0.5">충주 기온</span>
+                <span id="realtime-temp" class="text-xl font-black italic">loading</span>
             </div>
         </div>
     </header>
 
-    <main class="p-5 relative z-20 -mt-6 space-y-6">
+    <main class="p-5 relative z-20 mt-4 space-y-6">
         <section id="main-card" class="bg-white rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50 overflow-hidden min-h-[420px] flex flex-col transition-all duration-500">
-            <div id="card-header" class="flex justify-between items-center mb-5">
+            <div id="card-header" class="flex justify-between items-center mb-6">
                 <span id="meal-type-tag" class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">LUNCH</span>
                 <span id="display-day-tag" class="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-1 rounded-md"></span>
             </div>
@@ -49,13 +49,13 @@
                 </div>
             </div>
 
-            <div id="weekend-message" class="hidden flex-1 flex flex-col items-center justify-center py-10 text-center space-y-6">
+            <div id="weekend-message" class="hidden flex-1 flex flex-col items-center justify-center py-12 text-center space-y-6">
                 <div class="text-7xl animate-bounce">😴</div>
                 <div>
                     <h2 id="rest-title" class="text-2xl font-black text-slate-800 mb-2">식당도 쿨쿨 자는 중!</h2>
                     <p id="rest-subtitle" class="text-base text-slate-500 leading-relaxed font-medium"></p>
                 </div>
-                <div class="bg-white/60 backdrop-blur-sm px-6 py-2 rounded-2xl border border-rose-100 shadow-sm">
+                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-rose-100 shadow-sm">
                     <p id="return-msg" class="text-sm font-black text-rose-500"></p>
                 </div>
             </div>
@@ -86,7 +86,6 @@
         const now = new Date();
         const week = ['일', '월', '화', '수', '목', '금', '토'];
 
-        // 매년 자동으로 체크되는 주요 공휴일(양력) 리스트
         function getHolidayName(date) {
             const m = date.getMonth() + 1;
             const d = date.getDate();
@@ -100,25 +99,25 @@
         function getMealStatus() {
             const day = now.getDay();
             const hm = now.getHours() * 100 + now.getMinutes();
-            
-            // 내일 날짜 계산
             const tomorrow = new Date(now);
             tomorrow.setDate(now.getDate() + 1);
             
             const isTodayHoliday = getHolidayName(now) !== null;
             const isTomorrowHoliday = getHolidayName(tomorrow) !== null;
 
-            // 주말 판정 (금 18:30 이후 ~ 일요일 23:59)
             const isWeekend = (day === 5 && hm >= 1830) || day === 6 || day === 0;
-            // 공휴일 판정 (공휴일 전날 18:30 이후 ~ 공휴일 당일)
             const isHolidayPeriod = (isTomorrowHoliday && hm >= 1830) || isTodayHoliday;
 
-            // 멘트 결정 로직
+            // 멘트 및 상단 그리팅 결정
             let returnText = "내일 다시 만나요!";
-            if (day === 5 || day === 6 || (day === 0 && hm < 1830)) {
-                returnText = "다음 주 월요일에 봐요!"; // 주말일 때
+            let greetingText = "맛있는 식사 하세요! 🍱";
+
+            if (day === 6 || day === 0 || (day === 5 && hm >= 1830)) {
+                returnText = "다음 주 월요일에 봐요!";
+                greetingText = "즐겁고 편안한 주말 되세요! ✨";
             } else if (isHolidayPeriod) {
-                returnText = "휴일이 끝나면 다시 만나요!"; // 평일 공휴일일 때
+                returnText = "휴일이 끝나면 다시 만나요!";
+                greetingText = "꿀같은 휴일 보내세요! 🎈";
             }
 
             return { 
@@ -127,41 +126,41 @@
                 isRest: isWeekend || isHolidayPeriod,
                 isHolidayMsg: isHolidayPeriod && !isWeekend,
                 returnText,
+                greetingText,
                 targetDayOffset: (hm >= 1830) ? 1 : 0
             };
         }
 
         const status = getMealStatus();
 
-        // 날짜 및 태그 표시
+        // 멘트 적용
         document.getElementById('current-date').innerText = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
         document.getElementById('meal-type-tag').innerText = status.mealLabel;
+        document.getElementById('greeting').innerText = status.greetingText;
 
         async function loadData() {
             try {
-                const response = await fetch('data.json');
+                // 캐시 방지를 위해 랜덤 쿼리 추가
+                const response = await fetch('data.json?v=' + Math.random());
                 const data = await response.json();
                 
-                // 날씨는 항상 표시
-                if (data.weather) {
+                if (data.weather && data.weather.temp) {
                     document.getElementById('realtime-temp').innerText = data.weather.temp + "°";
+                } else {
+                    document.getElementById('realtime-temp').innerText = "21°"; // 데이터 없을 시 기본값
                 }
 
-                // 휴무 상태(주말/공휴일)일 때의 화면 처리
                 if (status.isRest) {
                     document.getElementById('meal-content').classList.add('hidden');
                     document.getElementById('rating-section').classList.add('hidden');
                     document.getElementById('weekend-message').classList.remove('hidden');
                     document.getElementById('main-card').classList.add('rest-bg');
                     document.getElementById('display-day-tag').innerText = "REST DAY";
-                    
-                    // 멘트 설정
                     document.getElementById('rest-subtitle').innerText = status.isHolidayMsg ? "공휴일에는 식당 이모님들도 쉬어가셔요." : "주말에는 식당 이모님들도 쉬어가셔요.";
                     document.getElementById('return-msg').innerText = status.returnText;
                     return;
                 }
 
-                // 평일 식단 렌더링
                 const targetDate = new Date();
                 targetDate.setDate(now.getDate() + status.targetDayOffset);
                 const targetDayName = week[targetDate.getDay()];
@@ -171,9 +170,7 @@
                 if (mealData && mealData[status.mealKey]) {
                     const menuItems = mealData[status.mealKey].split(',');
                     document.getElementById('menu-list').innerHTML = menuItems.map(m => 
-                        `<li class="flex items-center gap-3 p-3.5 bg-white rounded-2xl text-slate-700 font-bold border border-slate-100 shadow-sm transition-all hover:scale-[1.02]">
-                            <span class="w-2.5 h-2.5 bg-indigo-400 rounded-full shadow-inner"></span>${m.trim()}
-                        </li>`
+                        `<li class="flex items-center gap-3 p-3.5 bg-white rounded-2xl text-slate-700 font-bold border border-slate-100 shadow-sm"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m.trim()}</li>`
                     ).join('');
 
                     const nut = mealData.nutrition;
@@ -184,23 +181,16 @@
                     `;
                 }
             } catch (e) {
-                console.error("데이터 로드 중 오류:", e);
+                console.error("데이터 로드 실패:", e);
+                document.getElementById('realtime-temp').innerText = "연결안됨";
             }
         }
 
         function renderBar(label, val, color, unit, percent) {
-            return `<div>
-                <div class="flex justify-between items-end mb-1">
-                    <span class="text-[11px] font-black text-slate-800">${label} <span class="text-slate-400 font-medium ml-1">${unit}</span></span>
-                    <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">${percent}</span>
-                </div>
-                <div class="w-full bg-slate-200 rounded-full h-2 shadow-inner overflow-hidden">
-                    <div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div>
-                </div>
-            </div>`;
+            return `<div><div class="flex justify-between items-end mb-1"><span class="text-[11px] font-black text-slate-800">${label}</span><span class="text-[10px] font-bold text-indigo-600">${percent}</span></div><div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div></div></div>`;
         }
 
-        // 별점 평가 로직
+        // 별점 로직 동일
         const ratingKey = `rated_${now.toISOString().split('T')[0]}_${status.mealKey}`;
         function submitRating(score) {
             if (localStorage.getItem(ratingKey)) return;
@@ -220,7 +210,7 @@
                 s.classList.remove('grayscale', 'opacity-30');
             });
             document.getElementById('star-container').classList.add('disabled-stars');
-            document.getElementById('rating-title').innerText = "평가 완료! 내일도 기대해 주세요.";
+            document.getElementById('rating-title').innerText = "평가 완료! 감사합니다.";
             updateAdmin();
         }
 
