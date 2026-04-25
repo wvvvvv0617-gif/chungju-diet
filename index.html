@@ -101,7 +101,7 @@
     </main>
 
     <script>
-        // [수정] const 대신 let을 사용하여 외부 시뮬레이션 허용
+        // 1. let 선언으로 외부 시간 조작 허용
         let now = new Date();
         const week = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -169,7 +169,7 @@
         }
 
         async function loadData() {
-            const status = getMealStatus(); // 매 실행 시 현재 now 기준 상태 재계산
+            const status = getMealStatus();
             updateHeaderUI(status);
 
             const tempElem = document.getElementById('realtime-temp');
@@ -182,6 +182,7 @@
                 
                 const data = await response.json();
                 
+                // 날씨 처리
                 if (data.weather) {
                     const temp = data.weather.temp;
                     const rain = data.weather.rain;
@@ -196,6 +197,7 @@
                     }
                 }
 
+                // 휴무 처리
                 if (status.isRest) {
                     document.getElementById('meal-content').classList.add('hidden');
                     document.getElementById('rating-section').classList.add('hidden');
@@ -206,7 +208,6 @@
                     document.getElementById('return-msg').innerText = status.returnText;
                     return;
                 } else {
-                    // 휴무가 아닐 경우 UI 원복
                     document.getElementById('meal-content').classList.remove('hidden');
                     document.getElementById('rating-section').classList.remove('hidden');
                     document.getElementById('weekend-message').classList.add('hidden');
@@ -220,8 +221,10 @@
 
                 const mealData = data.meals ? data.meals[targetDayName] : null;
                 if (mealData && mealData[status.mealKey] && mealData[status.mealKey] !== "식단 없음") {
-                    // [수정] 쉼표 대신 공백(' ')으로 메뉴 분리
-                    const menuItems = mealData[status.mealKey].split(' ');
+                    
+                    // [핵심수정] 쉼표(,)나 공백( ) 무엇으로 구분되어 있든 깔끔하게 자르고 빈 칸은 제거합니다.
+                    const menuItems = mealData[status.mealKey].split(/[, ]+/).filter(item => item.trim() !== "");
+                    
                     document.getElementById('menu-list').innerHTML = menuItems.map(m => 
                         `<li class="flex items-center gap-3 p-3.5 bg-white rounded-2xl text-slate-700 font-bold border border-slate-100 shadow-sm"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m.trim()}</li>`
                     ).join('');
@@ -293,11 +296,9 @@
             }
         }
 
-        // 초기 실행
         loadData();
         updateAdmin();
         
-        // 별점 초기 상태 로드 (리로드 시)
         const initStatus = getMealStatus();
         const initRatingKey = `rated_${now.toISOString().split('T')[0]}_${initStatus.mealKey}`;
         if (localStorage.getItem(initRatingKey)) lockRatingUI(localStorage.getItem(initRatingKey));
