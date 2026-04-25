@@ -23,7 +23,7 @@ def get_target_date():
     return target.strftime("%Y-%m-%d")
 
 # =========================
-# 🌦️ OpenWeather (안정화 버전)
+# 🌦️ OpenWeather
 # =========================
 def get_weather():
     try:
@@ -33,17 +33,13 @@ def get_weather():
         res = requests.get(url, timeout=10)
         data = res.json()
 
-        # ❗ API 오류 체크 (핵심)
         if res.status_code != 200 or "main" not in data:
             print("❌ 날씨 API 실패:", data)
             return {"temp": 22, "rain": 0}
 
-        # 기온
         temp = round(data["main"]["temp"])
 
-        # 강수 계산
         rain = 0
-
         if "rain" in data and "1h" in data["rain"]:
             rain = min(int(data["rain"]["1h"] * 20), 100)
 
@@ -57,30 +53,35 @@ def get_weather():
                 rain = 20
             elif weather_main in ["Rain", "Drizzle", "Thunderstorm"]:
                 rain = 60
-            else:
-                rain = 0
 
         print(f"🌤️ 날씨: {temp}° / {rain}%")
 
-        return {
-            "temp": temp,
-            "rain": rain
-        }
+        return {"temp": temp, "rain": rain}
 
     except Exception as e:
         print("❌ OpenWeather 오류:", e)
-        return {
-            "temp": 22,
-            "rain": 0
-        }
+        return {"temp": 22, "rain": 0}
 
 # =========================
-# 🍱 영양 추정
+# 🍱 영양 추정 (🔥 kcal 추가됨)
 # =========================
 def estimate(text):
     if not text or len(text) < 5 or "식단 없음" in text:
-        return {"carbs": 0, "protein": 0, "fat": 0, "sugar": 0}
-    return {"carbs": 72, "protein": 24, "fat": 14, "sugar": 5}
+        return {
+            "kcal": 0,
+            "carbs": 0,
+            "protein": 0,
+            "fat": 0,
+            "sugar": 0
+        }
+
+    return {
+        "kcal": 850,   # 🔥 핵심 추가
+        "carbs": 72,
+        "protein": 24,
+        "fat": 14,
+        "sugar": 5
+    }
 
 # =========================
 # 🕷️ 식단 크롤링
@@ -137,4 +138,3 @@ def crawl():
 
 if __name__ == "__main__":
     crawl()
-    print("🔥 이 코드 실행됨")
