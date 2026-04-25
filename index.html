@@ -29,7 +29,7 @@
                     <span id="realtime-temp" class="text-lg font-black italic leading-none">--°</span>
                 </div>
                 <div class="flex flex-col">
-                    <span class="text-[9px] opacity-80 font-bold tracking-tighter">강수</span>
+                    <span class="text-[9px] opacity-80 font-bold tracking-tighter">강수/구름</span>
                     <span id="precipitation" class="text-sm font-black text-blue-200 leading-none">--%</span>
                 </div>
             </div>
@@ -62,7 +62,7 @@
                         <div class="h-8 skeleton opacity-50"></div>
                     </div>
                     <p class="text-[9px] text-slate-400 mt-6 text-center leading-relaxed font-medium">
-                        정확한 영양 정보는 아니니 참고용으로 보시기 바랍니다.
+                        표시된 영양 정보는 추정치이므로 참고용으로만 활용해 주세요.
                     </p>
                 </div>
             </div>
@@ -121,18 +121,22 @@
             tomorrow.setDate(now.getDate() + 1);
             const isTodayHoliday = getHolidayName(now) !== null;
             const isTomorrowHoliday = getHolidayName(tomorrow) !== null;
+            
+            // 금요일 18:30 이후부터 주말 모드 돌입
             const isWeekend = (day === 5 && hm >= 1830) || day === 6 || day === 0;
             const isHolidayPeriod = (isTomorrowHoliday && hm >= 1830) || isTodayHoliday;
 
             let returnText = "내일 다시 만나요!";
             let greetingText = "맛있는 식사 하세요! 🍱";
-            if (day === 6 || day === 0 || (day === 5 && hm >= 1830)) {
+            
+            if (isWeekend) {
                 returnText = "다음 주 월요일에 봐요!";
                 greetingText = "즐겁고 편안한 주말 되세요! ✨";
             } else if (isHolidayPeriod) {
                 returnText = "휴일이 끝나면 다시 만나요!";
                 greetingText = "꿀같은 휴일 보내세요! 🎈";
             }
+            
             return { 
                 mealKey: (hm < 830) ? 'breakfast' : (hm < 1330) ? 'lunch' : (hm < 1830) ? 'dinner' : 'breakfast',
                 mealLabel: (hm < 830) ? 'BREAKFAST 🍳' : (hm < 1330) ? 'LUNCH 🍱' : (hm < 1830) ? 'DINNER 🌙' : 'NEXT BREAKFAST ☀️',
@@ -152,34 +156,41 @@
             const rainElem = document.getElementById('precipitation');
             
             try {
-                // 스켈레톤 노출을 위한 최소 대기
-                await new Promise(resolve => setTimeout(resolve, 800));
+                // 부드러운 UI 전환을 위한 지연
+                await new Promise(resolve => setTimeout(resolve, 600));
                 
-                const response = await fetch('data.json?v=' + Math.random());
-                if (!response.ok) throw new Error('Network error or 404');
+                const response = await fetch('data.json?v=' + Date.now());
+                if (!response.ok) throw new Error('Data load failed');
                 
                 const data = await response.json();
                 
-                // [정직한 UI] 데이터가 확실히 존재할 때만 '--'를 숫자로 교체
+                // [정직한 UI] 날씨 데이터 타입 체크 및 갱신
                 if (data.weather) {
                     const temp = data.weather.temp;
                     const rain = data.weather.rain;
                     
-                    if (temp !== undefined) tempElem.innerText = temp + "°";
-                    if (rain !== undefined) rainElem.innerText = rain + "%";
-
-                    // 강수량 60% 이상 시 비 강조 로직
-                    if (rain >= 60) {
-                        rainElem.classList.remove('text-blue-200');
-                        rainElem.classList.add('text-yellow-300');
-                        document.getElementById('greeting').innerText = "비 소식이 있어요! 우산 챙기세요! ☔";
-                        const header = document.getElementById('main-header');
-                        header.classList.remove('from-indigo-600', 'to-blue-500');
-                        header.classList.add('from-slate-600', 'to-slate-500');
+                    if (typeof temp === 'number') {
+                        tempElem.innerText = temp + "°";
+                    } else {
+                        tempElem.innerText = "--°";
+                    }
+                    
+                    if (typeof rain === 'number') {
+                        rainElem.innerText = rain + "%";
+                        
+                        // 강수 확률 60% 이상일 때 스타일 강조
+                        if (rain >= 60) {
+                            rainElem.classList.remove('text-blue-200');
+                            rainElem.classList.add('text-yellow-300');
+                            document.getElementById('greeting').innerText = "비 소식이 있어요! 우산 챙기세요! ☔";
+                            const header = document.getElementById('main-header');
+                            header.classList.remove('from-indigo-600', 'to-blue-500');
+                            header.classList.add('from-slate-600', 'to-slate-500');
+                        }
                     }
                 }
 
-                // 휴일 및 주말 처리
+                // 휴일 처리
                 if (status.isRest) {
                     document.getElementById('meal-content').classList.add('hidden');
                     document.getElementById('rating-section').classList.add('hidden');
@@ -191,39 +202,34 @@
                     return;
                 }
 
-                // 평일 식단 표시
+                // 식단 데이터 표시
                 const targetDate = new Date(now);
                 targetDate.setDate(now.getDate() + status.targetDayOffset);
                 const targetDayName = week[targetDate.getDay()];
                 document.getElementById('display-day-tag').innerText = targetDayName + "요일 식단";
 
-                const mealData = data.meals[targetDayName];
-                if (mealData && mealData[status.mealKey]) {
-                    const menuItems = mealData[status.mealKey].split(',');
+                const mealData = data.meals ? data.meals[targetDayName] : null;
+                if (mealData && mealData[status.mealKey] && mealData[status.mealKey] !== "식단 없음") {
+                    const menuItems = mealData[status.mealKey].split(' ');
                     document.getElementById('menu-list').innerHTML = menuItems.map(m => 
                         `<li class="flex items-center gap-3 p-3.5 bg-white rounded-2xl text-slate-700 font-bold border border-slate-100 shadow-sm"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m.trim()}</li>`
                     ).join('');
 
                     const nut = mealData.nutrition;
-                    const gData = {
-                        carbs: Math.round(nut.carbs * 1.5),
-                        protein: Math.round(nut.protein * 0.35),
-                        fat: Math.round(nut.fat * 0.4),
-                        sugar: Math.round(nut.sugar * 0.6)
-                    };
-
                     document.getElementById('nutrition-bars').innerHTML = `
-                        ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', gData.carbs + 'g')}
-                        ${renderBar('단백질', nut.protein, 'bg-emerald-500', gData.protein + 'g')}
-                        ${renderBar('지방', nut.fat, 'bg-amber-400', gData.fat + 'g')}
-                        ${renderBar('당류', nut.sugar, 'bg-rose-400', gData.sugar + 'g')}
+                        ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', nut.carbs + 'g')}
+                        ${renderBar('단백질', nut.protein, 'bg-emerald-500', nut.protein + 'g')}
+                        ${renderBar('지방', nut.fat, 'bg-amber-400', nut.fat + 'g')}
+                        ${renderBar('당류', nut.sugar, 'bg-rose-400', nut.sugar + 'g')}
                     `;
+                } else {
+                    document.getElementById('menu-list').innerHTML = `<li class="p-8 text-center text-slate-400 font-medium">아직 등록된 식단이 없습니다.</li>`;
+                    document.getElementById('nutrition-bars').innerHTML = `<p class="text-center text-xs text-slate-300">영양 정보 없음</p>`;
                 }
             } catch (e) {
-                // 실패 시 '--' 상태 유지 (데이터 미수신 사실을 정직하게 알림)
-                console.error("Data Fetch Error:", e);
+                console.error("Load Error:", e);
                 if (!status.isRest) {
-                    document.getElementById('menu-list').innerHTML = `<li class="p-4 text-center text-rose-500 font-bold">식단 파일을 불러올 수 없습니다.</li>`;
+                    document.getElementById('menu-list').innerHTML = `<li class="p-8 text-center text-rose-400 font-bold">데이터를 불러올 수 없습니다.</li>`;
                 }
             }
         }
