@@ -28,27 +28,26 @@
     </header>
 
     <main class="p-5 -mt-6 space-y-6">
-        <section class="bg-white rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50 transition-all">
+        <section class="bg-white rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50">
             <div class="flex justify-between items-center mb-5">
                 <span id="meal-type-tag" class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">LUNCH</span>
-                <span class="text-[10px] text-gray-400 font-bold" id="update-time"></span>
+                <span id="display-day-tag" class="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-1 rounded-md"></span>
             </div>
             
             <div class="space-y-4 mb-8">
-                <h2 class="text-2xl font-black text-gray-800 flex items-center gap-2"> 오늘의 메뉴</h2>
+                <h2 class="text-2xl font-black text-gray-800 flex items-center gap-2">오늘의 메뉴</h2>
                 <ul id="menu-list" class="grid grid-cols-1 gap-2">
-                    <li class="p-4 bg-gray-50 rounded-2xl animate-pulse text-gray-300">식단을 불러오는 중...</li>
+                    <li class="p-4 bg-gray-50 rounded-2xl animate-pulse text-gray-300">식단을 확인하는 중...</li>
                 </ul>
             </div>
 
             <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100">
-                <h3 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest">Nutrition Report</h3>
-                <div id="nutrition-bars" class="space-y-4">
-                    </div>
+                <h3 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest text-center">Nutrition Report</h3>
+                <div id="nutrition-bars" class="space-y-4"></div>
             </div>
         </section>
 
-        <section id="rating-section" class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm text-center transition-all">
+        <section id="rating-section" class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm text-center">
             <p id="rating-title" class="text-gray-400 text-xs font-black mb-4 uppercase tracking-widest">오늘 식사는 어떠셨나요?</p>
             <div id="star-container" class="flex justify-center gap-3 text-4xl">
                 <button onclick="submitRating(1)" class="star-btn grayscale opacity-30 hover:opacity-100 transition-all">⭐</button>
@@ -60,114 +59,107 @@
             <p id="feedback-msg" class="text-blue-600 text-xs font-bold mt-4 h-4 opacity-0 transition-opacity">평가가 성공적으로 반영되었습니다!</p>
         </section>
 
-        <section id="admin-view" class="hidden p-5 bg-slate-900 rounded-[24px] text-xs font-mono shadow-2xl text-slate-300">
-            <div class="flex justify-between items-center mb-3">
-                <h4 class="text-emerald-400 font-bold">🛠️ SYSTEM ADMIN</h4>
-                <button onclick="localStorage.clear(); location.reload();" class="text-[9px] bg-red-900/30 px-2 py-1 rounded text-red-400">DB RESET</button>
-            </div>
+        <section id="admin-view" class="hidden p-5 bg-slate-900 rounded-[24px] text-xs font-mono text-slate-300">
+            <h4 class="text-emerald-400 font-bold mb-2">🛠️ SYSTEM ADMIN</h4>
             <p>> 누적 평점: <span id="admin-avg" class="text-white">0.0</span></p>
             <p>> 총 투표수: <span id="admin-count" class="text-white">0</span>회</p>
         </section>
     </main>
 
     <script>
-        // 1. 날짜 표시 로직
         const now = new Date();
-        const dateString = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
-        document.getElementById('current-date').innerText = dateString;
+        const week = ['일', '월', '화', '수', '목', '금', '토'];
+        
+        // 1. 날짜 및 요일 로직 수정 (주말이면 금요일 식단 표시)
+        let displayDayIndex = now.getDay();
+        let isWeekendText = "";
 
-        // 2. 시간대에 따른 식단 타입 판별 (조식/중식/석식)
+        if (displayDayIndex === 0 || displayDayIndex === 6) { // 토(6) 또는 일(0)
+            displayDayIndex = 5; // 금요일로 고정
+            isWeekendText = "(금요일 식단)";
+        }
+
+        const todayName = week[displayDayIndex];
+        document.getElementById('current-date').innerText = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+        document.getElementById('display-day-tag').innerText = todayName + "요일 메뉴 " + isWeekendText;
+
         function getMealType() {
             const hour = now.getHours();
             if (hour < 9) return { key: 'breakfast', label: 'Breakfast 🍳' };
             if (hour < 14) return { key: 'lunch', label: 'Lunch 🍱' };
             return { key: 'dinner', label: 'Dinner 🌙' };
         }
-
         const currentMeal = getMealType();
         document.getElementById('meal-type-tag').innerText = currentMeal.label;
 
-        // 3. 식단 데이터 로드 및 UI 업데이트
+        // 2. 식단 데이터 로드
         async function loadMenu() {
             try {
                 const response = await fetch('data.json');
                 const data = await response.json();
-                const day = ['일', '월', '화', '수', '목', '금', '토'][now.getDay()];
-                const todayData = data[day] || data['월']; // 데이터 없을 시 월요일 기준
+                const todayData = data[todayName]; 
 
-                // 메뉴 리스트 생성
-                const menuHtml = todayData[currentMeal.key].split(',').map(m => 
-                    `<li class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl text-gray-700 font-semibold border border-gray-100 shadow-sm">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>${m.trim()}
-                    </li>`
-                ).join('');
-                document.getElementById('menu-list').innerHTML = menuHtml;
+                if (todayData && todayData[currentMeal.key]) {
+                    const menuHtml = todayData[currentMeal.key].split(',').map(m => 
+                        `<li class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl text-gray-700 font-semibold border border-gray-100 shadow-sm transition-all hover:bg-blue-50">
+                            <span class="w-2 h-2 bg-blue-400 rounded-full"></span>${m.trim()}
+                        </li>`
+                    ).join('');
+                    document.getElementById('menu-list').innerHTML = menuHtml;
 
-                // 영양 성분 바 생성
-                const nut = todayData.nutrition;
-                const nutHtml = `
-                    ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', '70g')}
-                    ${renderBar('단백질', nut.protein, 'bg-emerald-500', '25g')}
-                    ${renderBar('지방', nut.fat, 'bg-amber-400', '15g')}
-                `;
-                document.getElementById('nutrition-bars').innerHTML = nutHtml;
+                    // 영양 성분 표시 (일일 권장량 % 계산식 복구)
+                    const nut = todayData.nutrition;
+                    // 성인 남성 일일 권장량 기준 (탄:300g, 단:60g, 지:50g) 대략적 예시
+                    const nutHtml = `
+                        ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', '70g', '23%')}
+                        ${renderBar('단백질', nut.protein, 'bg-emerald-500', '25g', '42%')}
+                        ${renderBar('지방', nut.fat, 'bg-amber-400', '15g', '27%')}
+                    `;
+                    document.getElementById('nutrition-bars').innerHTML = nutHtml;
+                }
             } catch (e) {
-                console.error("데이터 로드 실패", e);
+                document.getElementById('menu-list').innerHTML = "<li class='p-4 text-gray-400'>식단 정보가 없습니다.</li>";
             }
         }
 
-        function renderBar(label, val, color, unit) {
+        function renderBar(label, val, color, unit, percent) {
             return `<div>
-                <div class="flex justify-between text-[11px] font-bold mb-1 text-slate-500"><span>${label}</span><span>${unit}</span></div>
-                <div class="w-full bg-slate-200 rounded-full h-1.5"><div class="${color} h-1.5 rounded-full" style="width: ${val}%"></div></div>
+                <div class="flex justify-between text-[11px] font-bold mb-1.5 text-slate-600">
+                    <span>${label} <span class="text-slate-300 font-normal ml-1">${unit}</span></span>
+                    <span class="text-blue-600">권장량의 ${percent}</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2"><div class="${color} h-2 rounded-full shadow-sm" style="width: ${val}%"></div></div>
             </div>`;
         }
 
-        // 4. 평가 시스템 (1회 제한 로직)
+        // 3. 평가 시스템 (1회 제한 로직 유지)
         const ratingKey = `rated_${now.toISOString().split('T')[0]}_${currentMeal.key}`;
-
-        function checkAlreadyRated() {
-            if (localStorage.getItem(ratingKey)) {
-                lockRatingUI(localStorage.getItem(ratingKey));
-            }
-        }
 
         function submitRating(score) {
             if (localStorage.getItem(ratingKey)) return;
-
-            // 데이터 저장
             localStorage.setItem(ratingKey, score);
             
-            // 관리자 통계용 데이터 (누적)
             let stats = JSON.parse(localStorage.getItem('admin_stats') || '{"total":0, "count":0}');
             stats.total += score;
             stats.count += 1;
             localStorage.setItem('admin_stats', JSON.stringify(stats));
 
             lockRatingUI(score);
-            
-            const msg = document.getElementById('feedback-msg');
-            msg.style.opacity = '1';
+            document.getElementById('feedback-msg').style.opacity = '1';
         }
 
         function lockRatingUI(score) {
             const stars = document.querySelectorAll('.star-btn');
-            stars.forEach((s, i) => {
-                if (i < score) s.classList.add('star-gold');
-                s.classList.remove('grayscale', 'opacity-30');
-                s.classList.add('cursor-default');
-            });
+            stars.forEach((s, i) => { if (i < score) s.classList.add('star-gold'); s.classList.add('cursor-default'); });
             document.getElementById('star-container').classList.add('disabled-stars');
-            document.getElementById('rating-title').innerText = "이미 평가를 완료한 식단입니다";
-            document.getElementById('rating-section').classList.add('bg-gray-50');
+            document.getElementById('rating-title').innerText = "평가가 완료되었습니다";
             updateAdmin();
         }
 
-        // 관리자 대시보드
         function updateAdmin() {
             const stats = JSON.parse(localStorage.getItem('admin_stats') || '{"total":0, "count":0}');
             if (stats.count > 0) {
-                document.getElementById('admin-avg').innerText = (stats.total / stats.count).toPrecision(2);
+                document.getElementById('admin-avg').innerText = (stats.total / stats.count).toFixed(1);
                 document.getElementById('admin-count').innerText = stats.count;
             }
             if (new URLSearchParams(window.location.search).get('admin') === 'true') {
@@ -176,7 +168,7 @@
         }
 
         loadMenu();
-        checkAlreadyRated();
+        if (localStorage.getItem(ratingKey)) lockRatingUI(localStorage.getItem(ratingKey));
         updateAdmin();
     </script>
 </body>
