@@ -3,156 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>충주캠퍼스 식단 앱</title>
+    <title>충주캠퍼스 스마트 식단</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
-        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; }
-        .star-gold { color: #fbbf24; transform: scale(1.1); }
-        .fade-in { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        .star-gold { color: #fbbf24; filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4)); transform: scale(1.1); }
+        .disabled-stars { pointer-events: none; opacity: 0.6; }
     </style>
 </head>
-<body class="max-w-md mx-auto min-h-screen bg-white shadow-2xl">
+<body class="max-w-md mx-auto min-h-screen bg-white shadow-2xl pb-10">
 
-    <header class="p-6 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-b-[40px] shadow-xl">
+    <header class="p-6 bg-gradient-to-br from-indigo-600 to-blue-500 text-white rounded-b-[40px] shadow-xl">
         <div class="flex justify-between items-start">
-            <div class="fade-in">
-                <h1 id="greeting" class="text-2xl font-bold tracking-tight">맛있는 하루 되세요! 👋</h1>
-                <p class="text-sm opacity-80 mt-1">☀️ 충주는 지금 맑음, 기분 좋은 점심!</p>
+            <div>
+                <p id="current-date" class="text-indigo-100 text-sm font-bold mb-1"></p>
+                <h1 id="greeting" class="text-2xl font-bold tracking-tight">맛있는 식사 하세요! 🍱</h1>
             </div>
-            <div class="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-center min-w-[60px]">
-                <span class="text-xs block opacity-70">현재기온</span>
-                <span class="text-xl font-bold">22°</span>
+            <div class="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-center min-w-[64px]">
+                <span class="text-[10px] block opacity-80 font-bold">충주 기온</span>
+                <span class="text-xl font-black">22°</span>
             </div>
         </div>
     </header>
 
     <main class="p-5 -mt-6 space-y-6">
-        <section class="bg-white rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50">
-            <div class="flex items-center gap-2 mb-5">
-                <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">Today's Lunch</span>
+        <section class="bg-white rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50 transition-all">
+            <div class="flex justify-between items-center mb-5">
+                <span id="meal-type-tag" class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">LUNCH</span>
+                <span class="text-[10px] text-gray-400 font-bold" id="update-time"></span>
             </div>
             
             <div class="space-y-4 mb-8">
-                <h2 class="text-2xl font-black text-gray-800 flex items-center gap-2">🍱 오늘 점심 메뉴</h2>
-                <ul id="menu-list" class="grid grid-cols-1 gap-3">
-                    <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl text-gray-700 font-medium border border-gray-100">
-                        <span class="text-xl">🍚</span> 쌀밥
-                    </li>
-                    <li class="flex items-center gap-3 p-3 bg-blue-50/50 rounded-2xl text-gray-700 font-medium border border-blue-100">
-                        <span class="text-xl">🥘</span> 청국장찌개
-                    </li>
-                    <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl text-gray-700 font-medium border border-gray-100">
-                        <span class="text-xl">🥬</span> 섞박지
-                    </li>
-                    <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl text-gray-700 font-medium border border-gray-100">
-                        <span class="text-xl">🥤</span> 떠먹는 요거트
-                    </li>
+                <h2 class="text-2xl font-black text-gray-800 flex items-center gap-2"> 오늘의 메뉴</h2>
+                <ul id="menu-list" class="grid grid-cols-1 gap-2">
+                    <li class="p-4 bg-gray-50 rounded-2xl animate-pulse text-gray-300">식단을 불러오는 중...</li>
                 </ul>
             </div>
 
-            <div class="bg-gray-50 p-5 rounded-[24px] space-y-4">
-                <div class="flex justify-between items-end">
-                    <h3 class="text-sm font-bold text-gray-400">영양 성분 분석</h3>
-                    <span class="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-0.5 rounded-md">정확도 95%</span>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <div class="flex justify-between text-xs font-bold mb-1.5 text-gray-600"><span>탄수화물</span><span>70g (54%)</span></div>
-                        <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full shadow-sm" style="width: 70%"></div></div>
+            <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100">
+                <h3 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest">Nutrition Report</h3>
+                <div id="nutrition-bars" class="space-y-4">
                     </div>
-                    <div>
-                        <div class="flex justify-between text-xs font-bold mb-1.5 text-gray-600"><span>단백질</span><span>25g (19%)</span></div>
-                        <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-emerald-500 h-2 rounded-full shadow-sm" style="width: 50%"></div></div>
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-xs font-bold mb-1.5 text-gray-600"><span>지방</span><span>15g (27%)</span></div>
-                        <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-amber-400 h-2 rounded-full shadow-sm" style="width: 30%"></div></div>
-                    </div>
-                </div>
             </div>
         </section>
 
-        <section class="text-center py-4 bg-white rounded-3xl border border-gray-100 shadow-sm mx-2">
-            <p class="text-gray-400 text-sm font-bold mb-4 uppercase tracking-tighter">오늘 식사는 어떠셨나요?</p>
-            <div id="star-rating" class="flex justify-center gap-3 text-4xl mb-2">
-                <button onclick="saveRating(1)" class="star transition-all duration-200 grayscale opacity-40 hover:grayscale-0 hover:opacity-100">⭐</button>
-                <button onclick="saveRating(2)" class="star transition-all duration-200 grayscale opacity-40 hover:grayscale-0 hover:opacity-100">⭐</button>
-                <button onclick="saveRating(3)" class="star transition-all duration-200 grayscale opacity-40 hover:grayscale-0 hover:opacity-100">⭐</button>
-                <button onclick="saveRating(4)" class="star transition-all duration-200 grayscale opacity-40 hover:grayscale-0 hover:opacity-100">⭐</button>
-                <button onclick="saveRating(5)" class="star transition-all duration-200 grayscale opacity-40 hover:grayscale-0 hover:opacity-100">⭐</button>
+        <section id="rating-section" class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm text-center transition-all">
+            <p id="rating-title" class="text-gray-400 text-xs font-black mb-4 uppercase tracking-widest">오늘 식사는 어떠셨나요?</p>
+            <div id="star-container" class="flex justify-center gap-3 text-4xl">
+                <button onclick="submitRating(1)" class="star-btn grayscale opacity-30 hover:opacity-100 transition-all">⭐</button>
+                <button onclick="submitRating(2)" class="star-btn grayscale opacity-30 hover:opacity-100 transition-all">⭐</button>
+                <button onclick="submitRating(3)" class="star-btn grayscale opacity-30 hover:opacity-100 transition-all">⭐</button>
+                <button onclick="submitRating(4)" class="star-btn grayscale opacity-30 hover:opacity-100 transition-all">⭐</button>
+                <button onclick="submitRating(5)" class="star-btn grayscale opacity-30 hover:opacity-100 transition-all">⭐</button>
             </div>
-            <p id="feedback-msg" class="text-blue-600 text-xs font-bold mt-2 opacity-0 transition-opacity">✅ 평가 감사합니다!</p>
+            <p id="feedback-msg" class="text-blue-600 text-xs font-bold mt-4 h-4 opacity-0 transition-opacity">평가가 성공적으로 반영되었습니다!</p>
         </section>
 
-        <section id="admin-view" class="hidden mx-2 p-5 bg-slate-900 rounded-3xl text-xs font-mono shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h4 class="text-emerald-400 font-black">🛠️ ADMIN DASHBOARD</h4>
-                <button onclick="clearData()" class="text-[8px] bg-red-900/50 text-red-300 px-2 py-1 rounded">RESET</button>
+        <section id="admin-view" class="hidden p-5 bg-slate-900 rounded-[24px] text-xs font-mono shadow-2xl text-slate-300">
+            <div class="flex justify-between items-center mb-3">
+                <h4 class="text-emerald-400 font-bold">🛠️ SYSTEM ADMIN</h4>
+                <button onclick="localStorage.clear(); location.reload();" class="text-[9px] bg-red-900/30 px-2 py-1 rounded text-red-400">DB RESET</button>
             </div>
-            <div class="space-y-2 text-gray-400">
-                <p>> 실시간 만족도 평균: <span id="admin-avg" class="text-white font-bold">0.0</span> / 5.0</p>
-                <p>> 총 평가 참여 횟수: <span id="admin-count" class="text-white font-bold">0</span>회</p>
-                <div class="mt-4 pt-3 border-t border-slate-800 text-[10px]">
-                    <p class="text-emerald-500/50 italic">// 데이터는 브라우저 로컬 저장소에 보관 중</p>
-                </div>
-            </div>
+            <p>> 누적 평점: <span id="admin-avg" class="text-white">0.0</span></p>
+            <p>> 총 투표수: <span id="admin-count" class="text-white">0</span>회</p>
         </section>
     </main>
 
     <script>
-        // 평가 저장 기능
-        function saveRating(score) {
-            // 별 색상 변경
-            const stars = document.querySelectorAll('.star');
-            stars.forEach((s, idx) => {
-                if (idx < score) {
-                    s.classList.remove('grayscale', 'opacity-40');
-                    s.classList.add('star-gold');
-                } else {
-                    s.classList.add('grayscale', 'opacity-40');
-                    s.classList.remove('star-gold');
-                }
-            });
+        // 1. 날짜 표시 로직
+        const now = new Date();
+        const dateString = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+        document.getElementById('current-date').innerText = dateString;
 
-            // 메시지 노출
+        // 2. 시간대에 따른 식단 타입 판별 (조식/중식/석식)
+        function getMealType() {
+            const hour = now.getHours();
+            if (hour < 9) return { key: 'breakfast', label: 'Breakfast 🍳' };
+            if (hour < 14) return { key: 'lunch', label: 'Lunch 🍱' };
+            return { key: 'dinner', label: 'Dinner 🌙' };
+        }
+
+        const currentMeal = getMealType();
+        document.getElementById('meal-type-tag').innerText = currentMeal.label;
+
+        // 3. 식단 데이터 로드 및 UI 업데이트
+        async function loadMenu() {
+            try {
+                const response = await fetch('data.json');
+                const data = await response.json();
+                const day = ['일', '월', '화', '수', '목', '금', '토'][now.getDay()];
+                const todayData = data[day] || data['월']; // 데이터 없을 시 월요일 기준
+
+                // 메뉴 리스트 생성
+                const menuHtml = todayData[currentMeal.key].split(',').map(m => 
+                    `<li class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl text-gray-700 font-semibold border border-gray-100 shadow-sm">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>${m.trim()}
+                    </li>`
+                ).join('');
+                document.getElementById('menu-list').innerHTML = menuHtml;
+
+                // 영양 성분 바 생성
+                const nut = todayData.nutrition;
+                const nutHtml = `
+                    ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', '70g')}
+                    ${renderBar('단백질', nut.protein, 'bg-emerald-500', '25g')}
+                    ${renderBar('지방', nut.fat, 'bg-amber-400', '15g')}
+                `;
+                document.getElementById('nutrition-bars').innerHTML = nutHtml;
+            } catch (e) {
+                console.error("데이터 로드 실패", e);
+            }
+        }
+
+        function renderBar(label, val, color, unit) {
+            return `<div>
+                <div class="flex justify-between text-[11px] font-bold mb-1 text-slate-500"><span>${label}</span><span>${unit}</span></div>
+                <div class="w-full bg-slate-200 rounded-full h-1.5"><div class="${color} h-1.5 rounded-full" style="width: ${val}%"></div></div>
+            </div>`;
+        }
+
+        // 4. 평가 시스템 (1회 제한 로직)
+        const ratingKey = `rated_${now.toISOString().split('T')[0]}_${currentMeal.key}`;
+
+        function checkAlreadyRated() {
+            if (localStorage.getItem(ratingKey)) {
+                lockRatingUI(localStorage.getItem(ratingKey));
+            }
+        }
+
+        function submitRating(score) {
+            if (localStorage.getItem(ratingKey)) return;
+
+            // 데이터 저장
+            localStorage.setItem(ratingKey, score);
+            
+            // 관리자 통계용 데이터 (누적)
+            let stats = JSON.parse(localStorage.getItem('admin_stats') || '{"total":0, "count":0}');
+            stats.total += score;
+            stats.count += 1;
+            localStorage.setItem('admin_stats', JSON.stringify(stats));
+
+            lockRatingUI(score);
+            
             const msg = document.getElementById('feedback-msg');
             msg.style.opacity = '1';
-            setTimeout(() => { msg.style.opacity = '0'; }, 2000);
-
-            // 데이터 저장 (누적)
-            let ratings = JSON.parse(localStorage.getItem('lunch_ratings') || '[]');
-            ratings.push({ score: score, time: new Date().toISOString() });
-            localStorage.setItem('lunch_ratings', JSON.stringify(ratings));
-
-            updateAdminDashboard();
         }
 
-        // 관리자 대시보드 업데이트
-        function updateAdminDashboard() {
-            let ratings = JSON.parse(localStorage.getItem('lunch_ratings') || '[]');
-            if (ratings.length > 0) {
-                const total = ratings.reduce((sum, item) => sum + item.score, 0);
-                const avg = (total / ratings.length).toFixed(1);
-                document.getElementById('admin-avg').innerText = avg;
-                document.getElementById('admin-count').innerText = ratings.length;
+        function lockRatingUI(score) {
+            const stars = document.querySelectorAll('.star-btn');
+            stars.forEach((s, i) => {
+                if (i < score) s.classList.add('star-gold');
+                s.classList.remove('grayscale', 'opacity-30');
+                s.classList.add('cursor-default');
+            });
+            document.getElementById('star-container').classList.add('disabled-stars');
+            document.getElementById('rating-title').innerText = "이미 평가를 완료한 식단입니다";
+            document.getElementById('rating-section').classList.add('bg-gray-50');
+            updateAdmin();
+        }
+
+        // 관리자 대시보드
+        function updateAdmin() {
+            const stats = JSON.parse(localStorage.getItem('admin_stats') || '{"total":0, "count":0}');
+            if (stats.count > 0) {
+                document.getElementById('admin-avg').innerText = (stats.total / stats.count).toPrecision(2);
+                document.getElementById('admin-count').innerText = stats.count;
+            }
+            if (new URLSearchParams(window.location.search).get('admin') === 'true') {
+                document.getElementById('admin-view').classList.remove('hidden');
             }
         }
 
-        function clearData() {
-            if(confirm('모든 평가 데이터를 초기화할까요?')) {
-                localStorage.removeItem('lunch_ratings');
-                location.reload();
-            }
-        }
-
-        // 관리자 모드 체크
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('admin') === 'true') {
-            document.getElementById('admin-view').classList.remove('hidden');
-            updateAdminDashboard();
-        }
+        loadMenu();
+        checkAlreadyRated();
+        updateAdmin();
     </script>
 </body>
 </html>
