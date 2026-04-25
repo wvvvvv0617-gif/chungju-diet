@@ -29,7 +29,7 @@
                     <span id="realtime-temp" class="text-lg font-black italic leading-none">--°</span>
                 </div>
                 <div class="flex flex-col">
-                    <span class="text-[9px] opacity-80 font-bold tracking-tighter">강수/구름</span>
+                    <span class="text-[9px] opacity-80 font-bold tracking-tighter">강수</span>
                     <span id="precipitation" class="text-sm font-black text-blue-200 leading-none">--%</span>
                 </div>
             </div>
@@ -122,7 +122,7 @@
             const isTodayHoliday = getHolidayName(now) !== null;
             const isTomorrowHoliday = getHolidayName(tomorrow) !== null;
             
-            // 금요일 18:30 이후부터 주말 모드 돌입
+            // 주말 판정: 금요일 18:30 이후부터 일요일 23:59까지
             const isWeekend = (day === 5 && hm >= 1830) || day === 6 || day === 0;
             const isHolidayPeriod = (isTomorrowHoliday && hm >= 1830) || isTodayHoliday;
 
@@ -137,12 +137,29 @@
                 greetingText = "꿀같은 휴일 보내세요! 🎈";
             }
             
+            // 00:00부터 08:29까지는 당일 BREAKFAST 표시
+            let mealKey, mealLabel, targetDayOffset = 0;
+            if (hm < 830) {
+                mealKey = 'breakfast';
+                mealLabel = 'BREAKFAST 🍳';
+            } else if (hm < 1330) {
+                mealKey = 'lunch';
+                mealLabel = 'LUNCH 🍱';
+            } else if (hm < 1830) {
+                mealKey = 'dinner';
+                mealLabel = 'DINNER 🌙';
+            } else {
+                mealKey = 'breakfast';
+                mealLabel = 'NEXT BREAKFAST ☀️';
+                targetDayOffset = 1;
+            }
+
             return { 
-                mealKey: (hm < 830) ? 'breakfast' : (hm < 1330) ? 'lunch' : (hm < 1830) ? 'dinner' : 'breakfast',
-                mealLabel: (hm < 830) ? 'BREAKFAST 🍳' : (hm < 1330) ? 'LUNCH 🍱' : (hm < 1830) ? 'DINNER 🌙' : 'NEXT BREAKFAST ☀️',
+                mealKey, 
+                mealLabel,
                 isRest: isWeekend || isHolidayPeriod,
                 isHolidayMsg: isHolidayPeriod && !isWeekend,
-                returnText, greetingText, targetDayOffset: (hm >= 1830) ? 1 : 0
+                returnText, greetingText, targetDayOffset 
             };
         }
 
@@ -156,29 +173,22 @@
             const rainElem = document.getElementById('precipitation');
             
             try {
-                // 부드러운 UI 전환을 위한 지연
                 await new Promise(resolve => setTimeout(resolve, 600));
-                
                 const response = await fetch('data.json?v=' + Date.now());
                 if (!response.ok) throw new Error('Data load failed');
                 
                 const data = await response.json();
                 
-                // [정직한 UI] 날씨 데이터 타입 체크 및 갱신
                 if (data.weather) {
                     const temp = data.weather.temp;
                     const rain = data.weather.rain;
                     
                     if (typeof temp === 'number') {
                         tempElem.innerText = temp + "°";
-                    } else {
-                        tempElem.innerText = "--°";
                     }
                     
                     if (typeof rain === 'number') {
                         rainElem.innerText = rain + "%";
-                        
-                        // 강수 확률 60% 이상일 때 스타일 강조
                         if (rain >= 60) {
                             rainElem.classList.remove('text-blue-200');
                             rainElem.classList.add('text-yellow-300');
@@ -190,7 +200,6 @@
                     }
                 }
 
-                // 휴일 처리
                 if (status.isRest) {
                     document.getElementById('meal-content').classList.add('hidden');
                     document.getElementById('rating-section').classList.add('hidden');
@@ -202,7 +211,6 @@
                     return;
                 }
 
-                // 식단 데이터 표시
                 const targetDate = new Date(now);
                 targetDate.setDate(now.getDate() + status.targetDayOffset);
                 const targetDayName = week[targetDate.getDay()];
@@ -210,7 +218,7 @@
 
                 const mealData = data.meals ? data.meals[targetDayName] : null;
                 if (mealData && mealData[status.mealKey] && mealData[status.mealKey] !== "식단 없음") {
-                    const menuItems = mealData[status.mealKey].split(' ');
+                    const menuItems = mealData[status.mealKey].split(',');
                     document.getElementById('menu-list').innerHTML = menuItems.map(m => 
                         `<li class="flex items-center gap-3 p-3.5 bg-white rounded-2xl text-slate-700 font-bold border border-slate-100 shadow-sm"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m.trim()}</li>`
                     ).join('');
