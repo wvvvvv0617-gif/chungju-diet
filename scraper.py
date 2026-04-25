@@ -63,24 +63,24 @@ def get_weather():
         return {"temp": 22, "rain": 0}
 
 # =========================
-# 🍱 영양 추정 (🔥 kcal 추가됨)
+# 🍱 영양 + 칼로리
 # =========================
 def estimate(text):
     if not text or len(text) < 5 or "식단 없음" in text:
         return {
-            "kcal": 0,
             "carbs": 0,
             "protein": 0,
             "fat": 0,
-            "sugar": 0
+            "sugar": 0,
+            "kcal": 0
         }
 
     return {
-        "kcal": 850,   # 🔥 핵심 추가
         "carbs": 72,
         "protein": 24,
         "fat": 14,
-        "sugar": 5
+        "sugar": 5,
+        "kcal": 800
     }
 
 # =========================
