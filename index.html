@@ -106,13 +106,14 @@
     <script>
         const ADMIN_PASSWORD = "0617"; 
         
-        // --- 구글 폼 연결 설정 ---
+        // --- 구글 폼 연결 설정 (업데이트 완료) ---
         const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG35dKFaOFHN5Cls4pcWGX9Q_5J1qa2pOxjBhFpoFddIJucw/formResponse";
         const ENTRY_IDS = {
-            date: "entry.254330103",
-            meal: "entry.1706173003",
-            score: "entry.1717387225",
-            feedback: "entry.1118181652"
+            date: "entry.1731866414",
+            meal: "entry.475926623",
+            menu: "entry.525600404",     // 메뉴 전송용 ID 추가
+            score: "entry.615065306",
+            feedback: "entry.119301674"
         };
 
         let now = new Date();
@@ -240,10 +241,14 @@
             const ratingKey = `rated_${dateStr}_${status.rateKey}`;
             if (localStorage.getItem(ratingKey)) return;
 
-            // 1. 구글 폼 데이터 전송
+            // 메뉴 정보 가져오기
+            const menuText = document.getElementById('rating-menu-preview').innerText;
+
+            // 1. 구글 폼 데이터 전송 (업데이트된 순서 및 번호)
             const formData = new FormData();
             formData.append(ENTRY_IDS.date, dateStr);
-            formData.append(ENTRY_IDS.meal, status.rateKey);
+            formData.append(ENTRY_IDS.meal, mealNameKR[status.rateKey]);
+            formData.append(ENTRY_IDS.menu, menuText);
             formData.append(ENTRY_IDS.score, score);
             formData.append(ENTRY_IDS.feedback, "(별점만 제출)");
 
@@ -260,6 +265,7 @@
 
             lockRatingUI(score);
             document.getElementById('feedback-msg').style.opacity = '1';
+            setTimeout(() => { document.getElementById('feedback-msg').style.opacity = '0'; }, 2000);
         }
 
         async function submitTextFeedback() {
@@ -268,13 +274,15 @@
             const dateStr = now.toISOString().split('T')[0];
             const sentKey = `text_sent_${dateStr}_${status.rateKey}`;
             const score = localStorage.getItem(`rated_${dateStr}_${status.rateKey}`) || "0";
+            const menuText = document.getElementById('rating-menu-preview').innerText;
 
             if (!text || localStorage.getItem(sentKey)) return;
 
-            // 1. 구글 폼 데이터 전송
+            // 1. 구글 폼 데이터 전송 (업데이트된 순서 및 번호)
             const formData = new FormData();
             formData.append(ENTRY_IDS.date, dateStr);
-            formData.append(ENTRY_IDS.meal, status.rateKey);
+            formData.append(ENTRY_IDS.meal, mealNameKR[status.rateKey]);
+            formData.append(ENTRY_IDS.menu, menuText);
             formData.append(ENTRY_IDS.score, score);
             formData.append(ENTRY_IDS.feedback, text);
 
