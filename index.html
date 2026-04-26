@@ -156,7 +156,6 @@
         let currentMenuData = null;
         let selectedScore = 0; 
 
-        // 이메일 토글 함수 (추가됨)
         function toggleEmail() {
             const btn = document.getElementById('show-email-btn');
             const emailLink = document.getElementById('dev-email');
@@ -200,9 +199,10 @@
             else if (hm < 1830) { mealKey = 'dinner'; mealLabel = 'DINNER 🌙'; }
             else { mealKey = 'breakfast'; mealLabel = 'NEXT BREAKFAST ☀️'; targetDayOffset = 1; }
 
+            // [수정된 평가 로직] 당일 23:50까지만 평가 활성화
             if (hm >= 830 && hm <= 1300) rateKey = 'breakfast';
             else if (hm >= 1330 && hm <= 1830) rateKey = 'lunch';
-            else if (hm >= 1840 || hm <= 820) rateKey = 'dinner';
+            else if (hm >= 1840 && hm <= 2350) rateKey = 'dinner';
 
             return { mealKey, mealLabel, rateKey, isRest: isWeekend || isHolidayPeriod, isHolidayMsg: isHolidayPeriod && !isWeekend, returnText, greetingText, targetDayOffset };
         }
