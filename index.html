@@ -17,6 +17,10 @@
 
     <title>충주캠퍼스 스마트 식단</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind 다크모드 설정 활성화
+        tailwind.config = { darkMode: 'class' }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
         body { 
@@ -25,17 +29,21 @@
             -webkit-tap-highlight-color: transparent;
             padding-bottom: env(safe-area-inset-bottom);
             overscroll-behavior-y: contain;
+            transition: background-color 0.3s ease;
         }
+        .dark body { background-color: #0f172a; }
         .star-gold { color: #fbbf24; filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4)); transform: scale(1.1); }
         .disabled-stars { pointer-events: none; opacity: 0.8; }
         .rest-bg { background: linear-gradient(135deg, #fff5f5 0%, #fff0f6 100%) !important; }
+        .dark .rest-bg { background: linear-gradient(135deg, #2d1a1a 0%, #2d1621 100%) !important; }
         @keyframes shimmer { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
         .skeleton { animation: shimmer 1.5s infinite ease-in-out; background-color: #e2e8f0; border-radius: 1rem; }
+        .dark .skeleton { background-color: #1e293b; }
         .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="max-w-md mx-auto min-h-screen bg-white shadow-2xl pb-10">
+<body class="max-w-md mx-auto min-h-screen bg-white shadow-2xl pb-10 dark:bg-slate-900 dark:shadow-none">
 
     <header id="main-header" class="bg-gradient-to-br from-indigo-600 to-blue-500 text-white rounded-b-[50px] shadow-xl relative z-10 transition-all duration-700">
         <div style="height: env(safe-area-inset-top); min-height: 20px;"></div>
@@ -45,14 +53,19 @@
                     <p id="current-date" class="text-indigo-100 text-sm font-bold mb-1"></p>
                     <h1 id="greeting" class="text-2xl font-bold tracking-tight leading-tight">맛있는 식사 하세요! 🍱</h1>
                 </div>
-                <div class="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-center min-w-[75px] border border-white/10 flex flex-col gap-1.5">
-                    <div class="flex flex-col border-b border-white/10 pb-1">
-                        <span class="text-[9px] opacity-80 font-bold tracking-tighter">기온</span>
-                        <span id="realtime-temp" class="text-lg font-black italic leading-none">--°</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-[9px] opacity-80 font-bold tracking-tighter">강수</span>
-                        <span id="precipitation" class="text-sm font-black text-blue-200 leading-none">--%</span>
+                <div class="flex flex-col gap-2">
+                    <button onclick="toggleDarkMode()" class="bg-white/20 backdrop-blur-md p-2 rounded-xl border border-white/10 hover:bg-white/30 transition-all self-end">
+                        <span id="dark-icon" class="text-lg">🌙</span>
+                    </button>
+                    <div class="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-center min-w-[75px] border border-white/10 flex flex-col gap-1.5">
+                        <div class="flex flex-col border-b border-white/10 pb-1">
+                            <span class="text-[9px] opacity-80 font-bold tracking-tighter">기온</span>
+                            <span id="realtime-temp" class="text-lg font-black italic leading-none">--°</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[9px] opacity-80 font-bold tracking-tighter">강수</span>
+                            <span id="precipitation" class="text-sm font-black text-blue-200 leading-none">--%</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -60,22 +73,22 @@
     </header>
 
     <main class="p-5 relative z-20 mt-4 space-y-6">
-        <section id="main-card" class="bg-white rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50 overflow-hidden min-h-[420px] flex flex-col transition-all duration-500">
+        <section id="main-card" class="bg-white rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50 overflow-hidden min-h-[420px] flex flex-col transition-all duration-500 dark:bg-slate-800 dark:border-slate-700 dark:shadow-none">
             <div id="card-header" class="flex justify-between items-center mb-6">
-                <span id="meal-type-tag" class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">LUNCH</span>
-                <span id="display-day-tag" class="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-1 rounded-md"></span>
+                <span id="meal-type-tag" class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase dark:bg-orange-900/30 dark:text-orange-400">LUNCH</span>
+                <span id="display-day-tag" class="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-1 rounded-md dark:bg-blue-900/30 dark:text-blue-300"></span>
             </div>
             
             <div id="meal-content">
                 <div class="space-y-4 mb-8">
-                    <h2 class="text-2xl font-black text-gray-800 flex items-center gap-2">오늘의 메뉴</h2>
+                    <h2 class="text-2xl font-black text-gray-800 dark:text-slate-100 flex items-center gap-2">오늘의 메뉴</h2>
                     <ul id="menu-list" class="grid grid-cols-1 gap-2">
                         <li class="h-14 skeleton"></li>
                         <li class="h-14 skeleton"></li>
                         <li class="h-14 skeleton"></li>
                     </ul>
                 </div>
-                <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner">
+                <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner dark:bg-slate-900/50 dark:border-slate-700">
                     <h3 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest text-center">Nutrition Report</h3>
                     <div id="nutrition-bars" class="space-y-5"></div>
                     <p class="text-[9px] text-slate-400 mt-6 text-center leading-relaxed font-medium">표시된 영양 정보는 추정치이므로 참고용으로만 활용해 주세요.</p>
@@ -85,19 +98,19 @@
             <div id="weekend-message" class="hidden flex-1 flex flex-col items-center justify-center py-12 text-center space-y-6">
                 <div class="text-7xl animate-bounce">😴</div>
                 <div>
-                    <h2 id="rest-title" class="text-2xl font-black text-slate-800 mb-2">식당도 쿨쿨 자는 중!</h2>
-                    <p id="rest-subtitle" class="text-base text-slate-500 leading-relaxed font-medium"></p>
+                    <h2 id="rest-title" class="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">식당도 쿨쿨 자는 중!</h2>
+                    <p id="rest-subtitle" class="text-base text-slate-500 dark:text-slate-400 leading-relaxed font-medium"></p>
                 </div>
-                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-orange-100 shadow-sm">
-                    <p id="return-msg" class="text-sm font-black text-orange-600"></p>
+                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-orange-100 shadow-sm dark:bg-slate-800/70 dark:border-orange-900/30">
+                    <p id="return-msg" class="text-sm font-black text-orange-600 dark:text-orange-400"></p>
                 </div>
             </div>
         </section>
 
-        <section id="rating-section" class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+        <section id="rating-section" class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm dark:bg-slate-800 dark:border-slate-700">
             <div class="text-center">
-                <p id="rating-title" class="text-slate-800 text-[10px] font-black mb-1 uppercase tracking-widest">
-                    방금 드신 <span id="rating-meal-name" class="text-indigo-600">식사</span>는 어떠셨나요?
+                <p id="rating-title" class="text-slate-800 dark:text-slate-200 text-[10px] font-black mb-1 uppercase tracking-widest">
+                    방금 드신 <span id="rating-meal-name" class="text-indigo-600 dark:text-indigo-400">식사</span>는 어떠셨나요?
                 </p>
                 <p id="rating-menu-preview" class="text-[9px] text-slate-400 font-medium mb-4 px-4 truncate"></p>
                 
@@ -113,29 +126,29 @@
                     <div id="feedback-input-container" class="flex flex-col gap-2">
                         <div class="flex gap-2">
                             <input type="text" id="feedback-text" placeholder="식당 이모님께 전하고 싶은 말씀..." 
-                                class="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs outline-none focus:border-indigo-300 focus:bg-white transition-all">
-                            <button id="send-btn" onclick="submitFullFeedback()" class="bg-indigo-600 text-white px-4 py-3 rounded-xl text-xs font-bold active:scale-95 transition-all disabled:bg-slate-300">보내기</button>
+                                class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-xl px-4 py-3 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-300 transition-all">
+                            <button id="send-btn" onclick="submitFullFeedback()" class="bg-indigo-600 text-white px-4 py-3 rounded-xl text-xs font-bold active:scale-95 transition-all disabled:bg-slate-300 dark:disabled:bg-slate-700">보내기</button>
                         </div>
                         <p class="text-[9px] text-slate-400 text-left pl-1">※ 모든 평가는 <span class="font-bold text-indigo-500">익명으로</span> 식당측에 전달됩니다.</p>
                     </div>
                 </div>
-                <p id="feedback-msg" class="text-indigo-600 text-[11px] font-bold mt-4 h-4 opacity-0 transition-opacity">✅ 소중한 의견 감사합니다!</p>
+                <p id="feedback-msg" class="text-indigo-600 dark:text-indigo-400 text-[11px] font-bold mt-4 h-4 opacity-0 transition-opacity">✅ 소중한 의견 감사합니다!</p>
             </div>
         </section>
 
         <section id="dev-contact-section" class="mt-12 mb-10 px-2 text-center">
-            <div class="p-8 bg-indigo-50/30 rounded-[40px] border border-dashed border-indigo-100">
-                <div class="inline-block p-3 bg-white rounded-2xl shadow-sm mb-4">🚀</div>
-                <h4 class="text-sm font-black text-indigo-900 mb-2 leading-relaxed">
+            <div class="p-8 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-[40px] border border-dashed border-indigo-100 dark:border-indigo-900/30">
+                <div class="inline-block p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm mb-4">🚀</div>
+                <h4 class="text-sm font-black text-indigo-900 dark:text-indigo-200 mb-2 leading-relaxed">
                     "이런 기능이 있다면 더 완벽할 텐데!"<br>싶은 순간이 있나요?
                 </h4>
-                <p class="text-[11px] text-indigo-600/70 font-medium mb-6">여러분의 제안이 앱의 미래가 됩니다.</p>
+                <p class="text-[11px] text-indigo-600/70 dark:text-indigo-400/70 font-medium mb-6">여러분의 제안이 앱의 미래가 됩니다.</p>
                 
                 <div id="email-area" class="flex flex-col items-center gap-3">
-                    <button id="show-email-btn" onclick="toggleEmail()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-xs font-bold shadow-lg shadow-indigo-200 active:scale-95 transition-all">
+                    <button id="show-email-btn" onclick="toggleEmail()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-xs font-bold shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 transition-all">
                         개발자 이메일 주소 보기
                     </button>
-                    <a id="dev-email" href="mailto:wvvvvv0617@naver.com" class="hidden text-xs font-black text-indigo-600 underline decoration-indigo-200 underline-offset-4 animate-fadeIn">
+                    <a id="dev-email" href="mailto:wvvvvv0617@naver.com" class="hidden text-xs font-black text-indigo-600 dark:text-indigo-400 underline decoration-indigo-200 underline-offset-4 animate-fadeIn">
                         wvvvvv0617@naver.com
                     </a>
                 </div>
@@ -157,6 +170,18 @@
         const mealNameKR = { 'breakfast': '아침', 'lunch': '점심', 'dinner': '저녁' };
         let currentMenuData = null;
         let selectedScore = 0; 
+
+        // [다크모드 제어]
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.getElementById('dark-icon').innerText = '☀️';
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('dark-icon').innerText = isDark ? '☀️' : '🌙';
+        }
 
         function toggleEmail() {
             const btn = document.getElementById('show-email-btn');
@@ -234,7 +259,6 @@
                 const mealData = data.meals ? data.meals[targetDayName] : null;
                 const currentMeal = mealData ? mealData[status.mealKey] : "식단 없음";
 
-                // [평가 섹션 표시 로직 수정: 식단이 "식단 없음"이 아닐 때만 노출]
                 if (status.rateKey && !status.isRest && currentMeal !== "식단 없음") {
                     const rateMenu = mealData ? mealData[status.rateKey] : "메뉴 정보 없음";
                     document.getElementById('rating-section').classList.remove('hidden');
@@ -269,8 +293,9 @@
                     document.getElementById('display-day-tag').innerText = targetDayName + "요일 식단";
                     
                     if (currentMeal && currentMeal !== "식단 없음") {
-                        const items = currentMeal.split(/[, ]+/).filter(i => i.trim());
-                        document.getElementById('menu-list').innerHTML = items.map(m => `<li class="flex items-center gap-3 p-3.5 bg-white rounded-2xl text-slate-700 font-bold border border-slate-100 shadow-sm"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m}</li>`).join('');
+                        // [파싱 규칙 개선: 콤마로만 구분]
+                        const items = currentMeal.split(/,\s*/).filter(i => i.trim());
+                        document.getElementById('menu-list').innerHTML = items.map(m => `<li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl text-slate-700 dark:text-slate-200 font-bold border border-slate-100 dark:border-slate-700 shadow-sm"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m}</li>`).join('');
                         
                         let nut = (mealData && mealData.nutrition) ? mealData.nutrition[status.mealKey] : null;
                         if (nut) {
@@ -282,8 +307,7 @@
                             `;
                         }
                     } else {
-                        // 식단이 "식단 없음"일 때 UI 처리
-                        document.getElementById('menu-list').innerHTML = `<li class="flex items-center gap-3 p-3.5 bg-white rounded-2xl text-slate-400 font-bold border border-slate-100 shadow-sm"><span class="w-2.5 h-2.5 bg-slate-300 rounded-full"></span>식단 정보가 없습니다.</li>`;
+                        document.getElementById('menu-list').innerHTML = `<li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl text-slate-400 font-bold border border-slate-100 dark:border-slate-700 shadow-sm"><span class="w-2.5 h-2.5 bg-slate-300 rounded-full"></span>식단 정보가 없습니다.</li>`;
                         document.getElementById('nutrition-bars').innerHTML = `<p class="text-center text-[10px] text-slate-400 py-4">등록된 영양 정보가 없습니다.</p>`;
                     }
                 }
@@ -291,7 +315,7 @@
         }
 
         function renderBar(label, val, color, weight) {
-            return `<div><div class="flex justify-between items-end mb-1"><div class="flex items-baseline gap-1.5"><span class="text-[11px] font-black text-slate-800">${label}</span><span class="text-[9px] font-bold text-slate-400">${val}%</span></div><span class="text-[10px] font-black text-indigo-600">${weight}</span></div><div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div></div></div>`;
+            return `<div><div class="flex justify-between items-end mb-1"><div class="flex items-baseline gap-1.5"><span class="text-[11px] font-black text-slate-800 dark:text-slate-200">${label}</span><span class="text-[9px] font-bold text-slate-400">${val}%</span></div><span class="text-[10px] font-black text-indigo-600 dark:text-indigo-400">${weight}</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div></div></div>`;
         }
 
         function selectRating(score) {
@@ -312,7 +336,7 @@
             const stars = document.querySelectorAll('.star-btn');
             stars.forEach(s => { s.classList.add('grayscale', 'opacity-30'); s.classList.remove('star-gold', 'opacity-100'); });
             document.getElementById('star-container').classList.remove('disabled-stars');
-            document.getElementById('rating-title').innerHTML = `방금 드신 <span id="rating-meal-name" class="text-indigo-600">${mealNameKR[getMealStatus().rateKey] || '식사'}</span>는 어떠셨나요?`;
+            document.getElementById('rating-title').innerHTML = `방금 드신 <span id="rating-meal-name" class="text-indigo-600 dark:text-indigo-400">${mealNameKR[getMealStatus().rateKey] || '식사'}</span>는 어떠셨나요?`;
             const input = document.getElementById('feedback-text');
             const btn = document.getElementById('send-btn');
             input.disabled = false; input.placeholder = "식당 이모님께 전하고 싶은 말씀..."; input.value = "";
@@ -427,7 +451,17 @@
             }
         });
 
+        // [자동 갱신 로직 개선]
         setInterval(() => {
+            const feedbackInput = document.getElementById('feedback-text');
+            // 사용자가 별점을 선택 중이거나(selectedScore > 0 이지만 아직 미제출인 상태는 체크 불필요, 
+            // 여기서는 텍스트 입력창 포커스 여부나 입력값 유무로 체크) 
+            // 텍스트를 입력 중인 경우 자동 로딩을 건너뜁니다.
+            if (document.activeElement === feedbackInput || feedbackInput.value.length > 0) {
+                console.log("사용자가 입력 중이므로 자동 갱신을 스킵합니다.");
+                return; 
+            }
+
             const mealTag = document.getElementById('meal-type-tag');
             if(mealTag) {
                 const currentLabel = mealTag.innerText;
