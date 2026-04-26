@@ -23,7 +23,6 @@
             font-family: 'Pretendard', sans-serif; 
             background-color: #f8fafc; 
             -webkit-tap-highlight-color: transparent;
-            /* iOS 바닥 여백 및 당겨서 새로고침 허용 */
             padding-bottom: env(safe-area-inset-bottom);
             overscroll-behavior-y: contain;
         }
@@ -122,6 +121,25 @@
             </div>
         </section>
 
+        <section id="dev-contact-section" class="mt-12 mb-10 px-2 text-center">
+            <div class="p-8 bg-indigo-50/30 rounded-[40px] border border-dashed border-indigo-100">
+                <div class="inline-block p-3 bg-white rounded-2xl shadow-sm mb-4">🚀</div>
+                <h4 class="text-sm font-black text-indigo-900 mb-2 leading-relaxed">
+                    "이런 기능이 있다면 더 완벽할 텐데!"<br>싶은 순간이 있나요?
+                </h4>
+                <p class="text-[11px] text-indigo-600/70 font-medium mb-6">여러분의 제안이 앱의 미래가 됩니다.</p>
+                
+                <div id="email-area" class="flex flex-col items-center gap-3">
+                    <button id="show-email-btn" onclick="toggleEmail()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-xs font-bold shadow-lg shadow-indigo-200 active:scale-95 transition-all">
+                        개발자 이메일 주소 보기
+                    </button>
+                    <a id="dev-email" href="mailto:wvvvvv0617@naver.com" class="hidden text-xs font-black text-indigo-600 underline decoration-indigo-200 underline-offset-4 animate-fadeIn">
+                        wvvvvv0617@naver.com
+                    </a>
+                </div>
+            </div>
+        </section>
+
         <section id="admin-view" class="hidden p-6 bg-slate-900 rounded-[32px] text-xs font-mono text-slate-300 shadow-2xl border border-slate-700 space-y-6"></section>
     </main>
 
@@ -137,6 +155,14 @@
         const mealNameKR = { 'breakfast': '아침', 'lunch': '점심', 'dinner': '저녁' };
         let currentMenuData = null;
         let selectedScore = 0; 
+
+        // 이메일 토글 함수 (추가됨)
+        function toggleEmail() {
+            const btn = document.getElementById('show-email-btn');
+            const emailLink = document.getElementById('dev-email');
+            btn.classList.add('hidden');
+            emailLink.classList.remove('hidden');
+        }
 
         function getHolidayName(date) {
             const m = date.getMonth() + 1;
@@ -220,7 +246,6 @@
                         lockRatingUI(selectedScore);
                         lockTextFeedbackUI();
                     } else {
-                        // [수정] 새로운 끼니 시간이 되면 UI 리셋
                         resetRatingUI();
                     }
                 } else {
@@ -272,7 +297,6 @@
             });
         }
 
-        // [수정] 평가 UI 초기화 함수 추가
         function resetRatingUI() {
             selectedScore = 0;
             const stars = document.querySelectorAll('.star-btn');
@@ -321,8 +345,10 @@
         }
 
         function lockRatingUI(score) {
-            document.getElementById('star-container').classList.add('disabled-stars');
-            document.getElementById('rating-title').innerText = "평가 완료! 감사합니다.";
+            const starContainer = document.getElementById('star-container');
+            if(starContainer) starContainer.classList.add('disabled-stars');
+            const ratingTitle = document.getElementById('rating-title');
+            if(ratingTitle) ratingTitle.innerText = "평가 완료! 감사합니다.";
             selectRating(score);
         }
 
@@ -377,7 +403,6 @@
             }
         }
 
-        // [추가] 앱 복귀 시(Background -> Foreground) 자동 갱신
         document.addEventListener("visibilitychange", () => {
             if (document.visibilityState === "visible") {
                 now = new Date();
@@ -386,14 +411,16 @@
             }
         });
 
-        // [추가] 1분마다 끼니 변화 감지 후 UI 자동 전환
         setInterval(() => {
-            const currentLabel = document.getElementById('meal-type-tag').innerText;
-            now = new Date();
-            const status = getMealStatus();
-            if (currentLabel !== status.mealLabel) {
-                loadData();
-                updateAdmin();
+            const mealTag = document.getElementById('meal-type-tag');
+            if(mealTag) {
+                const currentLabel = mealTag.innerText;
+                now = new Date();
+                const status = getMealStatus();
+                if (currentLabel !== status.mealLabel) {
+                    loadData();
+                    updateAdmin();
+                }
             }
         }, 60000);
 
