@@ -119,7 +119,7 @@
         const week = ['일', '월', '화', '수', '목', '금', '토'];
         const mealNameKR = { 'breakfast': '아침', 'lunch': '점심', 'dinner': '저녁' };
         let currentMenuData = null;
-        let selectedScore = 0; // 선택된 별점을 저장할 변수 추가
+        let selectedScore = 0; 
 
         function getHolidayName(date) {
             const m = date.getMonth() + 1;
@@ -240,7 +240,6 @@
             return `<div><div class="flex justify-between items-end mb-1"><div class="flex items-baseline gap-1.5"><span class="text-[11px] font-black text-slate-800">${label}</span><span class="text-[9px] font-bold text-slate-400">${val}%</span></div><span class="text-[10px] font-black text-indigo-600">${weight}</span></div><div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div></div></div>`;
         }
 
-        // 별점만 선택하는 함수 (전송하지 않음)
         function selectRating(score) {
             selectedScore = score;
             const stars = document.querySelectorAll('.star-btn');
@@ -250,7 +249,7 @@
             });
         }
 
-        // 별점과 텍스트를 한꺼번에 전송하는 통합 함수
+        // 수정된 통합 전송 함수
         async function submitFullFeedback() {
             const text = document.getElementById('feedback-text').value.trim();
             const status = getMealStatus();
@@ -258,13 +257,21 @@
             const ratingKey = `rated_${dateStr}_${status.rateKey}`;
             const menuText = document.getElementById('rating-menu-preview').innerText;
 
+            // 1. 별점 체크
             if (selectedScore === 0) {
                 alert("별점을 먼저 선택해 주세요!");
                 return;
             }
-            if (localStorage.getItem(ratingKey)) return;
 
-            // 1. 구글 폼 데이터 전송
+            // 2. 중복 투표 체크 (이미 전송했다면 알림)
+            if (localStorage.getItem(ratingKey)) {
+                alert("이미 오늘의 평가를 완료하셨습니다!");
+                lockRatingUI(selectedScore);
+                lockTextFeedbackUI();
+                return;
+            }
+
+            // 3. 구글 폼 전송
             const formData = new FormData();
             formData.append(ENTRY_IDS.date, dateStr);
             formData.append(ENTRY_IDS.meal, mealNameKR[status.rateKey]);
@@ -274,7 +281,7 @@
 
             fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData });
 
-            // 2. 로컬 저장 (관리자 통계 업데이트)
+            // 4. 로컬 저장
             localStorage.setItem(ratingKey, selectedScore);
             let stats = JSON.parse(localStorage.getItem('admin_stats_v3') || '{}');
             const key = `${dateStr}_${status.rateKey}`;
@@ -287,7 +294,7 @@
             }
             localStorage.setItem('admin_stats_v3', JSON.stringify(stats));
 
-            // UI 잠금
+            // 5. UI 잠금 및 결과 표시
             lockRatingUI(selectedScore);
             lockTextFeedbackUI();
             
@@ -299,6 +306,7 @@
         function lockRatingUI(score) {
             document.getElementById('star-container').classList.add('disabled-stars');
             document.getElementById('rating-title').innerText = "평가 완료! 감사합니다.";
+            selectRating(score); // 별점 고정
         }
 
         function lockTextFeedbackUI() {
