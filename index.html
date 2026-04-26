@@ -74,7 +74,7 @@
                         </div>
                     </div>
                     <button onclick="toggleDarkMode()" class="bg-white/20 backdrop-blur-md p-2.5 rounded-xl border border-white/10 hover:bg-white/30 transition-all shadow-sm active:scale-90">
-                        <span id="dark-icon" class="text-lg leading-none block">🌙</span>
+                        <span id="dark-icon" class="text-lg leading-none block">☀️</span>
                     </button>
                 </div>
             </div>
@@ -148,18 +148,18 @@
         <section id="dev-contact-section" class="mt-12 mb-10 px-2 text-center">
             <div class="p-8 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-[40px] border border-dashed border-indigo-100 dark:border-indigo-900/30">
                 <div class="inline-block p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm mb-4">🚀</div>
-                <h4 class="text-sm font-black text-indigo-900 dark:text-indigo-200 mb-2 leading-relaxed">
-                    "이런 기능이 있다면 더 완벽할 텐데!"<br>싶은 순간이 있나요?
+                <h4 class="text-sm font-black text-indigo-900 dark:text-indigo-200 mb-2 leading-relaxed px-4">
+                    "거창한 기능이 아니어도 좋아요.<br>'이거 있으면 편하겠다' 싶은 사소한 생각들을 편하게 들려주세요."
                 </h4>
-                <p class="text-[11px] text-indigo-600/70 dark:text-indigo-400/70 font-medium mb-6">여러분의 제안이 앱의 미래가 됩니다.</p>
+                <p class="text-[11px] text-indigo-600/70 dark:text-indigo-400/70 font-medium mb-6">여러분의 제안이 앱의 미래가 됩니다. ✨</p>
                 
                 <div id="email-area" class="flex flex-col items-center gap-3">
-                    <button id="show-email-btn" onclick="toggleEmail()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-xs font-bold shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 transition-all">
-                        개발자 이메일 주소 보기
-                    </button>
-                    <a id="dev-email" href="mailto:wvvvvv0617@naver.com" class="hidden text-xs font-black text-indigo-600 dark:text-indigo-400 underline decoration-indigo-200 underline-offset-4 animate-fadeIn">
-                        wvvvvv0617@naver.com
+                    <a href="https://forms.gle/CSuTJa8defrhDELr5" target="_blank" class="w-full max-w-[220px]">
+                        <button class="w-full bg-indigo-600 text-white px-6 py-4 rounded-2xl text-xs font-black shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 transition-all">
+                            익명으로 의견 남기기
+                        </button>
                     </a>
+                    <p class="text-[9px] text-slate-400 mt-1 italic">클릭 시 설문 페이지로 이동합니다.</p>
                 </div>
             </div>
         </section>
@@ -185,10 +185,10 @@
             const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
             if (isDark) {
                 document.documentElement.classList.add('dark');
-                document.getElementById('dark-icon').innerText = '🌙'; // 다크모드일 때 달 모양 고정
+                document.getElementById('dark-icon').innerText = '🌙'; 
             } else {
                 document.documentElement.classList.remove('dark');
-                document.getElementById('dark-icon').innerText = '☀️'; // 라이트모드일 때 해 모양 고정
+                document.getElementById('dark-icon').innerText = '☀️'; 
             }
         }
         initTheme();
@@ -197,13 +197,6 @@
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
             document.getElementById('dark-icon').innerText = isDark ? '🌙' : '☀️';
-        }
-
-        function toggleEmail() {
-            const btn = document.getElementById('show-email-btn');
-            const emailLink = document.getElementById('dev-email');
-            btn.classList.add('hidden');
-            emailLink.classList.remove('hidden');
         }
 
         function getHolidayName(date) {
