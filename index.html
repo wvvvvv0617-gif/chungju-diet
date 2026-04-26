@@ -9,7 +9,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         .star-gold { color: #fbbf24; filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4)); transform: scale(1.1); }
-        .disabled-stars { pointer-events: none; opacity: 0.6; }
+        .disabled-stars { pointer-events: none; opacity: 0.8; }
         .rest-bg { background: linear-gradient(135deg, #fff5f5 0%, #fff0f6 100%) !important; }
         @keyframes shimmer { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
         .skeleton { animation: shimmer 1.5s infinite ease-in-out; background-color: #e2e8f0; border-radius: 1rem; }
@@ -221,7 +221,6 @@
                         `<li class="flex items-center gap-3 p-3.5 bg-white rounded-2xl text-slate-700 font-bold border border-slate-100 shadow-sm"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m.trim()}</li>`
                     ).join('');
 
-                    // [영양성분 다양화 적용] 식사별 데이터 매칭
                     let nut = null;
                     if (mealData.nutrition) {
                         nut = mealData.nutrition[status.mealKey] || mealData.nutrition;
@@ -277,9 +276,16 @@
         function lockRatingUI(score) {
             const stars = document.querySelectorAll('.star-btn');
             stars.forEach((s, i) => { 
-                if (i < score) s.classList.add('star-gold'); 
-                s.classList.add('cursor-default', 'opacity-100'); 
-                s.classList.remove('grayscale', 'opacity-30');
+                if (i < score) {
+                    // 선택한 별점까지 황금색으로 변경
+                    s.classList.add('star-gold', 'opacity-100'); 
+                    s.classList.remove('grayscale', 'opacity-30');
+                } else {
+                    // 나머지 별들은 흐릿하게 유지
+                    s.classList.add('grayscale', 'opacity-30');
+                    s.classList.remove('star-gold', 'opacity-100');
+                }
+                s.classList.add('cursor-default'); 
             });
             document.getElementById('star-container').classList.add('disabled-stars');
             document.getElementById('rating-title').innerText = "평가 완료! 감사합니다.";
@@ -332,7 +338,8 @@
         
         const initStatus = getMealStatus();
         const initRatingKey = `rated_${now.toISOString().split('T')[0]}_${initStatus.mealKey}`;
-        if (localStorage.getItem(initRatingKey)) lockRatingUI(localStorage.getItem(initRatingKey));
+        const savedScore = localStorage.getItem(initRatingKey);
+        if (savedScore) lockRatingUI(parseInt(savedScore));
     </script>
 </body>
 </html>
