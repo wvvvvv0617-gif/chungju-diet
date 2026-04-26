@@ -105,10 +105,20 @@
 
     <script>
         const ADMIN_PASSWORD = "0617"; 
+        
+        // --- 구글 폼 연결 설정 ---
+        const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG35dKFaOFHN5Cls4pcWGX9Q_5J1qa2pOxjBhFpoFddIJucw/formResponse";
+        const ENTRY_IDS = {
+            date: "entry.254330103",
+            meal: "entry.1706173003",
+            score: "entry.1717387225",
+            feedback: "entry.1118181652"
+        };
+
         let now = new Date();
         const week = ['일', '월', '화', '수', '목', '금', '토'];
         const mealNameKR = { 'breakfast': '아침', 'lunch': '점심', 'dinner': '저녁' };
-        let currentMenuData = null; // 관리자 페이지용 전역 저장
+        let currentMenuData = null;
 
         function getHolidayName(date) {
             const m = date.getMonth() + 1;
@@ -166,7 +176,7 @@
             try {
                 const response = await fetch('data.json?v=' + Date.now());
                 const data = await response.json();
-                currentMenuData = data; // 저장
+                currentMenuData = data;
                 
                 if (data.weather) {
                     document.getElementById('realtime-temp').innerText = data.weather.temp + "°";
@@ -224,14 +234,23 @@
             return `<div><div class="flex justify-between items-end mb-1"><div class="flex items-baseline gap-1.5"><span class="text-[11px] font-black text-slate-800">${label}</span><span class="text-[9px] font-bold text-slate-400">${val}%</span></div><span class="text-[10px] font-black text-indigo-600">${weight}</span></div><div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div></div></div>`;
         }
 
-        function submitRating(score) {
+        async function submitRating(score) {
             const status = getMealStatus();
             const dateStr = now.toISOString().split('T')[0];
             const ratingKey = `rated_${dateStr}_${status.rateKey}`;
             if (localStorage.getItem(ratingKey)) return;
 
-            localStorage.setItem(ratingKey, score);
+            // 1. 구글 폼 데이터 전송
+            const formData = new FormData();
+            formData.append(ENTRY_IDS.date, dateStr);
+            formData.append(ENTRY_IDS.meal, status.rateKey);
+            formData.append(ENTRY_IDS.score, score);
+            formData.append(ENTRY_IDS.feedback, "(별점만 제출)");
 
+            fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData });
+
+            // 2. 로컬 저장 (관리자 페이지 및 중복방지용)
+            localStorage.setItem(ratingKey, score);
             let stats = JSON.parse(localStorage.getItem('admin_stats_v3') || '{}');
             const key = `${dateStr}_${status.rateKey}`;
             if (!stats[key]) stats[key] = { total: 0, count: 0, feedbacks: [] };
@@ -243,21 +262,31 @@
             document.getElementById('feedback-msg').style.opacity = '1';
         }
 
-        function submitTextFeedback() {
+        async function submitTextFeedback() {
             const text = document.getElementById('feedback-text').value.trim();
             const status = getMealStatus();
             const dateStr = now.toISOString().split('T')[0];
             const sentKey = `text_sent_${dateStr}_${status.rateKey}`;
+            const score = localStorage.getItem(`rated_${dateStr}_${status.rateKey}`) || "0";
 
             if (!text || localStorage.getItem(sentKey)) return;
 
+            // 1. 구글 폼 데이터 전송
+            const formData = new FormData();
+            formData.append(ENTRY_IDS.date, dateStr);
+            formData.append(ENTRY_IDS.meal, status.rateKey);
+            formData.append(ENTRY_IDS.score, score);
+            formData.append(ENTRY_IDS.feedback, text);
+
+            fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData });
+
+            // 2. 로컬 저장
             let stats = JSON.parse(localStorage.getItem('admin_stats_v3') || '{}');
             const key = `${dateStr}_${status.rateKey}`;
             if (!stats[key]) stats[key] = { total: 0, count: 0, feedbacks: [] };
-            
             stats[key].feedbacks.push({ time: new Date().toLocaleTimeString(), msg: text });
             localStorage.setItem('admin_stats_v3', JSON.stringify(stats));
-            localStorage.setItem(sentKey, 'true'); // 전송 기록 저장
+            localStorage.setItem(sentKey, 'true');
 
             lockTextFeedbackUI();
             document.getElementById('feedback-msg').style.opacity = '1';
@@ -304,7 +333,6 @@
                     const d = new Date(date);
                     const dayName = week[d.getDay()];
                     
-                    // 해당 날짜의 실제 메뉴 가져오기
                     let actualMenu = "메뉴 정보 없음";
                     if(currentMenuData && currentMenuData.meals[dayName]) {
                         actualMenu = currentMenuData.meals[dayName][meal] || "식단 정보 없음";
