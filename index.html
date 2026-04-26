@@ -165,7 +165,11 @@
         }
 
         function updateHeaderUI(status) {
-            document.getElementById('current-date').innerText = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+            // 요일 앞에 괄호를 추가하기 위해 날짜 문자열 포맷팅 수정
+            const dateStr = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+            const dayName = week[now.getDay()];
+            document.getElementById('current-date').innerText = `${dateStr} (${dayName})`;
+            
             document.getElementById('meal-type-tag').innerText = status.mealLabel;
             document.getElementById('greeting').innerText = status.greetingText;
         }
