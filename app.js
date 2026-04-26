@@ -1,11 +1,12 @@
-fetch('data.json')
+fetch(`data.json?v=${new Date().getTime()}`)
 .then(res => res.json())
 .then(data => {
 
     const result = getMeal(data);
 
+    // 데이터가 없을 경우를 대비해 '정보 없음' 처리를 강화했습니다.
     document.getElementById("meal").innerText =
-        result.data || "데이터 없음";
+        result.data || "식단 정보가 없습니다.";
 
     document.getElementById("carb").innerText = result.nutrition?.carbs ?? 0;
     document.getElementById("protein").innerText = result.nutrition?.protein ?? 0;
