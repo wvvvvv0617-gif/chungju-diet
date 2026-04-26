@@ -23,8 +23,9 @@
             font-family: 'Pretendard', sans-serif; 
             background-color: #f8fafc; 
             -webkit-tap-highlight-color: transparent;
-            /* iOS 바닥 여백 대응 */
+            /* iOS 바닥 여백 및 당겨서 새로고침 허용 */
             padding-bottom: env(safe-area-inset-bottom);
+            overscroll-behavior-y: contain;
         }
         .star-gold { color: #fbbf24; filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4)); transform: scale(1.1); }
         .disabled-stars { pointer-events: none; opacity: 0.8; }
@@ -35,20 +36,23 @@
 </head>
 <body class="max-w-md mx-auto min-h-screen bg-white shadow-2xl pb-10">
 
-    <header id="main-header" class="p-8 bg-gradient-to-br from-indigo-600 to-blue-500 text-white rounded-b-[50px] shadow-xl relative z-10 transition-all duration-700 pt-12">
-        <div class="flex justify-between items-start">
-            <div>
-                <p id="current-date" class="text-indigo-100 text-sm font-bold mb-1"></p>
-                <h1 id="greeting" class="text-2xl font-bold tracking-tight leading-tight">맛있는 식사 하세요! 🍱</h1>
-            </div>
-            <div class="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-center min-w-[75px] border border-white/10 flex flex-col gap-1.5">
-                <div class="flex flex-col border-b border-white/10 pb-1">
-                    <span class="text-[9px] opacity-80 font-bold tracking-tighter">기온</span>
-                    <span id="realtime-temp" class="text-lg font-black italic leading-none">--°</span>
+    <header id="main-header" class="bg-gradient-to-br from-indigo-600 to-blue-500 text-white rounded-b-[50px] shadow-xl relative z-10 transition-all duration-700">
+        <div style="height: env(safe-area-inset-top); min-height: 20px;"></div>
+        <div class="p-8 pt-4">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p id="current-date" class="text-indigo-100 text-sm font-bold mb-1"></p>
+                    <h1 id="greeting" class="text-2xl font-bold tracking-tight leading-tight">맛있는 식사 하세요! 🍱</h1>
                 </div>
-                <div class="flex flex-col">
-                    <span class="text-[9px] opacity-80 font-bold tracking-tighter">강수</span>
-                    <span id="precipitation" class="text-sm font-black text-blue-200 leading-none">--%</span>
+                <div class="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-center min-w-[75px] border border-white/10 flex flex-col gap-1.5">
+                    <div class="flex flex-col border-b border-white/10 pb-1">
+                        <span class="text-[9px] opacity-80 font-bold tracking-tighter">기온</span>
+                        <span id="realtime-temp" class="text-lg font-black italic leading-none">--°</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[9px] opacity-80 font-bold tracking-tighter">강수</span>
+                        <span id="precipitation" class="text-sm font-black text-blue-200 leading-none">--%</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -123,14 +127,9 @@
 
     <script>
         const ADMIN_PASSWORD = "0617"; 
-        
         const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG35dKFaOFHN5Cls4pcWGX9Q_5J1qa2pOxjBhFpoFddIJucw/formResponse";
         const ENTRY_IDS = {
-            date: "entry.1731866414",
-            meal: "entry.475926623",
-            menu: "entry.525600404",
-            score: "entry.615065306",
-            feedback: "entry.119301674"
+            date: "entry.1731866414", meal: "entry.475926623", menu: "entry.525600404", score: "entry.615065306", feedback: "entry.119301674"
         };
 
         let now = new Date();
@@ -186,7 +185,6 @@
             const dateStr = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
             const dayName = week[now.getDay()];
             document.getElementById('current-date').innerText = `${dateStr} (${dayName})`;
-            
             document.getElementById('meal-type-tag').innerText = status.mealLabel;
             document.getElementById('greeting').innerText = status.greetingText;
         }
@@ -221,6 +219,9 @@
                         selectedScore = parseInt(savedScore);
                         lockRatingUI(selectedScore);
                         lockTextFeedbackUI();
+                    } else {
+                        // [수정] 새로운 끼니 시간이 되면 UI 리셋
+                        resetRatingUI();
                     }
                 } else {
                     document.getElementById('rating-section').classList.add('hidden');
@@ -234,13 +235,17 @@
                     document.getElementById('rest-subtitle').innerText = status.isHolidayMsg ? "공휴일에는 식당 이모님들도 쉬어가셔요." : "주말에는 식당 이모님들도 쉬어가셔요.";
                     document.getElementById('return-msg').innerText = status.returnText;
                 } else {
+                    document.getElementById('meal-content').classList.remove('hidden');
+                    document.getElementById('weekend-message').classList.add('hidden');
+                    document.getElementById('main-card').classList.remove('rest-bg');
                     document.getElementById('display-day-tag').innerText = targetDayName + "요일 식단";
-                    const currentMeal = mealData[status.mealKey];
+                    
+                    const currentMeal = mealData ? mealData[status.mealKey] : "식단 없음";
                     if (currentMeal && currentMeal !== "식단 없음") {
                         const items = currentMeal.split(/[, ]+/).filter(i => i.trim());
                         document.getElementById('menu-list').innerHTML = items.map(m => `<li class="flex items-center gap-3 p-3.5 bg-white rounded-2xl text-slate-700 font-bold border border-slate-100 shadow-sm"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m}</li>`).join('');
                         
-                        let nut = mealData.nutrition ? mealData.nutrition[status.mealKey] : null;
+                        let nut = (mealData && mealData.nutrition) ? mealData.nutrition[status.mealKey] : null;
                         if (nut) {
                             document.getElementById('nutrition-bars').innerHTML = `
                                 ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', nut.carbs + 'g')}
@@ -267,6 +272,19 @@
             });
         }
 
+        // [수정] 평가 UI 초기화 함수 추가
+        function resetRatingUI() {
+            selectedScore = 0;
+            const stars = document.querySelectorAll('.star-btn');
+            stars.forEach(s => { s.classList.add('grayscale', 'opacity-30'); s.classList.remove('star-gold', 'opacity-100'); });
+            document.getElementById('star-container').classList.remove('disabled-stars');
+            document.getElementById('rating-title').innerHTML = `방금 드신 <span id="rating-meal-name" class="text-indigo-600">${mealNameKR[getMealStatus().rateKey] || '식사'}</span>는 어떠셨나요?`;
+            const input = document.getElementById('feedback-text');
+            const btn = document.getElementById('send-btn');
+            input.disabled = false; input.placeholder = "식당 이모님께 전하고 싶은 말씀..."; input.value = "";
+            btn.disabled = false; btn.innerText = "보내기";
+        }
+
         async function submitFullFeedback() {
             const text = document.getElementById('feedback-text').value.trim();
             const status = getMealStatus();
@@ -274,17 +292,8 @@
             const ratingKey = `rated_${dateStr}_${status.rateKey}`;
             const menuText = document.getElementById('rating-menu-preview').innerText;
 
-            if (selectedScore === 0) {
-                alert("별점을 먼저 선택해 주세요!");
-                return;
-            }
-
-            if (localStorage.getItem(ratingKey)) {
-                alert("이미 오늘의 평가를 완료하셨습니다!");
-                lockRatingUI(selectedScore);
-                lockTextFeedbackUI();
-                return;
-            }
+            if (selectedScore === 0) { alert("별점을 먼저 선택해 주세요!"); return; }
+            if (localStorage.getItem(ratingKey)) { alert("이미 오늘의 평가를 완료하셨습니다!"); return; }
 
             const formData = new FormData();
             formData.append(ENTRY_IDS.date, dateStr);
@@ -294,22 +303,18 @@
             formData.append(ENTRY_IDS.feedback, text || "(의견 없음)");
 
             fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData });
-
             localStorage.setItem(ratingKey, selectedScore);
+            
             let stats = JSON.parse(localStorage.getItem('admin_stats_v3') || '{}');
             const key = `${dateStr}_${status.rateKey}`;
             if (!stats[key]) stats[key] = { total: 0, count: 0, feedbacks: [] };
-            
             stats[key].total += selectedScore;
             stats[key].count += 1;
-            if(text) {
-                stats[key].feedbacks.push({ time: new Date().toLocaleTimeString(), msg: text });
-            }
+            if(text) stats[key].feedbacks.push({ time: new Date().toLocaleTimeString(), msg: text });
             localStorage.setItem('admin_stats_v3', JSON.stringify(stats));
 
             lockRatingUI(selectedScore);
             lockTextFeedbackUI();
-            
             document.getElementById('feedback-msg').style.opacity = '1';
             setTimeout(() => { document.getElementById('feedback-msg').style.opacity = '0'; }, 3000);
             updateAdmin();
@@ -324,11 +329,8 @@
         function lockTextFeedbackUI() {
             const input = document.getElementById('feedback-text');
             const btn = document.getElementById('send-btn');
-            input.disabled = true;
-            input.placeholder = "소중한 의견이 전송되었습니다.";
-            input.value = "";
-            btn.disabled = true;
-            btn.innerText = "완료";
+            input.disabled = true; input.placeholder = "소중한 의견이 전송되었습니다."; input.value = "";
+            btn.disabled = true; btn.innerText = "완료";
         }
 
         function updateAdmin() {
@@ -339,22 +341,14 @@
                     if (pw === ADMIN_PASSWORD) sessionStorage.setItem('admin_auth', 'true');
                     else { window.location.href = window.location.pathname; return; }
                 }
-
                 const stats = JSON.parse(localStorage.getItem('admin_stats_v3') || '{}');
                 const adminView = document.getElementById('admin-view');
-                
                 let reportHtml = `<h4 class="text-emerald-400 font-bold mb-4 tracking-tighter text-sm">🛠️ ADMIN DASHBOARD</h4>`;
-                
                 Object.entries(stats).reverse().forEach(([k, v]) => {
                     const [date, meal] = k.split('_');
                     const d = new Date(date);
                     const dayName = week[d.getDay()];
-                    
-                    let actualMenu = "메뉴 정보 없음";
-                    if(currentMenuData && currentMenuData.meals[dayName]) {
-                        actualMenu = currentMenuData.meals[dayName][meal] || "식단 정보 없음";
-                    }
-
+                    let actualMenu = (currentMenuData && currentMenuData.meals[dayName]) ? (currentMenuData.meals[dayName][meal] || "식단 정보 없음") : "데이터 로딩 중...";
                     reportHtml += `
                         <div class="bg-slate-800/50 p-5 rounded-2xl mb-4 border border-slate-700">
                             <div class="mb-3">
@@ -366,29 +360,42 @@
                                 <p class="text-[10px] text-slate-400 leading-tight mt-1">🍴 ${actualMenu}</p>
                             </div>
                             <div class="space-y-1.5 mt-3 border-t border-slate-700 pt-3">
-                                <p class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-2">Anonymous Feedbacks</p>
-                                ${(v.feedbacks || []).map(f => `<div class="bg-slate-900/50 p-2 rounded-lg border border-slate-800/50"><p class="text-slate-300 text-[11px] leading-relaxed"><span class="text-[9px] text-indigo-500/70 font-mono mr-1">${f.time}</span> ${f.msg}</p></div>`).join('') || '<p class="text-slate-600 italic text-[10px]">작성된 건의사항이 없습니다.</p>'}
+                                ${(v.feedbacks || []).map(f => `<div class="bg-slate-900/50 p-2 rounded-lg border border-slate-800/50"><p class="text-slate-300 text-[11px] leading-relaxed"><span class="text-[9px] text-indigo-500/70 font-mono mr-1">${f.time}</span> ${f.msg}</p></div>`).join('') || '<p class="text-slate-600 italic text-[10px]">건의사항 없음</p>'}
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 });
-
                 adminView.innerHTML = reportHtml + `<button onclick="resetStats()" class="w-full py-3 bg-rose-500/20 text-rose-400 border border-rose-500/50 rounded-xl font-bold mt-4 active:bg-rose-500/40">데이터 초기화</button>`;
                 adminView.classList.remove('hidden');
             }
         }
 
         function resetStats() {
-            if (confirm("모든 통계와 평가 기록을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) {
+            if (confirm("모든 기록을 삭제하시겠습니까?")) {
                 localStorage.removeItem('admin_stats_v3');
-                Object.keys(localStorage).forEach(key => { 
-                    if (key.startsWith('rated_')) {
-                        localStorage.removeItem(key);
-                    }
-                });
+                Object.keys(localStorage).forEach(key => { if (key.startsWith('rated_')) localStorage.removeItem(key); });
                 location.reload();
             }
         }
+
+        // [추가] 앱 복귀 시(Background -> Foreground) 자동 갱신
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                now = new Date();
+                loadData();
+                updateAdmin();
+            }
+        });
+
+        // [추가] 1분마다 끼니 변화 감지 후 UI 자동 전환
+        setInterval(() => {
+            const currentLabel = document.getElementById('meal-type-tag').innerText;
+            now = new Date();
+            const status = getMealStatus();
+            if (currentLabel !== status.mealLabel) {
+                loadData();
+                updateAdmin();
+            }
+        }, 60000);
 
         loadData();
         updateAdmin();
