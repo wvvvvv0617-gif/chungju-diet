@@ -18,7 +18,6 @@
     <title>충주캠퍼스 스마트 식단</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Tailwind 다크모드 설정 활성화
         tailwind.config = { darkMode: 'class' }
     </script>
     <style>
@@ -31,11 +30,21 @@
             overscroll-behavior-y: contain;
             transition: background-color 0.3s ease;
         }
-        .dark body { background-color: #0f172a; }
+        .dark body { background-color: #020617; }
+        
+        /* 다크모드 헤더 색상 강제 지정 */
+        .dark #main-header { 
+            background: linear-gradient(135deg, #0f172a 0%, #020617 100%) !important;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+
         .star-gold { color: #fbbf24; filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4)); transform: scale(1.1); }
         .disabled-stars { pointer-events: none; opacity: 0.8; }
+        
+        /* 주말 안내창 배경색 */
         .rest-bg { background: linear-gradient(135deg, #fff5f5 0%, #fff0f6 100%) !important; }
-        .dark .rest-bg { background: linear-gradient(135deg, #2d1a1a 0%, #2d1621 100%) !important; }
+        .dark .rest-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; border: 1px solid #1e293b; }
+
         @keyframes shimmer { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
         .skeleton { animation: shimmer 1.5s infinite ease-in-out; background-color: #e2e8f0; border-radius: 1rem; }
         .dark .skeleton { background-color: #1e293b; }
@@ -53,11 +62,8 @@
                     <p id="current-date" class="text-indigo-100 text-sm font-bold mb-1"></p>
                     <h1 id="greeting" class="text-2xl font-bold tracking-tight leading-tight">맛있는 식사 하세요! 🍱</h1>
                 </div>
-                <div class="flex flex-col gap-2">
-                    <button onclick="toggleDarkMode()" class="bg-white/20 backdrop-blur-md p-2 rounded-xl border border-white/10 hover:bg-white/30 transition-all self-end">
-                        <span id="dark-icon" class="text-lg">🌙</span>
-                    </button>
-                    <div class="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-center min-w-[75px] border border-white/10 flex flex-col gap-1.5">
+                <div class="flex flex-col gap-2 items-end">
+                    <div class="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-center min-w-[75px] border border-white/10 flex flex-col gap-1.5 shadow-sm">
                         <div class="flex flex-col border-b border-white/10 pb-1">
                             <span class="text-[9px] opacity-80 font-bold tracking-tighter">기온</span>
                             <span id="realtime-temp" class="text-lg font-black italic leading-none">--°</span>
@@ -67,6 +73,9 @@
                             <span id="precipitation" class="text-sm font-black text-blue-200 leading-none">--%</span>
                         </div>
                     </div>
+                    <button onclick="toggleDarkMode()" class="bg-white/20 backdrop-blur-md p-2.5 rounded-xl border border-white/10 hover:bg-white/30 transition-all shadow-sm active:scale-90">
+                        <span id="dark-icon" class="text-lg leading-none block">🌙</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -101,7 +110,7 @@
                     <h2 id="rest-title" class="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">식당도 쿨쿨 자는 중!</h2>
                     <p id="rest-subtitle" class="text-base text-slate-500 dark:text-slate-400 leading-relaxed font-medium"></p>
                 </div>
-                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-orange-100 shadow-sm dark:bg-slate-800/70 dark:border-orange-900/30">
+                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-orange-100 shadow-sm dark:bg-slate-800/70 dark:border-indigo-900/50">
                     <p id="return-msg" class="text-sm font-black text-orange-600 dark:text-orange-400"></p>
                 </div>
             </div>
@@ -171,16 +180,23 @@
         let currentMenuData = null;
         let selectedScore = 0; 
 
-        // [다크모드 제어]
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-            document.getElementById('dark-icon').innerText = '☀️';
+        // [다크모드 제어 최적화]
+        function initTheme() {
+            const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('dark-icon').innerText = '🌙'; // 다크모드일 때 달 모양 고정
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('dark-icon').innerText = '☀️'; // 라이트모드일 때 해 모양 고정
+            }
         }
+        initTheme();
 
         function toggleDarkMode() {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            document.getElementById('dark-icon').innerText = isDark ? '☀️' : '🌙';
+            document.getElementById('dark-icon').innerText = isDark ? '🌙' : '☀️';
         }
 
         function toggleEmail() {
@@ -293,7 +309,6 @@
                     document.getElementById('display-day-tag').innerText = targetDayName + "요일 식단";
                     
                     if (currentMeal && currentMeal !== "식단 없음") {
-                        // [파싱 규칙 개선: 콤마로만 구분]
                         const items = currentMeal.split(/,\s*/).filter(i => i.trim());
                         document.getElementById('menu-list').innerHTML = items.map(m => `<li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl text-slate-700 dark:text-slate-200 font-bold border border-slate-100 dark:border-slate-700 shadow-sm"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m}</li>`).join('');
                         
@@ -322,7 +337,6 @@
             const dateStr = now.toISOString().split('T')[0];
             const status = getMealStatus();
             if (localStorage.getItem(`rated_${dateStr}_${status.rateKey}`)) return;
-
             selectedScore = score;
             const stars = document.querySelectorAll('.star-btn');
             stars.forEach((s, i) => { 
@@ -361,7 +375,6 @@
             formData.append(ENTRY_IDS.feedback, text || "(의견 없음)");
 
             fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData });
-            
             localStorage.setItem(ratingKey, selectedScore);
             
             let stats = JSON.parse(localStorage.getItem('admin_stats_v3') || '{}');
@@ -380,11 +393,8 @@
         }
 
         function lockRatingUI(score) {
-            const starContainer = document.getElementById('star-container');
-            if(starContainer) starContainer.classList.add('disabled-stars');
-            const ratingTitle = document.getElementById('rating-title');
-            if(ratingTitle) ratingTitle.innerText = "평가 완료! 감사합니다.";
-            
+            document.getElementById('star-container').classList.add('disabled-stars');
+            document.getElementById('rating-title').innerText = "평가 완료! 감사합니다.";
             const stars = document.querySelectorAll('.star-btn');
             stars.forEach((s, i) => { 
                 if (i < score) s.classList.add('star-gold', 'opacity-100'), s.classList.remove('grayscale', 'opacity-30');
@@ -395,8 +405,8 @@
         function lockTextFeedbackUI() {
             const input = document.getElementById('feedback-text');
             const btn = document.getElementById('send-btn');
-            if(input) { input.disabled = true; input.placeholder = "참여해주셔서 감사합니다."; input.value = ""; }
-            if(btn) { btn.disabled = true; btn.innerText = "완료"; }
+            input.disabled = true; input.placeholder = "참여해주셔서 감사합니다."; input.value = "";
+            btn.disabled = true; btn.innerText = "완료";
         }
 
         function updateAdmin() {
@@ -451,16 +461,9 @@
             }
         });
 
-        // [자동 갱신 로직 개선]
         setInterval(() => {
             const feedbackInput = document.getElementById('feedback-text');
-            // 사용자가 별점을 선택 중이거나(selectedScore > 0 이지만 아직 미제출인 상태는 체크 불필요, 
-            // 여기서는 텍스트 입력창 포커스 여부나 입력값 유무로 체크) 
-            // 텍스트를 입력 중인 경우 자동 로딩을 건너뜁니다.
-            if (document.activeElement === feedbackInput || feedbackInput.value.length > 0) {
-                console.log("사용자가 입력 중이므로 자동 갱신을 스킵합니다.");
-                return; 
-            }
+            if (document.activeElement === feedbackInput || feedbackInput.value.length > 0) return; 
 
             const mealTag = document.getElementById('meal-type-tag');
             if(mealTag) {
