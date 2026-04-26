@@ -2,12 +2,29 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4f46e5">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="스마트 식단">
+    
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3443/3443338.png">
+    <link rel="shortcut icon" href="https://cdn-icons-png.flaticon.com/512/3443/3443338.png">
+
     <title>충주캠퍼스 스마트 식단</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
-        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Pretendard', sans-serif; 
+            background-color: #f8fafc; 
+            -webkit-tap-highlight-color: transparent;
+            /* iOS 바닥 여백 대응 */
+            padding-bottom: env(safe-area-inset-bottom);
+        }
         .star-gold { color: #fbbf24; filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4)); transform: scale(1.1); }
         .disabled-stars { pointer-events: none; opacity: 0.8; }
         .rest-bg { background: linear-gradient(135deg, #fff5f5 0%, #fff0f6 100%) !important; }
@@ -17,7 +34,7 @@
 </head>
 <body class="max-w-md mx-auto min-h-screen bg-white shadow-2xl pb-10">
 
-    <header id="main-header" class="p-8 bg-gradient-to-br from-indigo-600 to-blue-500 text-white rounded-b-[50px] shadow-xl relative z-10 transition-all duration-700">
+    <header id="main-header" class="p-8 bg-gradient-to-br from-indigo-600 to-blue-500 text-white rounded-b-[50px] shadow-xl relative z-10 transition-all duration-700 pt-12">
         <div class="flex justify-between items-start">
             <div>
                 <p id="current-date" class="text-indigo-100 text-sm font-bold mb-1"></p>
@@ -249,7 +266,6 @@
             });
         }
 
-        // 수정된 통합 전송 함수
         async function submitFullFeedback() {
             const text = document.getElementById('feedback-text').value.trim();
             const status = getMealStatus();
@@ -257,13 +273,11 @@
             const ratingKey = `rated_${dateStr}_${status.rateKey}`;
             const menuText = document.getElementById('rating-menu-preview').innerText;
 
-            // 1. 별점 체크
             if (selectedScore === 0) {
                 alert("별점을 먼저 선택해 주세요!");
                 return;
             }
 
-            // 2. 중복 투표 체크 (이미 전송했다면 알림)
             if (localStorage.getItem(ratingKey)) {
                 alert("이미 오늘의 평가를 완료하셨습니다!");
                 lockRatingUI(selectedScore);
@@ -271,7 +285,6 @@
                 return;
             }
 
-            // 3. 구글 폼 전송
             const formData = new FormData();
             formData.append(ENTRY_IDS.date, dateStr);
             formData.append(ENTRY_IDS.meal, mealNameKR[status.rateKey]);
@@ -281,7 +294,6 @@
 
             fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData });
 
-            // 4. 로컬 저장
             localStorage.setItem(ratingKey, selectedScore);
             let stats = JSON.parse(localStorage.getItem('admin_stats_v3') || '{}');
             const key = `${dateStr}_${status.rateKey}`;
@@ -294,7 +306,6 @@
             }
             localStorage.setItem('admin_stats_v3', JSON.stringify(stats));
 
-            // 5. UI 잠금 및 결과 표시
             lockRatingUI(selectedScore);
             lockTextFeedbackUI();
             
@@ -306,7 +317,7 @@
         function lockRatingUI(score) {
             document.getElementById('star-container').classList.add('disabled-stars');
             document.getElementById('rating-title').innerText = "평가 완료! 감사합니다.";
-            selectRating(score); // 별점 고정
+            selectRating(score);
         }
 
         function lockTextFeedbackUI() {
