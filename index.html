@@ -13,7 +13,6 @@
     
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3443/3443338.png">
     <link rel="shortcut icon" href="https://cdn-icons-png.flaticon.com/512/3443/3443338.png">
-    <link rel="manifest" href="manifest.json">
 
     <title>충주캠퍼스 스마트 식단</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,7 +31,6 @@
         }
         .dark body { background-color: #020617; }
         
-        /* 다크모드 헤더 색상 강제 지정 */
         .dark #main-header { 
             background: linear-gradient(135deg, #0f172a 0%, #020617 100%) !important;
             box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
@@ -41,7 +39,6 @@
         .star-gold { color: #fbbf24; filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4)); transform: scale(1.1); }
         .disabled-stars { pointer-events: none; opacity: 0.8; }
         
-        /* 주말 안내창 배경색 */
         .rest-bg { background: linear-gradient(135deg, #fff5f5 0%, #fff0f6 100%) !important; }
         .dark .rest-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; border: 1px solid #1e293b; }
 
@@ -99,7 +96,17 @@
                 </div>
                 <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner dark:bg-slate-900/50 dark:border-slate-700">
                     <h3 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest text-center">Nutrition Report</h3>
+                    
+                    <div class="flex flex-col items-center justify-center mb-6 py-2 border-b border-slate-200/50 dark:border-slate-700/50">
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Estimated Calories</span>
+                        <div class="flex items-baseline gap-1">
+                            <span id="calories" class="text-3xl font-black text-indigo-600 dark:text-indigo-400">0</span>
+                            <span class="text-sm font-bold text-slate-500">kcal</span>
+                        </div>
+                    </div>
+
                     <div id="nutrition-bars" class="space-y-5"></div>
+                    <div id="calorie-box" class="mt-4 text-center text-sm font-black text-indigo-600 dark:text-indigo-400"></div>
                     <p class="text-[9px] text-slate-400 mt-6 text-center leading-relaxed font-medium">표시된 영양 정보는 추정치이므로 참고용으로만 활용해 주세요.</p>
                 </div>
             </div>
@@ -180,7 +187,6 @@
         let currentMenuData = null;
         let selectedScore = 0; 
 
-        // [다크모드 제어 최적화]
         function initTheme() {
             const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
             if (isDark) {
@@ -307,6 +313,8 @@
                         
                         let nut = (mealData && mealData.nutrition) ? mealData.nutrition[status.mealKey] : null;
                         if (nut) {
+                            document.getElementById('calories').innerText = nut.calories || 0;
+
                             document.getElementById('nutrition-bars').innerHTML = `
                                 ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', nut.carbs + 'g')}
                                 ${renderBar('단백질', nut.protein, 'bg-emerald-500', nut.protein + 'g')}
@@ -315,6 +323,7 @@
                             `;
                         }
                     } else {
+                        document.getElementById('calories').innerText = '0';
                         document.getElementById('menu-list').innerHTML = `<li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl text-slate-400 font-bold border border-slate-100 dark:border-slate-700 shadow-sm"><span class="w-2.5 h-2.5 bg-slate-300 rounded-full"></span>식단 정보가 없습니다.</li>`;
                         document.getElementById('nutrition-bars').innerHTML = `<p class="text-center text-[10px] text-slate-400 py-4">등록된 영양 정보가 없습니다.</p>`;
                     }
