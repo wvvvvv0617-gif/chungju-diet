@@ -87,7 +87,7 @@
             
             <div id="meal-content">
                 <div class="space-y-4 mb-8">
-                    <h2 class="text-2xl font-black text-gray-800 dark:text-slate-100 flex items-center gap-2">오늘의 메뉴</h2>
+                    <h2 class="text-2xl font-black text-gray-800 dark:text-slate-100 flex items-center gap-2">식단 상세 정보</h2>
                     <ul id="menu-list" class="grid grid-cols-1 gap-2">
                         <li class="h-14 skeleton"></li>
                         <li class="h-14 skeleton"></li>
@@ -97,15 +97,8 @@
                 <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner dark:bg-slate-900/50 dark:border-slate-700">
                     <h3 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest text-center">Nutrition Report</h3>
                     
-                    <div class="flex flex-col items-center justify-center mb-6 py-2 border-b border-slate-200/50 dark:border-slate-700/50">
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">예상 섭취 칼로리</span>
-                        <div class="flex items-baseline gap-1">
-                            <span id="calories" class="text-xl font-black text-indigo-600 dark:text-indigo-400">0</span>
-                            <span class="text-xs font-bold text-slate-500">kcal</span>
+                    <div id="nutrition-bars" class="space-y-5">
                         </div>
-                    </div>
-
-                    <div id="nutrition-bars" class="space-y-6"></div>
                     <p class="text-[9px] text-slate-400 mt-6 text-center leading-relaxed font-medium">표시된 영양 정보는 추정치이므로 참고용으로만 활용해 주세요.</p>
                 </div>
             </div>
@@ -217,7 +210,6 @@
                 targetDayOffset = 1; 
             }
 
-            // 평가 노출 로직 (방금 먹은 식사를 평가)
             if (hm >= 830 && hm <= 1300) rateKey = 'breakfast';
             else if (hm >= 1330 && hm <= 1830) rateKey = 'lunch'; 
             else if (hm >= 1840 && hm <= 2350) rateKey = 'dinner';
@@ -263,19 +255,17 @@
                     document.getElementById('precipitation').innerText = data.weather.rain + "%";
                 }
 
-                // [메인 카드용 데이터] targetDayOffset 반영
                 const displayDate = new Date(now);
                 displayDate.setDate(now.getDate() + status.targetDayOffset);
                 const targetDayNameEn = week[displayDate.getDay()];
                 const mealData = data.meals ? data.meals[targetDayNameEn] : null;
                 const currentMeal = mealData ? mealData[status.mealKey] : "식단 없음";
 
-                // [평가 섹션용 데이터] targetDayOffset과 상관없이 무조건 '오늘(now)'의 데이터 사용
                 const todayNameEn = week[now.getDay()];
                 const todayData = data.meals ? data.meals[todayNameEn] : null;
 
                 if (status.rateKey && todayData && todayData[status.rateKey]) {
-                    const rateMenu = todayData[status.rateKey]; // 항상 오늘의 해당 끼니 메뉴
+                    const rateMenu = todayData[status.rateKey];
                     document.getElementById('rating-section').classList.remove('hidden');
                     document.getElementById('rating-meal-name').innerText = mealNameKR[status.rateKey];
                     document.getElementById('rating-menu-preview').innerText = rateMenu;
@@ -313,16 +303,19 @@
                         
                         let nut = (mealData && mealData.nutrition) ? mealData.nutrition[status.mealKey] : null;
                         if (nut) {
-                            document.getElementById('calories').innerText = nut.calories || 0;
+                            // 칼로리 퍼센트 계산 (임의 기준치 1000kcal)
+                            const calPercent = Math.min((nut.calories / 1000) * 100, 100);
+                            
                             document.getElementById('nutrition-bars').innerHTML = `
-                                ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', nut.carbs + 'g')}
+                                ${renderBar('총 열량(Calories)', calPercent, 'bg-indigo-500', nut.calories + ' kcal')}
+                                <div class="h-px bg-slate-200 dark:bg-slate-700 my-2"></div>
+                                ${renderBar('탄수화물', nut.carbs, 'bg-blue-400', nut.carbs + 'g')}
                                 ${renderBar('단백질', nut.protein, 'bg-emerald-500', nut.protein + 'g')}
                                 ${renderBar('지방', nut.fat, 'bg-amber-400', nut.fat + 'g')}
                                 ${renderBar('당류', nut.sugar, 'bg-rose-400', nut.sugar + 'g')}
                             `;
                         }
                     } else {
-                        document.getElementById('calories').innerText = '0';
                         document.getElementById('menu-list').innerHTML = `<li class="p-8 text-center text-slate-400 font-medium">등록된 식단 정보가 없습니다.</li>`;
                         document.getElementById('nutrition-bars').innerHTML = `<p class="text-center text-[10px] text-slate-400 py-4">영양 정보 없음</p>`;
                     }
