@@ -343,7 +343,7 @@
             const stars = document.querySelectorAll('.star-btn');
             stars.forEach(s => { s.classList.add('grayscale', 'opacity-30'); s.classList.remove('star-gold', 'opacity-100'); });
             document.getElementById('star-container').classList.remove('disabled-stars');
-            document.getElementById('rating-title').innerHTML = `방금 드신 <span id="rating-meal-name" class="text-indigo-600 dark:text-indigo-400">${mealNameKR[getMealStatus().rateKey] || '식사'}</span>는 어떠셨나요?`;
+            document.getElementById('rating-title').innerHTML = `오늘 드신 <span id="rating-meal-name" class="text-indigo-600 dark:text-indigo-400">${mealNameKR[getMealStatus().rateKey] || '식사'}</span>는 어떠셨나요?`;
             const input = document.getElementById('feedback-text');
             const btn = document.getElementById('send-btn');
             input.disabled = false; input.placeholder = "식당 이모님께 전하고 싶은 말씀..."; input.value = "";
