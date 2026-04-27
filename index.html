@@ -66,8 +66,8 @@
                             <span id="realtime-temp" class="text-lg font-black italic leading-none">--°</span>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-[9px] opacity-80 font-bold tracking-tighter">강수</span>
-                            <span id="precipitation" class="text-sm font-black text-blue-200 leading-none">--%</span>
+                            <span class="text-[9px] opacity-80 font-bold tracking-tighter">날씨</span>
+                            <span id="precipitation" class="text-[11px] font-black text-blue-200 leading-none">--</span>
                         </div>
                     </div>
                     <button onclick="toggleDarkMode()" class="bg-white/20 backdrop-blur-md p-2.5 rounded-xl border border-white/10 hover:bg-white/30 transition-all shadow-sm active:scale-90">
@@ -196,6 +196,16 @@
             return solarHolidays[`${m}-${d}`] || null;
         }
 
+        // 수정: 운량(%) 데이터를 텍스트로 변환하는 함수 추가
+        function getCloudStatusText(cloudValue) {
+            const clouds = parseInt(cloudValue);
+            if (clouds <= 10) return "매우 맑음";
+            if (clouds <= 30) return "맑음";
+            if (clouds <= 60) return "구름 조금";
+            if (clouds <= 90) return "흐림";
+            return "매우 흐림";
+        }
+
         function getMealStatus() {
             const hm = now.getHours() * 100 + now.getMinutes();
             
@@ -252,7 +262,8 @@
                 
                 if (data.weather) {
                     document.getElementById('realtime-temp').innerText = data.weather.temp + "°";
-                    document.getElementById('precipitation').innerText = data.weather.rain + "%";
+                    // 수정: 단순 퍼센트 대신 텍스트로 변환하여 출력
+                    document.getElementById('precipitation').innerText = getCloudStatusText(data.weather.rain);
                 }
 
                 const displayDate = new Date(now);
