@@ -309,10 +309,10 @@
                             document.getElementById('nutrition-bars').innerHTML = `
                                 ${renderBar('총 열량(Calories)', calPercent, 'bg-indigo-500', nut.calories + ' kcal')}
                                 <div class="h-px bg-slate-200 dark:bg-slate-700 my-2"></div>
-                                ${renderBar('탄수화물', nut.carbs, 'bg-blue-400', nut.carbs + 'g')}
-                                ${renderBar('단백질', nut.protein, 'bg-emerald-500', nut.protein + 'g')}
-                                ${renderBar('지방', nut.fat, 'bg-amber-400', nut.fat + 'g')}
-                                ${renderBar('당류', nut.sugar, 'bg-rose-400', nut.sugar + 'g')}
+                                ${renderBar('탄수화물(carbs)', nut.carbs, 'bg-blue-400', nut.carbs + 'g')}
+                                ${renderBar('단백질(Protein)', nut.protein, 'bg-emerald-500', nut.protein + 'g')}
+                                ${renderBar('지방(Fat)', nut.fat, 'bg-amber-400', nut.fat + 'g')}
+                                ${renderBar('당류(Sugar)', nut.sugar, 'bg-rose-400', nut.sugar + 'g')}
                             `;
                         }
                     } else {
