@@ -214,15 +214,14 @@
             else { 
                 mealKey = 'breakfast'; 
                 mealLabel = 'NEXT BREAKFAST ☀️'; 
-                targetDayOffset = 1; // 18:30 이후면 내일로 설정
+                targetDayOffset = 1; 
             }
 
-            // 평가 노출 로직
+            // 평가 노출 로직 (방금 먹은 식사를 평가)
             if (hm >= 830 && hm <= 1300) rateKey = 'breakfast';
             else if (hm >= 1330 && hm <= 1830) rateKey = 'lunch'; 
             else if (hm >= 1840 && hm <= 2350) rateKey = 'dinner';
 
-            // 타겟 날짜 계산 (오늘 혹은 내일)
             const targetDate = new Date(now);
             targetDate.setDate(now.getDate() + targetDayOffset);
             
@@ -264,17 +263,19 @@
                     document.getElementById('precipitation').innerText = data.weather.rain + "%";
                 }
 
-                // 실제 데이터를 가져올 요일 계산 (targetDayOffset 반영)
+                // [메인 카드용 데이터] targetDayOffset 반영
                 const displayDate = new Date(now);
                 displayDate.setDate(now.getDate() + status.targetDayOffset);
-                const targetDayName = week[displayDate.getDay()];
-
-                const mealData = data.meals ? data.meals[targetDayName] : null;
+                const targetDayNameEn = week[displayDate.getDay()];
+                const mealData = data.meals ? data.meals[targetDayNameEn] : null;
                 const currentMeal = mealData ? mealData[status.mealKey] : "식단 없음";
 
-                // 평가 섹션 제어 (평가는 '현재' 먹은 식사에 대해 수행하므로 targetDayOffset 0일때만 유효할 확률이 큼)
-                if (status.rateKey && !status.isRest && mealData && mealData[status.rateKey]) {
-                    const rateMenu = mealData[status.rateKey];
+                // [평가 섹션용 데이터] targetDayOffset과 상관없이 무조건 '오늘(now)'의 데이터 사용
+                const todayNameEn = week[now.getDay()];
+                const todayData = data.meals ? data.meals[todayNameEn] : null;
+
+                if (status.rateKey && todayData && todayData[status.rateKey]) {
+                    const rateMenu = todayData[status.rateKey]; // 항상 오늘의 해당 끼니 메뉴
                     document.getElementById('rating-section').classList.remove('hidden');
                     document.getElementById('rating-meal-name').innerText = mealNameKR[status.rateKey];
                     document.getElementById('rating-menu-preview').innerText = rateMenu;
@@ -304,7 +305,7 @@
                     document.getElementById('meal-content').classList.remove('hidden');
                     document.getElementById('weekend-message').classList.add('hidden');
                     document.getElementById('main-card').classList.remove('rest-bg');
-                    document.getElementById('display-day-tag').innerText = targetDayName + "요일 식단";
+                    document.getElementById('display-day-tag').innerText = targetDayNameEn + "요일 식단";
                     
                     if (currentMeal && currentMeal !== "식단 없음") {
                         const items = currentMeal.split(/,\s*/).filter(i => i.trim());
@@ -377,7 +378,6 @@
             fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData });
             localStorage.setItem(ratingKey, selectedScore);
             
-            // 로컬 관리자 데이터 저장
             let stats = JSON.parse(localStorage.getItem('admin_stats_v3') || '{}');
             const key = `${dateStr}_${status.rateKey}`;
             if (!stats[key]) stats[key] = { total: 0, count: 0, feedbacks: [] };
