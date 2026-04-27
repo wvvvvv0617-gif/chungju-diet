@@ -1,8 +1,8 @@
 {
   "weather": {
-    "temp": 23,
+    "temp": 20,
     "rain": 100,
-    "last_update": "2026-04-27 16:59"
+    "last_update": "2026-04-27 19:18"
   },
   "meals": {
     "월": {
@@ -14,19 +14,22 @@
           "carbs": 50,
           "protein": 25,
           "fat": 10,
-          "sugar": 5
+          "sugar": 5,
+          "calories": 690
         },
         "lunch": {
           "carbs": 50,
           "protein": 25,
           "fat": 10,
-          "sugar": 5
+          "sugar": 5,
+          "calories": 690
         },
         "dinner": {
           "carbs": 65,
           "protein": 40,
           "fat": 20,
-          "sugar": 13
+          "sugar": 13,
+          "calories": 900
         }
       }
     },
@@ -39,19 +42,22 @@
           "carbs": 50,
           "protein": 25,
           "fat": 10,
-          "sugar": 5
+          "sugar": 5,
+          "calories": 690
         },
         "lunch": {
           "carbs": 60,
           "protein": 20,
           "fat": 15,
-          "sugar": 5
+          "sugar": 5,
+          "calories": 755
         },
         "dinner": {
           "carbs": 45,
           "protein": 40,
           "fat": 20,
-          "sugar": 5
+          "sugar": 5,
+          "calories": 820
         }
       }
     },
@@ -64,19 +70,22 @@
           "carbs": 45,
           "protein": 40,
           "fat": 20,
-          "sugar": 5
+          "sugar": 5,
+          "calories": 820
         },
         "lunch": {
           "carbs": 50,
           "protein": 25,
           "fat": 10,
-          "sugar": 5
+          "sugar": 5,
+          "calories": 690
         },
         "dinner": {
           "carbs": 50,
           "protein": 25,
           "fat": 10,
-          "sugar": 5
+          "sugar": 5,
+          "calories": 690
         }
       }
     },
@@ -89,19 +98,22 @@
           "carbs": 60,
           "protein": 20,
           "fat": 15,
-          "sugar": 5
+          "sugar": 5,
+          "calories": 755
         },
         "lunch": {
           "carbs": 65,
           "protein": 40,
           "fat": 20,
-          "sugar": 13
+          "sugar": 13,
+          "calories": 900
         },
         "dinner": {
           "carbs": 60,
           "protein": 20,
           "fat": 15,
-          "sugar": 5
+          "sugar": 5,
+          "calories": 755
         }
       }
     },
@@ -114,19 +126,22 @@
           "carbs": 0,
           "protein": 0,
           "fat": 0,
-          "sugar": 0
+          "sugar": 0,
+          "calories": 0
         },
         "lunch": {
           "carbs": 0,
           "protein": 0,
           "fat": 0,
-          "sugar": 0
+          "sugar": 0,
+          "calories": 0
         },
         "dinner": {
           "carbs": 0,
           "protein": 0,
           "fat": 0,
-          "sugar": 0
+          "sugar": 0,
+          "calories": 0
         }
       }
     }
