@@ -98,14 +98,14 @@
                     <h3 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest text-center">Nutrition Report</h3>
                     
                     <div class="flex flex-col items-center justify-center mb-6 py-2 border-b border-slate-200/50 dark:border-slate-700/50">
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Estimated Calories</span>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">예상 섭취 칼로리</span>
                         <div class="flex items-baseline gap-1">
-                            <span id="calories" class="text-3xl font-black text-indigo-600 dark:text-indigo-400">0</span>
-                            <span class="text-sm font-bold text-slate-500">kcal</span>
+                            <span id="calories" class="text-xl font-black text-indigo-600 dark:text-indigo-400">0</span>
+                            <span class="text-xs font-bold text-slate-500">kcal</span>
                         </div>
                     </div>
 
-                    <div id="nutrition-bars" class="space-y-5"></div>
+                    <div id="nutrition-bars" class="space-y-6"></div>
                     <div id="calorie-box" class="mt-4 text-center text-sm font-black text-indigo-600 dark:text-indigo-400"></div>
                     <p class="text-[9px] text-slate-400 mt-6 text-center leading-relaxed font-medium">표시된 영양 정보는 추정치이므로 참고용으로만 활용해 주세요.</p>
                 </div>
@@ -332,7 +332,7 @@
         }
 
         function renderBar(label, val, color, weight) {
-            return `<div><div class="flex justify-between items-end mb-1"><div class="flex items-baseline gap-1.5"><span class="text-[11px] font-black text-slate-800 dark:text-slate-200">${label}</span><span class="text-[9px] font-bold text-slate-400">${val}%</span></div><span class="text-[10px] font-black text-indigo-600 dark:text-indigo-400">${weight}</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div></div></div>`;
+            return `<div><div class="flex justify-between items-end mb-1"><div class="flex items-baseline gap-1.5"><span class="text-[11px] font-black text-slate-800 dark:text-slate-200">${label}</span></div><span class="text-[10px] font-black text-indigo-600 dark:text-indigo-400">${weight}</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden shadow-inner"><div class="${color} h-full transition-all duration-1000 shadow-sm" style="width: ${val}%"></div></div></div>`;
         }
 
         function selectRating(score) {
