@@ -106,7 +106,6 @@
                     </div>
 
                     <div id="nutrition-bars" class="space-y-6"></div>
-                    <div id="calorie-box" class="mt-4 text-center text-sm font-black text-indigo-600 dark:text-indigo-400"></div>
                     <p class="text-[9px] text-slate-400 mt-6 text-center leading-relaxed font-medium">표시된 영양 정보는 추정치이므로 참고용으로만 활용해 주세요.</p>
                 </div>
             </div>
@@ -145,7 +144,7 @@
                                 class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-xl px-4 py-3 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-300 transition-all">
                             <button id="send-btn" onclick="submitFullFeedback()" class="bg-indigo-600 text-white px-4 py-3 rounded-xl text-xs font-bold active:scale-95 transition-all disabled:bg-slate-300 dark:disabled:bg-slate-700">보내기</button>
                         </div>
-                        <p class="text-[9px] text-slate-400 text-left pl-1">※ 작성해주신 의견은 <span class="font-bold text-indigo-500">익명으로</span> 수렴되어, 추후 식사 환경 개선을 제안하는 데 소중한 보탬이 됩니다.</p>
+                        <p class="text-[9px] text-slate-400 text-left pl-1">※ 작성해주신 의견은 <span class="font-bold text-indigo-500">익명으로</span> 수렴됩니다.</p>
                     </div>
                 </div>
                 <p id="feedback-msg" class="text-indigo-600 dark:text-indigo-400 text-[11px] font-bold mt-4 h-4 opacity-0 transition-opacity">✅ 소중한 의견 감사합니다!</p>
@@ -158,15 +157,12 @@
                 <h4 class="text-sm font-black text-indigo-900 dark:text-indigo-200 mb-4 leading-relaxed px-4">
                 불편한 점이나 제안하고 싶은 기능을 알려주세요.
                 </h4>
-                <p class="text-[11px] text-indigo-600/70 dark:text-indigo-400/70 font-medium mb-6">여러분의 제안이 앱의 미래가 됩니다. ✨</p>
-                
                 <div id="email-area" class="flex flex-col items-center gap-3">
                     <a href="https://forms.gle/CSuTJa8defrhDELr5" target="_blank" class="w-full max-w-[220px]">
                         <button class="w-full bg-indigo-600 text-white px-6 py-4 rounded-2xl text-xs font-black shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 transition-all">
                             익명으로 의견 남기기
                         </button>
                     </a>
-                    <p class="text-[9px] text-slate-400 mt-1 italic">클릭 시 설문 페이지로 이동합니다.</p>
                 </div>
             </div>
         </section>
@@ -189,13 +185,8 @@
 
         function initTheme() {
             const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            if (isDark) {
-                document.documentElement.classList.add('dark');
-                document.getElementById('dark-icon').innerText = '🌙'; 
-            } else {
-                document.documentElement.classList.remove('dark');
-                document.getElementById('dark-icon').innerText = '☀️'; 
-            }
+            document.documentElement.classList.toggle('dark', isDark);
+            document.getElementById('dark-icon').innerText = isDark ? '🌙' : '☀️';
         }
         initTheme();
 
@@ -213,39 +204,42 @@
         }
 
         function getMealStatus() {
-            const day = now.getDay();
             const hm = now.getHours() * 100 + now.getMinutes();
-            const tomorrow = new Date(now);
-            tomorrow.setDate(now.getDate() + 1);
-            const isTodayHoliday = getHolidayName(now) !== null;
-            const isTomorrowHoliday = getHolidayName(tomorrow) !== null;
-            
-            const isWeekend = (day === 5 && hm >= 1830) || day === 6 || day === 0;
-            const isHolidayPeriod = (isTomorrowHoliday && hm >= 1830) || isTodayHoliday;
-
-            let returnText = "내일 다시 만나요!";
-            let greetingText = "맛있는 식사 하세요! 🍱";
-            
-            if (isWeekend) {
-                returnText = "다음 주 월요일에 봐요!";
-                greetingText = "즐겁고 편안한 주말 되세요! ✨";
-            } else if (isHolidayPeriod) {
-                returnText = "휴일이 끝나면 다시 만나요!";
-                greetingText = "꿀같은 휴일 보내세요! 🎈";
-            }
             
             let mealKey, mealLabel, targetDayOffset = 0, rateKey = null;
 
             if (hm < 830) { mealKey = 'breakfast'; mealLabel = 'BREAKFAST 🍳'; }
             else if (hm < 1330) { mealKey = 'lunch'; mealLabel = 'LUNCH 🍱'; }
             else if (hm < 1830) { mealKey = 'dinner'; mealLabel = 'DINNER 🌙'; }
-            else { mealKey = 'breakfast'; mealLabel = 'NEXT BREAKFAST ☀️'; targetDayOffset = 1; }
+            else { 
+                mealKey = 'breakfast'; 
+                mealLabel = 'NEXT BREAKFAST ☀️'; 
+                targetDayOffset = 1; // 18:30 이후면 내일로 설정
+            }
 
+            // 평가 노출 로직
             if (hm >= 830 && hm <= 1300) rateKey = 'breakfast';
             else if (hm >= 1330 && hm <= 1830) rateKey = 'lunch'; 
             else if (hm >= 1840 && hm <= 2350) rateKey = 'dinner';
 
-            return { mealKey, mealLabel, rateKey, isRest: isWeekend || isHolidayPeriod, isHolidayMsg: isHolidayPeriod && !isWeekend, returnText, greetingText, targetDayOffset };
+            // 타겟 날짜 계산 (오늘 혹은 내일)
+            const targetDate = new Date(now);
+            targetDate.setDate(now.getDate() + targetDayOffset);
+            
+            const day = targetDate.getDay();
+            const isWeekend = day === 6 || day === 0;
+            const isHoliday = getHolidayName(targetDate) !== null;
+            const isRest = isWeekend || isHoliday;
+
+            let returnText = targetDayOffset === 1 ? "내일 다시 만나요!" : "잠시만 기다려주세요!";
+            let greetingText = "맛있는 식사 하세요! 🍱";
+            
+            if (isRest) {
+                returnText = (day === 6 || day === 0) ? "평일에 다시 만나요!" : "휴일이 끝나면 다시 만나요!";
+                greetingText = "편안한 휴식 되세요! ✨";
+            }
+
+            return { mealKey, mealLabel, rateKey, isRest, isHolidayMsg: isHoliday, returnText, greetingText, targetDayOffset };
         }
 
         function updateHeaderUI(status) {
@@ -270,12 +264,17 @@
                     document.getElementById('precipitation').innerText = data.weather.rain + "%";
                 }
 
-                const targetDayName = week[now.getDay()];
+                // 실제 데이터를 가져올 요일 계산 (targetDayOffset 반영)
+                const displayDate = new Date(now);
+                displayDate.setDate(now.getDate() + status.targetDayOffset);
+                const targetDayName = week[displayDate.getDay()];
+
                 const mealData = data.meals ? data.meals[targetDayName] : null;
                 const currentMeal = mealData ? mealData[status.mealKey] : "식단 없음";
 
-                if (status.rateKey && !status.isRest && currentMeal !== "식단 없음") {
-                    const rateMenu = mealData ? mealData[status.rateKey] : "메뉴 정보 없음";
+                // 평가 섹션 제어 (평가는 '현재' 먹은 식사에 대해 수행하므로 targetDayOffset 0일때만 유효할 확률이 큼)
+                if (status.rateKey && !status.isRest && mealData && mealData[status.rateKey]) {
+                    const rateMenu = mealData[status.rateKey];
                     document.getElementById('rating-section').classList.remove('hidden');
                     document.getElementById('rating-meal-name').innerText = mealNameKR[status.rateKey];
                     document.getElementById('rating-menu-preview').innerText = rateMenu;
@@ -299,7 +298,7 @@
                     document.getElementById('weekend-message').classList.remove('hidden');
                     document.getElementById('main-card').classList.add('rest-bg');
                     document.getElementById('display-day-tag').innerText = "REST DAY";
-                    document.getElementById('rest-subtitle').innerText = status.isHolidayMsg ? "공휴일에는 식당 이모님들도 쉬어가셔요." : "주말에는 식당 이모님들도 쉬어가셔요.";
+                    document.getElementById('rest-subtitle').innerText = status.isHolidayMsg ? "공휴일에는 식당이 쉬어갑니다." : "주말에는 식당이 쉬어갑니다.";
                     document.getElementById('return-msg').innerText = status.returnText;
                 } else {
                     document.getElementById('meal-content').classList.remove('hidden');
@@ -309,12 +308,11 @@
                     
                     if (currentMeal && currentMeal !== "식단 없음") {
                         const items = currentMeal.split(/,\s*/).filter(i => i.trim());
-                        document.getElementById('menu-list').innerHTML = items.map(m => `<li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl text-slate-700 dark:text-slate-200 font-bold border border-slate-100 dark:border-slate-700 shadow-sm"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m}</li>`).join('');
+                        document.getElementById('menu-list').innerHTML = items.map(m => `<li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl text-slate-700 dark:text-slate-200 font-bold border border-slate-100 dark:border-slate-700 shadow-sm animate-fadeIn"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m}</li>`).join('');
                         
                         let nut = (mealData && mealData.nutrition) ? mealData.nutrition[status.mealKey] : null;
                         if (nut) {
                             document.getElementById('calories').innerText = nut.calories || 0;
-
                             document.getElementById('nutrition-bars').innerHTML = `
                                 ${renderBar('탄수화물', nut.carbs, 'bg-blue-500', nut.carbs + 'g')}
                                 ${renderBar('단백질', nut.protein, 'bg-emerald-500', nut.protein + 'g')}
@@ -324,15 +322,15 @@
                         }
                     } else {
                         document.getElementById('calories').innerText = '0';
-                        document.getElementById('menu-list').innerHTML = `<li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl text-slate-400 font-bold border border-slate-100 dark:border-slate-700 shadow-sm"><span class="w-2.5 h-2.5 bg-slate-300 rounded-full"></span>식단 정보가 없습니다.</li>`;
-                        document.getElementById('nutrition-bars').innerHTML = `<p class="text-center text-[10px] text-slate-400 py-4">등록된 영양 정보가 없습니다.</p>`;
+                        document.getElementById('menu-list').innerHTML = `<li class="p-8 text-center text-slate-400 font-medium">등록된 식단 정보가 없습니다.</li>`;
+                        document.getElementById('nutrition-bars').innerHTML = `<p class="text-center text-[10px] text-slate-400 py-4">영양 정보 없음</p>`;
                     }
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Data Load Error:", e); }
         }
 
         function renderBar(label, val, color, weight) {
-            return `<div><div class="flex justify-between items-end mb-1"><div class="flex items-baseline gap-1.5"><span class="text-[11px] font-black text-slate-800 dark:text-slate-200">${label}</span></div><span class="text-[10px] font-black text-indigo-600 dark:text-indigo-400">${weight}</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden shadow-inner"><div class="${color} h-full transition-all duration-1000 shadow-sm" style="width: ${val}%"></div></div></div>`;
+            return `<div><div class="flex justify-between items-end mb-1"><span class="text-[11px] font-black text-slate-800 dark:text-slate-200">${label}</span><span class="text-[10px] font-black text-indigo-600 dark:text-indigo-400">${weight}</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div></div></div>`;
         }
 
         function selectRating(score) {
@@ -352,10 +350,10 @@
             const stars = document.querySelectorAll('.star-btn');
             stars.forEach(s => { s.classList.add('grayscale', 'opacity-30'); s.classList.remove('star-gold', 'opacity-100'); });
             document.getElementById('star-container').classList.remove('disabled-stars');
-            document.getElementById('rating-title').innerHTML = `오늘 드신 <span id="rating-meal-name" class="text-indigo-600 dark:text-indigo-400">${mealNameKR[getMealStatus().rateKey] || '식사'}</span>는 어떠셨나요?`;
+            document.getElementById('rating-title').innerHTML = `오늘 드신 <span class="text-indigo-600 dark:text-indigo-400">${mealNameKR[getMealStatus().rateKey] || '식사'}</span>는 어떠셨나요?`;
             const input = document.getElementById('feedback-text');
             const btn = document.getElementById('send-btn');
-            input.disabled = false; input.placeholder = "식당 이모님께 전하고 싶은 말씀..."; input.value = "";
+            input.disabled = false; input.value = "";
             btn.disabled = false; btn.innerText = "보내기";
         }
 
@@ -366,8 +364,8 @@
             const ratingKey = `rated_${dateStr}_${status.rateKey}`;
             const menuText = document.getElementById('rating-menu-preview').innerText;
 
-            if (selectedScore === 0) { alert("별점을 먼저 선택해 주세요!"); return; }
-            if (localStorage.getItem(ratingKey)) { alert("이미 오늘의 평가를 완료하셨습니다!"); return; }
+            if (selectedScore === 0) { alert("별점을 선택해 주세요!"); return; }
+            if (localStorage.getItem(ratingKey)) return;
 
             const formData = new FormData();
             formData.append(ENTRY_IDS.date, dateStr);
@@ -379,6 +377,7 @@
             fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData });
             localStorage.setItem(ratingKey, selectedScore);
             
+            // 로컬 관리자 데이터 저장
             let stats = JSON.parse(localStorage.getItem('admin_stats_v3') || '{}');
             const key = `${dateStr}_${status.rateKey}`;
             if (!stats[key]) stats[key] = { total: 0, count: 0, feedbacks: [] };
@@ -407,7 +406,7 @@
         function lockTextFeedbackUI() {
             const input = document.getElementById('feedback-text');
             const btn = document.getElementById('send-btn');
-            input.disabled = true; input.placeholder = "참여해주셔서 감사합니다."; input.value = "";
+            input.disabled = true; input.placeholder = "참여해주셔서 감사합니다.";
             btn.disabled = true; btn.innerText = "완료";
         }
 
@@ -415,40 +414,34 @@
             const params = new URLSearchParams(window.location.search);
             if (params.get('admin') === 'true') {
                 if (sessionStorage.getItem('admin_auth') !== 'true') {
-                    const pw = prompt("관리자 비밀번호를 입력하세요:");
+                    const pw = prompt("관리자 비밀번호:");
                     if (pw === ADMIN_PASSWORD) sessionStorage.setItem('admin_auth', 'true');
                     else { window.location.href = window.location.pathname; return; }
                 }
                 const stats = JSON.parse(localStorage.getItem('admin_stats_v3') || '{}');
                 const adminView = document.getElementById('admin-view');
-                let reportHtml = `<h4 class="text-emerald-400 font-bold mb-4 tracking-tighter text-sm">🛠️ ADMIN DASHBOARD</h4>`;
+                let reportHtml = `<h4 class="text-emerald-400 font-bold mb-4 text-sm">🛠️ ADMIN DASHBOARD</h4>`;
                 Object.entries(stats).reverse().forEach(([k, v]) => {
                     const [date, meal] = k.split('_');
-                    const d = new Date(date);
-                    const dayName = week[d.getDay()];
-                    let actualMenu = (currentMenuData && currentMenuData.meals[dayName]) ? (currentMenuData.meals[dayName][meal] || "식단 정보 없음") : "데이터 로딩 중...";
                     reportHtml += `
-                        <div class="bg-slate-800/50 p-5 rounded-2xl mb-4 border border-slate-700">
-                            <div class="mb-3">
-                                <div class="flex justify-between items-start">
-                                    <span class="text-[10px] text-indigo-400 font-bold">${date} (${dayName})</span>
-                                    <span class="text-yellow-400 font-bold">⭐ ${(v.total/v.count || 0).toFixed(1)} <span class="text-[9px] text-slate-500">(${v.count}명)</span></span>
-                                </div>
-                                <h5 class="text-white font-bold text-sm mt-1">${mealNameKR[meal]} 식단</h5>
-                                <p class="text-[10px] text-slate-400 leading-tight mt-1">🍴 ${actualMenu}</p>
+                        <div class="bg-slate-800/50 p-4 rounded-2xl mb-4 border border-slate-700">
+                            <div class="flex justify-between">
+                                <span class="text-indigo-400 font-bold">${date}</span>
+                                <span class="text-yellow-400">⭐ ${(v.total/v.count || 0).toFixed(1)} (${v.count}명)</span>
                             </div>
-                            <div class="space-y-1.5 mt-3 border-t border-slate-700 pt-3">
-                                ${(v.feedbacks || []).map(f => `<div class="bg-slate-900/50 p-2 rounded-lg border border-slate-800/50"><p class="text-slate-300 text-[11px] leading-relaxed"><span class="text-[9px] text-indigo-500/70 font-mono mr-1">${f.time}</span> ${f.msg}</p></div>`).join('') || '<p class="text-slate-600 italic text-[10px]">건의사항 없음</p>'}
+                            <h5 class="text-white font-bold mt-1">${mealNameKR[meal]}</h5>
+                            <div class="space-y-1 mt-2">
+                                ${(v.feedbacks || []).map(f => `<p class="text-slate-300 text-[10px] bg-slate-900/50 p-1 rounded">${f.msg}</p>`).join('')}
                             </div>
                         </div>`;
                 });
-                adminView.innerHTML = reportHtml + `<button onclick="resetStats()" class="w-full py-3 bg-rose-500/20 text-rose-400 border border-rose-500/50 rounded-xl font-bold mt-4 active:bg-rose-500/40">데이터 초기화</button>`;
+                adminView.innerHTML = reportHtml + `<button onclick="resetStats()" class="w-full py-2 bg-rose-500/20 text-rose-400 rounded-xl text-[10px]">초기화</button>`;
                 adminView.classList.remove('hidden');
             }
         }
 
         function resetStats() {
-            if (confirm("모든 기록을 삭제하시겠습니까?")) {
+            if (confirm("삭제하시겠습니까?")) {
                 localStorage.removeItem('admin_stats_v3');
                 Object.keys(localStorage).forEach(key => { if (key.startsWith('rated_')) localStorage.removeItem(key); });
                 location.reload();
@@ -459,25 +452,8 @@
             if (document.visibilityState === "visible") {
                 now = new Date();
                 loadData();
-                updateAdmin();
             }
         });
-
-        setInterval(() => {
-            const feedbackInput = document.getElementById('feedback-text');
-            if (document.activeElement === feedbackInput || feedbackInput.value.length > 0) return; 
-
-            const mealTag = document.getElementById('meal-type-tag');
-            if(mealTag) {
-                const currentLabel = mealTag.innerText;
-                now = new Date();
-                const status = getMealStatus();
-                if (currentLabel !== status.mealLabel) {
-                    loadData();
-                    updateAdmin();
-                }
-            }
-        }, 60000);
 
         loadData();
         updateAdmin();
