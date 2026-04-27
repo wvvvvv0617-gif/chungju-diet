@@ -70,9 +70,8 @@ def estimate_nutrition(menu_text):
     for key in base:
         base[key] = max(5, min(95, base[key]))
         
-    # 🔥 칼로리 계산 로직 추가 (탄수화물*4 + 단백질*4 + 지방*9)
-    # 한 끼 식사 베이스 칼로리 약 300kcal + 영양소별 합산
-    base["calories"] = (base["carbs"] * 4) + (base["protein"] * 4) + (base["fat"] * 9) + 200
+    # 🔥 칼로리 계산 로직 (탄수화물*4 + 단백질*4 + 지방*9 + 기본300kcal)
+    base["calories"] = int((base["carbs"] * 4) + (base["protein"] * 4) + (base["fat"] * 9) + 300)
         
     return base
 
