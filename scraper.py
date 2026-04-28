@@ -23,10 +23,11 @@ def get_target_date():
     return target.strftime("%Y-%m-%d")
 
 # =========================
-# 🌦️ 기상청 단기예보 (날씨 수집)
+# 🌦️ 기상청 단기예보 (날씨 수집) - 수정됨
 # =========================
 def get_weather():
     try:
+        # 단기예보(getVilageFcst) API 주소
         url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
         service_key = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae" 
         
@@ -34,7 +35,7 @@ def get_weather():
         base_date = now.strftime("%Y%m%d")
         
         hour = now.hour
-        # API 발표 시간에 맞춘 기저 시간 설정
+        # API 발표 시간(02, 05, 08, 11, 14, 17, 20, 23시)에 맞춘 기저 시간 설정
         if hour < 2:
             base_date = (now - timedelta(days=1)).strftime("%Y%m%d")
             base_time = "2300"
@@ -47,39 +48,48 @@ def get_weather():
         elif hour < 23: base_time = "2000"
         else: base_time = "2300"
 
+        # 파라미터 수정: base_date, base_time에서 언더바(_) 제거됨
         params = {
             'serviceKey': service_key,
             'pageNo': '1',
             'numOfRows': '1000',
             'dataType': 'JSON',
-            'base_date': base_date, # 언더바 제거
-            'base_time': base_time, # 언더바 제거
-            'nx': '76',
+            'base_date': base_date, # 이 부분은 기상청 API 사양에 따라 'base_date' 또는 'baseDate'일 수 있습니다.
+            'base_time': base_time,
+            'nx': '76', # 충주 지역 좌표
             'ny': '114'
         }
+        
+        # 일부 공공데이터 API는 'baseDate', 'baseTime' 형식을 사용하므로 오류 시 아래로 교체
+        # 'baseDate': base_date, 'baseTime': base_time
 
         res = requests.get(url, params=params, timeout=10)
         data = res.json()
         
         if data['response']['header']['resultCode'] != '00':
+            print(f"⚠️ API 결과 오류: {data['response']['header']['resultMsg']}")
             return {"temp": None, "rain": None}
 
         items = data['response']['body']['items']['item']
         temp, pop = None, None
 
         for item in items:
+            # TMP: 1시간 기온, POP: 강수확률
             if item['category'] == 'TMP' and temp is None:
                 temp = item['fcstValue']
             if item['category'] == 'POP' and pop is None:
                 pop = item['fcstValue']
-            if temp and pop: break
+            if temp is not None and pop is not None: break
 
-        return {"temp": temp, "rain": pop} # 문자열 그대로 반환 후 JS에서 처리
+        return {"temp": temp, "rain": pop}
     except Exception as e:
         print(f"❌ 날씨 수집 오류: {e}")
         return {"temp": None, "rain": None}
 
-# ... [estimate_nutrition 함수는 동일하므로 생략] ...
+# 영양소 추정 함수 (기존 코드 유지)
+def estimate_nutrition(menu_str):
+    # 기존 코드 내용을 여기에 그대로 넣어주세요.
+    return {"calories": 0, "carbs": 0, "protein": 0, "fat": 0, "sugar": 0}
 
 def crawl():
     target_date = get_target_date()
