@@ -2,8 +2,8 @@ name: Auto Menu Update
 
 on:
   schedule:
-    # 매 시간 정각에 실행 (한국 시간 매 시간 정각)
-    - cron: "0 * * * *"  
+    # 매 시간 17분에 실행 (정각 트래픽을 피해서 지연 최소화)
+    - cron: "17 * * * *"  
   workflow_dispatch: # 수동 실행 버튼 활성화
 
 jobs:
