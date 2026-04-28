@@ -48,21 +48,18 @@ def get_weather():
         elif hour < 23: base_time = "2000"
         else: base_time = "2300"
 
-        # 파라미터 수정: base_date, base_time에서 언더바(_) 제거됨
+        # 파라미터 수정: baseDate, baseTime으로 명칭 변경 및 목행동 좌표(77, 115) 적용
         params = {
             'serviceKey': service_key,
             'pageNo': '1',
             'numOfRows': '1000',
             'dataType': 'JSON',
-            'base_date': base_date, # 이 부분은 기상청 API 사양에 따라 'base_date' 또는 'baseDate'일 수 있습니다.
-            'base_time': base_time,
-            'nx': '76', # 충주 지역 좌표
-            'ny': '114'
+            'baseDate': base_date, 
+            'baseTime': base_time,
+            'nx': '77', 
+            'ny': '115'
         }
         
-        # 일부 공공데이터 API는 'baseDate', 'baseTime' 형식을 사용하므로 오류 시 아래로 교체
-        # 'baseDate': base_date, 'baseTime': base_time
-
         res = requests.get(url, params=params, timeout=10)
         data = res.json()
         
