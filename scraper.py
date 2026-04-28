@@ -4,6 +4,7 @@ import random
 import hashlib
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
+from urllib.parse import unquote
 
 # =========================
 # ⏰ 한국 시간 (KST)
@@ -23,19 +24,20 @@ def get_target_date():
     return target.strftime("%Y-%m-%d")
 
 # =========================
-# 🌦️ 기상청 단기예보 (날씨 수집) - 수정됨
+# 🌦️ 기상청 단기예보 (날씨 수집) - 최종 수정
 # =========================
 def get_weather():
     try:
-        # 단기예보(getVilageFcst) API 주소
         url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
-        service_key = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae" 
+        
+        # 서비스키 문제 방지를 위해 unquote 후 다시 적용
+        service_key = unquote("e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae")
         
         now = get_kst_now()
         base_date = now.strftime("%Y%m%d")
         
         hour = now.hour
-        # API 발표 시간(02, 05, 08, 11, 14, 17, 20, 23시)에 맞춘 기저 시간 설정
+        # API 발표 시간(02, 05, 08, 11, 14, 17, 20, 23시) 기준 설정
         if hour < 2:
             base_date = (now - timedelta(days=1)).strftime("%Y%m%d")
             base_time = "2300"
@@ -48,7 +50,6 @@ def get_weather():
         elif hour < 23: base_time = "2000"
         else: base_time = "2300"
 
-        # 파라미터 수정: baseDate, baseTime으로 명칭 변경 및 목행동 좌표(77, 115) 적용
         params = {
             'serviceKey': service_key,
             'pageNo': '1',
@@ -56,27 +57,42 @@ def get_weather():
             'dataType': 'JSON',
             'baseDate': base_date, 
             'baseTime': base_time,
-            'nx': '77', 
+            'nx': '77', # 목행동 좌표
             'ny': '115'
         }
         
-        res = requests.get(url, params=params, timeout=10)
+        # 주소에 파라미터를 직접 섞지 않고 requests의 params 옵션 사용
+        res = requests.get(url, params=params, timeout=15)
+        
+        # 응답이 정상적인지 로그 확인 (디버깅용)
+        if res.status_code != 200:
+            print(f"⚠️ HTTP 오류 발생: {res.status_code}")
+            return {"temp": None, "rain": None}
+
         data = res.json()
         
-        if data['response']['header']['resultCode'] != '00':
-            print(f"⚠️ API 결과 오류: {data['response']['header']['resultMsg']}")
+        # 기상청 특유의 에러 메시지 체크
+        if 'response' not in data or data['response']['header']['resultCode'] != '00':
+            msg = data.get('response', {}).get('header', {}).get('resultMsg', 'Unknown Error')
+            print(f"⚠️ API 결과 오류: {msg}")
             return {"temp": None, "rain": None}
 
         items = data['response']['body']['items']['item']
         temp, pop = None, None
 
+        # 현재 시간과 가장 가까운 예보 시각 찾기
+        target_fcst_time = now.strftime("%H00")
+
         for item in items:
-            # TMP: 1시간 기온, POP: 강수확률
-            if item['category'] == 'TMP' and temp is None:
-                temp = item['fcstValue']
-            if item['category'] == 'POP' and pop is None:
-                pop = item['fcstValue']
-            if temp is not None and pop is not None: break
+            # 시간대가 일치하는 데이터를 먼저 찾고, 없으면 가장 빠른 데이터 사용
+            if item['fcstTime'] == target_fcst_time or temp is None:
+                if item['category'] == 'TMP':
+                    temp = item['fcstValue']
+                if item['category'] == 'POP':
+                    pop = item['fcstValue']
+            
+            if temp is not None and pop is not None and item['fcstTime'] == target_fcst_time:
+                break
 
         return {"temp": temp, "rain": pop}
     except Exception as e:
@@ -85,7 +101,6 @@ def get_weather():
 
 # 영양소 추정 함수 (기존 코드 유지)
 def estimate_nutrition(menu_str):
-    # 기존 코드 내용을 여기에 그대로 넣어주세요.
     return {"calories": 0, "carbs": 0, "protein": 0, "fat": 0, "sugar": 0}
 
 def crawl():
