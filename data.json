@@ -1,8 +1,8 @@
 {
   "weather": {
-    "temp": null,
-    "rain": null,
-    "last_update": "2026-04-28 21:09"
+    "temp": "11",
+    "rain": "30",
+    "last_update": "2026-04-28 21:30"
   },
   "meals": {
     "월": {
@@ -11,25 +11,25 @@
       "dinner": "쌀밥 , 닭개장 , 두부달걀부침 , 해물볶음우동 , 오이지무침 , 배추김치",
       "nutrition": {
         "breakfast": {
-          "carbs": 46,
-          "protein": 21,
-          "fat": 10,
-          "sugar": 5,
-          "calories": 638
+          "calories": 0,
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
         },
         "lunch": {
-          "carbs": 51,
-          "protein": 22,
-          "fat": 12,
-          "sugar": 5,
-          "calories": 680
+          "calories": 0,
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
         },
         "dinner": {
-          "carbs": 62,
-          "protein": 41,
-          "fat": 34,
-          "sugar": 11,
-          "calories": 998
+          "calories": 0,
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
         }
       }
     },
@@ -39,25 +39,25 @@
       "dinner": "하이라이스 , 얼갈이된장국 , 생선커틀릿 , 고추지양념무침 , 음료 , 배추김치",
       "nutrition": {
         "breakfast": {
-          "carbs": 40,
-          "protein": 43,
-          "fat": 16,
-          "sugar": 6,
-          "calories": 756
+          "calories": 0,
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
         },
         "lunch": {
-          "carbs": 47,
-          "protein": 37,
-          "fat": 34,
-          "sugar": 5,
-          "calories": 922
+          "calories": 0,
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
         },
         "dinner": {
-          "carbs": 41,
-          "protein": 41,
-          "fat": 23,
-          "sugar": 5,
-          "calories": 815
+          "calories": 0,
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
         }
       }
     },
@@ -67,25 +67,25 @@
       "dinner": "쌀밥 , 동태국 , 돈육고추장볶음 , 숙주무침 , 도시락김 , 배추김치",
       "nutrition": {
         "breakfast": {
-          "carbs": 40,
-          "protein": 37,
-          "fat": 33,
-          "sugar": 6,
-          "calories": 885
+          "calories": 0,
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
         },
         "lunch": {
-          "carbs": 45,
-          "protein": 24,
-          "fat": 28,
-          "sugar": 5,
-          "calories": 808
+          "calories": 0,
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
         },
         "dinner": {
-          "carbs": 41,
-          "protein": 41,
-          "fat": 20,
-          "sugar": 5,
-          "calories": 788
+          "calories": 0,
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
         }
       }
     },
@@ -95,25 +95,25 @@
       "dinner": "떡만두라면 , 쌀밥 , 음료 , 단무지 , 배추김치",
       "nutrition": {
         "breakfast": {
-          "carbs": 53,
-          "protein": 18,
-          "fat": 17,
-          "sugar": 5,
-          "calories": 717
+          "calories": 0,
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
         },
         "lunch": {
-          "carbs": 44,
-          "protein": 42,
-          "fat": 18,
-          "sugar": 6,
-          "calories": 786
+          "calories": 0,
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
         },
         "dinner": {
-          "carbs": 74,
-          "protein": 22,
-          "fat": 16,
-          "sugar": 14,
-          "calories": 808
+          "calories": 0,
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0
         }
       }
     },
@@ -123,25 +123,25 @@
       "dinner": "식단 없음",
       "nutrition": {
         "breakfast": {
+          "calories": 0,
           "carbs": 0,
           "protein": 0,
           "fat": 0,
-          "sugar": 0,
-          "calories": 0
+          "sugar": 0
         },
         "lunch": {
+          "calories": 0,
           "carbs": 0,
           "protein": 0,
           "fat": 0,
-          "sugar": 0,
-          "calories": 0
+          "sugar": 0
         },
         "dinner": {
+          "calories": 0,
           "carbs": 0,
           "protein": 0,
           "fat": 0,
-          "sugar": 0,
-          "calories": 0
+          "sugar": 0
         }
       }
     }
