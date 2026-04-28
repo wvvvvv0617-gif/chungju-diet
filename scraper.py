@@ -24,41 +24,77 @@ def get_target_date():
     return target.strftime("%Y-%m-%d")
 
 # =========================
-# 🌦️ OpenWeather (날씨 수집)
+# 🌦️ 기상청 단기예보 (날씨 수집)
 # =========================
 def get_weather():
     try:
-        API_KEY = "324c1ff82e3f995801bf309914bdf245"
-        url = f"https://api.openweathermap.org/data/2.5/weather?lat=36.991&lon=127.926&appid={API_KEY}&units=metric&lang=kr"
-        res = requests.get(url, timeout=10)
+        # 기상청 단기예보 API 설정
+        url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
+        # 여기에 발급받으신 서비스키를 입력하세요 (Decoding 키 권장)
+        service_key = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae" 
+        
+        now = get_kst_now()
+        base_date = now.strftime("%Y%m%d")
+        
+        # 기상청 발표 시간 기준 (단기예보는 0200부터 3시간 간격 발표)
+        # 현재 시간 기준 가장 최근 발표 시각 계산
+        hour = now.hour
+        if hour < 3: base_time = "0200"
+        elif hour < 6: base_time = "0500"
+        elif hour < 9: base_time = "0800"
+        elif hour < 12: base_time = "1100"
+        elif hour < 15: base_time = "1400"
+        elif hour < 18: base_time = "1700"
+        elif hour < 21: base_time = "2000"
+        else: base_time = "2300"
+
+        params = {
+            'serviceKey': service_key,
+            'pageNo': '1',
+            'numOfRows': '1000',
+            'dataType': 'JSON',
+            'base_date': base_date,
+            'base_time': base_time,
+            'nx': '76', # 충주캠퍼스 격자 X
+            'ny': '114' # 충주캠퍼스 격자 Y
+        }
+
+        res = requests.get(url, params=params, timeout=10)
         data = res.json()
-        if res.status_code != 200:
+        
+        if data['response']['header']['resultCode'] != '00':
             return {"temp": None, "rain": None}
-        temp = round(data["main"]["temp"])
-        # 비 정보가 있으면 확률 80%로 고정, 없으면 구름 양으로 대체
-        rain_prob = data.get("clouds", {}).get("all", 0)
-        if "rain" in data: rain_prob = 80
-        return {"temp": temp, "rain": rain_prob}
-    except:
+
+        items = data['response']['body']['items']['item']
+        
+        temp = None
+        pop = None # 강수확률
+
+        for item in items:
+            # TMP: 1시간 기온, POP: 강수확률
+            # 가장 빠른 예보 시각(fcstTime)의 데이터를 가져옵니다.
+            if item['category'] == 'TMP' and temp is None:
+                temp = item['fcstValue']
+            if item['category'] == 'POP' and pop is None:
+                pop = item['fcstValue']
+            
+            if temp and pop: break
+
+        return {"temp": int(temp) if temp else None, "rain": int(pop) if pop else None}
+    except Exception as e:
+        print(f"❌ 날씨 수집 오류: {e}")
         return {"temp": None, "rain": None}
 
 # =========================
 # 🍱 영양 성분 스마트 추정 (일관성 + 다양성 최적화)
 # =========================
 def estimate_nutrition(menu_text):
-    """
-    메뉴 이름을 '시드(Seed)'로 사용하여 동일 메뉴에는 동일 수치를,
-    다른 메뉴에는 분석된 다채로운 수치를 제공합니다.
-    """
     if not menu_text or "식단 없음" in menu_text or len(menu_text) < 3:
         return {"carbs": 0, "protein": 0, "fat": 0, "sugar": 0, "calories": 0}
 
-    # 🔥 중요: 메뉴 텍스트를 고유한 시드값으로 변환
-    # 이 로직 덕분에 "제육볶음"은 1시간 뒤에 다시 크롤링해도 똑같은 수치가 나옵니다.
     seed_value = int(hashlib.md5(menu_text.encode()).hexdigest(), 16) % 10000
     random.seed(seed_value)
 
-    # 1. 기본 베이스값 + 메뉴별 고유 미세 오차
     base = {
         "carbs": 55 + random.randint(-3, 3),
         "protein": 20 + random.randint(-2, 2),
@@ -66,38 +102,29 @@ def estimate_nutrition(menu_text):
         "sugar": 5 + random.randint(-1, 1)
     }
 
-    # 2. 키워드 분석 및 가중치 적용
-    # 고기/단백질군
     if any(k in menu_text for k in ["고기", "제육", "불고기", "돈육", "닭", "치킨", "생선", "계란", "오리", "함박"]):
         base["protein"] += random.randint(15, 20)
         base["fat"] += random.randint(5, 10)
         base["carbs"] -= 5
 
-    # 면/분식/탄수화물군
     if any(k in menu_text for k in ["국수", "우동", "라면", "파스타", "빵", "떡볶이", "덮밥", "볶음밥"]):
         base["carbs"] += random.randint(15, 25)
         base["sugar"] += random.randint(5, 10)
     
-    # 튀김/가스류
     if any(k in menu_text for k in ["가스", "튀김", "전", "부침"]):
         base["fat"] += random.randint(10, 15)
 
-    # 샐러드/나물/채소군
     if any(k in menu_text for k in ["샐러드", "나물", "무침", "요거트", "채소"]):
         base["carbs"] -= 7
         base["protein"] += 3
         base["fat"] -= 3
 
-    # 3. 수치 범위 제한 (5~98)
     for key in base:
         base[key] = max(5, min(98, base[key]))
         
-    # 4. 칼로리 계산 (탄*4 + 단*4 + 지*9 + 기본280kcal)
     base["calories"] = int((base["carbs"] * 4) + (base["protein"] * 4) + (base["fat"] * 9) + 280)
     
-    # 랜덤 시드 초기화 (다른 작업에 영향을 주지 않기 위함)
     random.seed(None)
-        
     return base
 
 # =========================
@@ -129,7 +156,6 @@ def crawl():
                     l_menu = " ".join(cols[2].get_text(" ", strip=True).split())
                     d_menu = " ".join(cols[3].get_text(" ", strip=True).split())
 
-                    # 메뉴 정제
                     b_menu = b_menu if len(b_menu) > 3 and "등록된" not in b_menu else "식단 없음"
                     l_menu = l_menu if len(l_menu) > 3 and "등록된" not in l_menu else "식단 없음"
                     d_menu = d_menu if len(d_menu) > 3 and "등록된" not in d_menu else "식단 없음"
@@ -155,11 +181,10 @@ def crawl():
             "meals": meal_result
         }
 
-        # JSON 저장
         with open("data.json", "w", encoding="utf-8") as f:
             json.dump(final_data, f, ensure_ascii=False, indent=2)
 
-        print("🚀 data.json 갱신 완료! (일관성 있는 스마트 분석 적용)")
+        print("🚀 data.json 갱신 완료! (기상청 API 적용)")
 
     except Exception as e:
         print(f"❌ 크롤링 중 오류 발생: {e}")
