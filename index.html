@@ -111,7 +111,7 @@
                     <div id="nutrition-bars" class="space-y-5">
                         </div>
                     <div class="mt-6 space-y-1">
-                        <p class="text-[9px] text-slate-400 text-center leading-relaxed font-medium">표시된 영양 정보는 추정치이므로 참고용으로만 활용해 주세요.</p>
+                        <p class="text-[9px] text-slate-400 text-center leading-relaxed font-medium">표시된 영양 정보는 메뉴 기반 추정치이므로 참고용으로만 활용해 주세요.</p>
                         <p class="text-[8px] text-slate-300 dark:text-slate-500 text-center leading-relaxed">본 서비스의 날씨 정보는 기상청 단기예보 API를 활용하며,<br>실제 기상 상황과 차이가 있을 수 있습니다.</p>
                     </div>
                 </div>
@@ -178,6 +178,46 @@
         const mealNameKR = { 'breakfast': '아침', 'lunch': '점심', 'dinner': '저녁' };
         let currentMenuData = null;
 
+        // --- 영양성분 고정 로직 시작 ---
+        function getFixedRandom(value, mealKey, menuText, range = 0.1) {
+            const dateStr = new Date().toISOString().split('T')[0];
+            // 날짜 + 식사시간 + 메뉴명을 조합해 고유한 시드 생성
+            const seedStr = dateStr + mealKey + menuText + value;
+            
+            let hash = 0;
+            for (let i = 0; i < seedStr.length; i++) {
+                hash = ((hash << 5) - hash) + seedStr.charCodeAt(i);
+                hash |= 0;
+            }
+            
+            const fixedRandom = (Math.abs(hash) % 100) / 100 * 2 - 1;
+            const variation = value * range * fixedRandom;
+            
+            return Math.round(value + variation);
+        }
+
+        function estimateNutrition(menuText, mealKey) {
+            if (!menuText || menuText.includes("식단 없음")) return null;
+            let cal = 0, carb = 0, prot = 0, fat = 0, sugar = 0;
+
+            if (menuText.includes("밥") || menuText.includes("면") || menuText.includes("죽")) { cal += 420; carb += 75; prot += 7; }
+            if (menuText.includes("고기") || menuText.includes("닭") || menuText.includes("돈육") || menuText.includes("생선")) { cal += 280; prot += 22; fat += 14; }
+            if (menuText.includes("튀김") || menuText.includes("가스") || menuText.includes("전")) { cal += 220; fat += 18; }
+            if (menuText.includes("찌개") || menuText.includes("국")) { cal += 120; carb += 12; sugar += 4; }
+            if (menuText.includes("음료") || menuText.includes("요거트")) { cal += 90; sugar += 18; }
+
+            cal = cal || 650; carb = carb || 95; prot = prot || 28; fat = fat || 16; sugar = sugar || 12;
+
+            return {
+                calories: getFixedRandom(cal, mealKey, menuText),
+                carbs: getFixedRandom(carb, mealKey, menuText),
+                protein: getFixedRandom(prot, mealKey, menuText),
+                fat: getFixedRandom(fat, mealKey, menuText),
+                sugar: getFixedRandom(sugar, mealKey, menuText)
+            };
+        }
+        // --- 영양성분 고정 로직 끝 ---
+
         function initTheme() {
             const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
             document.documentElement.classList.toggle('dark', isDark);
@@ -198,7 +238,6 @@
             return solarHolidays[`${m}-${d}`] || null;
         }
 
-        // 수정사항: '낮음' 등 수식어 제거 및 텍스트 정리
         function getRainStatusText(popValue) {
             const pop = parseInt(popValue);
             if (isNaN(pop)) return "--";
@@ -305,10 +344,14 @@
                         const items = currentMeal.split(/,\s*/).filter(i => i.trim());
                         document.getElementById('menu-list').innerHTML = items.map(m => `<li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl text-slate-700 dark:text-slate-200 font-bold border border-slate-100 dark:border-slate-700 shadow-sm animate-fadeIn"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m}</li>`).join('');
                         
-                        // 수정사항: 영양소 계산 로직 보강 (0으로 나오는 현상 해결)
+                        // 영양소 데이터 가져오기 및 없으면 추정 계산 실행
                         let nut = (mealData && mealData.nutrition) ? mealData.nutrition[status.mealKey] : null;
-                        if (nut && (nut.calories > 0 || nut.carbs > 0)) {
-                            // 권장량 기준 비율 계산
+                        
+                        if (!nut || (!nut.calories && !nut.carbs)) {
+                            nut = estimateNutrition(currentMeal, status.mealKey);
+                        }
+
+                        if (nut) {
                             const calPercent = Math.min((nut.calories / 1000) * 100, 100);
                             const carbPercent = Math.min((nut.carbs / 150) * 100, 100);
                             const protPercent = Math.min((nut.protein / 60) * 100, 100);
