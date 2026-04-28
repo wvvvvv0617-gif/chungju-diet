@@ -1,8 +1,8 @@
 {
   "weather": {
-    "temp": "5",
-    "rain": "20",
-    "last_update": "2026-04-29 07:22"
+    "temp": null,
+    "rain": null,
+    "last_update": "2026-04-29 07:45"
   },
   "meals": {
     "월": {
