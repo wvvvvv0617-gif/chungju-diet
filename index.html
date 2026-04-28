@@ -77,7 +77,7 @@
                             <span id="realtime-temp" class="text-lg font-black italic leading-none">--°</span>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-[9px] opacity-80 font-bold tracking-tighter">날씨</span>
+                            <span class="text-[9px] opacity-80 font-bold tracking-tighter">강수확률</span>
                             <span id="precipitation" class="text-[11px] font-black text-blue-200 leading-none">--</span>
                         </div>
                     </div>
@@ -195,13 +195,14 @@
             return solarHolidays[`${m}-${d}`] || null;
         }
 
-        function getCloudStatusText(cloudValue) {
-            const clouds = parseInt(cloudValue);
-            if (clouds <= 10) return "매우 맑음";
-            if (clouds <= 30) return "맑음";
-            if (clouds <= 60) return "구름 조금";
-            if (clouds <= 90) return "흐림";
-            return "매우 흐림";
+        // 수정됨: 기상청 강수확률(POP) 기준 텍스트로 변경
+        function getRainStatusText(popValue) {
+            const pop = parseInt(popValue);
+            if (isNaN(pop)) return "--";
+            if (pop === 0) return "맑음";
+            if (pop <= 30) return `낮음 (${pop}%)`;
+            if (pop <= 60) return `보통 (${pop}%)`;
+            return `높음 (${pop}%)`;
         }
 
         function getMealStatus() {
@@ -259,7 +260,8 @@
                 
                 if (data.weather) {
                     document.getElementById('realtime-temp').innerText = data.weather.temp + "°";
-                    document.getElementById('precipitation').innerText = getCloudStatusText(data.weather.rain);
+                    // 수정됨: scraper.py에서 받은 rain(강수확률) 값을 표시
+                    document.getElementById('precipitation').innerText = getRainStatusText(data.weather.rain);
                 }
 
                 const displayDate = new Date(now);
@@ -329,7 +331,6 @@
             return `<div><div class="flex justify-between items-end mb-1"><span class="text-[11px] font-black text-slate-800 dark:text-slate-200">${label}</span><span class="text-[10px] font-black text-indigo-600 dark:text-indigo-400">${weight}</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div></div></div>`;
         }
 
-        // 수정됨: 하트 제출 함수
         async function submitHeart() {
             const status = getMealStatus();
             const dateStr = now.toISOString().split('T')[0];
@@ -342,13 +343,12 @@
             formData.append(ENTRY_IDS.date, dateStr);
             formData.append(ENTRY_IDS.meal, mealNameKR[status.rateKey]);
             formData.append(ENTRY_IDS.menu, menuText);
-            formData.append(ENTRY_IDS.score, "좋아요❤️"); // 평점 칸에 들어갈 내용
-            formData.append(ENTRY_IDS.feedback, "(하트 피드백)"); // 의견 칸에 들어갈 내용
+            formData.append(ENTRY_IDS.score, "좋아요❤️");
+            formData.append(ENTRY_IDS.feedback, "(하트 피드백)");
 
             fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData });
             localStorage.setItem(ratingKey, "liked");
             
-            // 로컬 어드민 통계용 (기존 구조 유지)
             let stats = JSON.parse(localStorage.getItem('admin_stats_v3') || '{}');
             const key = `${dateStr}_${status.rateKey}`;
             if (!stats[key]) stats[key] = { total: 0, count: 0, feedbacks: [] };
