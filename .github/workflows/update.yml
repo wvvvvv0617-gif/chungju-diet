@@ -26,6 +26,8 @@ jobs:
         
     - name: Run scraper
       run: python scraper.py
+      env:
+        KMA_API_KEY: ${{ secrets.KMA_API_KEY }}
       
     - name: Commit data.json
       run: |
