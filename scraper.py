@@ -46,7 +46,7 @@ def get_weather():
         pass
 
     try:
-        service_key = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae"
+        service_key = os.getenv("KMA_API_KEY")
         base_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
 
         now = get_kst_now()
