@@ -27,6 +27,15 @@ def get_target_date():
 # 🌦️ 기상청 단기예보
 # =========================
 def get_weather():
+    # ⚠️ 이전 데이터 로드 로직 추가 (N/A 방지)
+    prev_weather = {"temp": "N/A", "rain": "N/A"}
+    try:
+        with open("data.json", "r", encoding="utf-8") as f:
+            old_data = json.load(f)
+            prev_weather = old_data.get("weather", {"temp": "N/A", "rain": "N/A"})
+    except:
+        pass
+
     try:
         service_key = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae"
         base_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
@@ -71,74 +80,44 @@ def get_weather():
         result_msg = response_header.get('resultMsg', 'Unknown Error')
         
         if result_code != '00':
-            print(f"⚠️ 기상청 API 오류 [{result_code}]: {result_msg}")
-            return {"temp": "N/A", "rain": "N/A"}
+            print(f"⚠️ 기상청 API 오류 [{result_code}]: {result_msg}. 이전 데이터를 유지합니다.")
+            return prev_weather
         
         items = data.get('response', {}).get('body', {}).get('items', {}).get('item', [])
         
         if not items:
-            print("⚠️ 예보 데이터가 없습니다")
-            return {"temp": "N/A", "rain": "N/A"}
+            print("⚠️ 예보 데이터가 없습니다. 이전 데이터를 유지합니다.")
+            return prev_weather
         
-        # 🎯 기상청 API: 03, 06, 09, 12, 15, 18, 21, 00시에만 데이터 제공
-        # → 현재 시간이 없으면 가장 최신의 이전 타임 데이터를 찾음
-        valid_hours = ['00', '03', '06', '09', '12', '15', '18', '21']
-        now_hour = int(now.strftime("%H"))
-        
-        # 현재 시간보다 작거나 같은 가장 최신 타임 찾기
-        closest_hour = None
-        for hour in reversed(valid_hours):
-            if int(hour) <= now_hour:
-                closest_hour = hour
-                break
-        
-        # 못 찾으면 전날 23시 데이터 사용
-        if closest_hour is None:
-            closest_hour = '23'
-        
-        target_time = f"{closest_hour}00"
-        print(f"📍 목표 시간: {target_time} (현재: {now.strftime('%H:%M')})")
-        
+        # 🎯 현재 시각에 가장 가까운 데이터 매칭 로직 개선
+        now_hour_str = now.strftime("%H") + "00"
         temp = None
         pop = None
         
-        # 1단계: 목표 시간의 데이터 찾기
+        # 1순위: 현재 시각과 정확히 일치하는 데이터 찾기
         for item in items:
             fcst_time = item.get('fcstTime', '')
-            category = item.get('category', '')
-            value = item.get('fcstValue', '')
-            
-            if fcst_time == target_time:
-                if category == 'TMP':
-                    temp = value
-                elif category == 'POP':
-                    pop = value
+            if fcst_time == now_hour_str:
+                if item.get('category') == 'TMP': temp = item.get('fcstValue')
+                elif item.get('category') == 'POP': pop = item.get('fcstValue')
         
-        # 2단계: 목표 시간에 없으면 가장 최신 데이터 찾기
+        # 2순위: 일치하는 시각이 없으면 전체 데이터 중 첫 번째(가장 빠른 예보) 사용
         if temp is None or pop is None:
-            all_times = sorted(set(item.get('fcstTime', '') for item in items), reverse=True)
-            for search_time in all_times:
-                if temp is None or pop is None:
-                    for item in items:
-                        if item.get('fcstTime', '') == search_time:
-                            if temp is None and item.get('category', '') == 'TMP':
-                                temp = item.get('fcstValue', '')
-                            if pop is None and item.get('category', '') == 'POP':
-                                pop = item.get('fcstValue', '')
-                    
-                    if temp is not None and pop is not None:
-                        break
+            for item in items:
+                if temp is None and item.get('category') == 'TMP': temp = item.get('fcstValue')
+                if pop is None and item.get('category') == 'POP': pop = item.get('fcstValue')
+                if temp and pop: break
         
-        temp = temp if temp else "N/A"
-        pop = pop if pop else "N/A"
-        
+        # 최종 결과가 없으면 이전 값 반환
+        if temp is None or pop is None:
+            return prev_weather
+            
         print(f"✅ 기상청 데이터 수집 완료: 기온={temp}°C, 강수확률={pop}%")
-        
         return {"temp": temp, "rain": pop}
         
     except Exception as e:
-        print(f"❌ 기상청 API 오류: {e}")
-        return {"temp": "N/A", "rain": "N/A"}
+        print(f"❌ 기상청 API 오류: {e}. 이전 데이터를 유지합니다.")
+        return prev_weather
 
 # =========================
 # 🍱 영양 성분 스마트 추정
