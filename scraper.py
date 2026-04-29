@@ -26,7 +26,7 @@ def get_target_date():
     return target.strftime("%Y-%m-%d")
 
 # =========================
-# 🌦️ 기상청 단기예보 (날씨 수집)
+# 🌦️ 기상청 단기예보 (날씨 수집 개선형)
 # =========================
 def get_weather():
     try:
@@ -70,24 +70,26 @@ def get_weather():
             return {"temp": "N/A", "rain": "N/A"}
 
         items = data['response']['body']['items']['item']
-        temp, pop = None, None
+        
+        # 1. 현재 시각 혹은 가장 가까운 예보 시각 찾기
         target_fcst_time = now.strftime("%H00")
+        
+        temp, pop = None, None
 
+        # 정확한 시각 매칭 시도
         for item in items:
-            # 현재 시각 예보를 우선적으로 찾음
             if item['fcstTime'] == target_fcst_time:
                 if item['category'] == 'TMP': temp = item['fcstValue']
                 if item['category'] == 'POP': pop = item['fcstValue']
-            if temp and pop: break
         
-        # 현재 시각 데이터가 없으면 가장 빠른 데이터 사용
-        if not temp:
+        # 2. 만약 현재 시각 예보가 없다면(발표 지연 등), 리스트의 가장 첫 번째(최신) 데이터를 사용
+        if temp is None or pop is None:
             for item in items:
-                if item['category'] == 'TMP': temp = item['fcstValue']
-                if item['category'] == 'POP': pop = item['fcstValue']
-                if temp: break
+                if temp is None and item['category'] == 'TMP': temp = item['fcstValue']
+                if pop is None and item['category'] == 'POP': pop = item['fcstValue']
+                if temp is not None and pop is not None: break
 
-        return {"temp": temp, "rain": pop}
+        return {"temp": temp if temp else "N/A", "rain": pop if pop else "N/A"}
         
     except Exception as e:
         print(f"❌ 날씨 수집 오류: {e}")
@@ -97,6 +99,7 @@ def get_weather():
 # 🍱 영양소 추정 (기본 구조 유지)
 # =========================
 def estimate_nutrition(menu_str):
+    # 기존에 작성하셨던 로직이 있다면 이 안에 넣으시면 됩니다.
     return {"calories": 0, "carbs": 0, "protein": 0, "fat": 0, "sugar": 0}
 
 # =========================
@@ -151,7 +154,7 @@ def crawl():
 
         with open("data.json", "w", encoding="utf-8") as f:
             json.dump(final_data, f, ensure_ascii=False, indent=2)
-        print(f"🚀 data.json 갱신 완료! (날씨: {weather['temp']}도)")
+        print(f"🚀 data.json 갱신 완료! (날씨: {weather['temp']}도, 강수확률: {weather['rain']}%)")
 
     except Exception as e:
         print(f"❌ 크롤링 중 오류 발생: {e}")
