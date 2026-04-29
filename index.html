@@ -178,10 +178,8 @@
         const mealNameKR = { 'breakfast': '아침', 'lunch': '점심', 'dinner': '저녁' };
         let currentMenuData = null;
 
-        // --- 영양성분 고정 로직 시작 ---
         function getFixedRandom(value, mealKey, menuText, range = 0.1) {
             const dateStr = new Date().toISOString().split('T')[0];
-            // 날짜 + 식사시간 + 메뉴명을 조합해 고유한 시드 생성
             const seedStr = dateStr + mealKey + menuText + value;
             
             let hash = 0;
@@ -216,7 +214,6 @@
                 sugar: getFixedRandom(sugar, mealKey, menuText)
             };
         }
-        // --- 영양성분 고정 로직 끝 ---
 
         function initTheme() {
             const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -311,8 +308,13 @@
                 const todayNameEn = week[now.getDay()];
                 const todayData = data.meals ? data.meals[todayNameEn] : null;
 
-                if (status.rateKey && todayData && todayData[status.rateKey]) {
-                    const rateMenu = todayData[status.rateKey];
+                // --- 평가 섹션 노출 로직 수정 시작 ---
+                const rateMenu = (status.rateKey && todayData) ? todayData[status.rateKey] : null;
+                
+                // 오늘이 휴일이 아니고(isRestToday 체크 필요) 데이터상 메뉴가 "식단 없음"이 아닐 때만 표시
+                const isRestToday = (now.getDay() === 6 || now.getDay() === 0 || getHolidayName(now) !== null);
+                
+                if (status.rateKey && todayData && rateMenu && rateMenu !== "식단 없음" && !isRestToday) {
                     document.getElementById('rating-section').classList.remove('hidden');
                     document.getElementById('rating-meal-name').innerText = mealNameKR[status.rateKey];
                     document.getElementById('rating-menu-preview').innerText = rateMenu;
@@ -326,6 +328,7 @@
                 } else {
                     document.getElementById('rating-section').classList.add('hidden');
                 }
+                // --- 평가 섹션 노출 로직 수정 끝 ---
 
                 if (status.isRest) {
                     document.getElementById('meal-content').classList.add('hidden');
@@ -344,7 +347,6 @@
                         const items = currentMeal.split(/,\s*/).filter(i => i.trim());
                         document.getElementById('menu-list').innerHTML = items.map(m => `<li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl text-slate-700 dark:text-slate-200 font-bold border border-slate-100 dark:border-slate-700 shadow-sm animate-fadeIn"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m}</li>`).join('');
                         
-                        // 영양소 데이터 가져오기 및 없으면 추정 계산 실행
                         let nut = (mealData && mealData.nutrition) ? mealData.nutrition[status.mealKey] : null;
                         
                         if (!nut || (!nut.calories && !nut.carbs)) {
