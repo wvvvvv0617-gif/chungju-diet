@@ -151,7 +151,7 @@
             <div class="p-8 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-[40px] border border-dashed border-indigo-100 dark:border-indigo-900/30">
                 <div class="inline-block p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm mb-4">🚀</div>
                 <h4 class="text-sm font-black text-indigo-900 dark:text-indigo-200 mb-4 leading-relaxed px-4">
-                기능 추가 요청 및 버그 제보
+                    기능 추가 요청 및 버그 제보
                 </h4>
                 <div id="email-area" class="flex flex-col items-center gap-3">
                     <a href="https://forms.gle/CSuTJa8defrhDELr5" target="_blank" class="w-full max-w-[220px]">
@@ -309,15 +309,17 @@
                 const todayData = data.meals ? data.meals[todayNameEn] : null;
 
                 // --- 평가 섹션 노출 로직 수정 시작 ---
-                const rateMenu = (status.rateKey && todayData) ? todayData[status.rateKey] : null;
+                const rateMenuRaw = (status.rateKey && todayData) ? todayData[status.rateKey] : null;
                 
-                // 오늘이 휴일이 아니고(isRestToday 체크 필요) 데이터상 메뉴가 "식단 없음"이 아닐 때만 표시
+                // 오늘이 휴일이 아니고 데이터상 메뉴가 "식단 없음"이 아닐 때만 표시
                 const isRestToday = (now.getDay() === 6 || now.getDay() === 0 || getHolidayName(now) !== null);
                 
-                if (status.rateKey && todayData && rateMenu && rateMenu !== "식단 없음" && !isRestToday) {
+                if (status.rateKey && todayData && rateMenuRaw && rateMenuRaw !== "식단 없음" && !isRestToday) {
                     document.getElementById('rating-section').classList.remove('hidden');
                     document.getElementById('rating-meal-name').innerText = mealNameKR[status.rateKey];
-                    document.getElementById('rating-menu-preview').innerText = rateMenu;
+                    
+                    // 핵심 수정 부분: 줄바꿈을 쉼표로 치환하여 한 줄로 표시
+                    document.getElementById('rating-menu-preview').innerText = rateMenuRaw.replace(/\s+/g, ' ').replace(/ ,/g, ',').trim();
                     
                     const dateStr = now.toISOString().split('T')[0];
                     if (localStorage.getItem(`rated_${dateStr}_${status.rateKey}`)) {
