@@ -23,17 +23,15 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
         
-        /* 텍스트 선택 및 드래그 방지, 롱탭 메뉴 차단 */
         * {
-            -webkit-user-select: none;  /* Safari/Chrome */
-            -moz-user-select: none;     /* Firefox */
-            -ms-user-select: none;      /* IE/Edge */
-            user-select: none;          /* 표준 */
-            -webkit-touch-callout: none; /* iOS 길게 누르기 메뉴 차단 */
-            -webkit-tap-highlight-color: transparent; /* 클릭 시 파란 잔상 제거 */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* 입력창이나 텍스트 선택이 필요한 요소가 생길 경우를 위한 예외 처리 */
         input, textarea {
             -webkit-user-select: text;
             user-select: text;
@@ -123,9 +121,7 @@
                 </div>
                 <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner dark:bg-slate-900/50 dark:border-slate-700">
                     <h3 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest text-center">Nutrition Report</h3>
-                    
-                    <div id="nutrition-bars" class="space-y-5">
-                        </div>
+                    <div id="nutrition-bars" class="space-y-5"></div>
                     <div class="mt-6 space-y-1">
                         <p class="text-[9px] text-slate-400 text-center leading-relaxed font-medium">표시된 영양 정보는 메뉴 기반 추정치이므로 참고용으로만 활용해 주세요.</p>
                         <p class="text-[8px] text-slate-300 dark:text-slate-500 text-center leading-relaxed">본 서비스의 날씨 정보는 기상청 단기예보 API를 활용하며,<br>실제 기상 상황과 차이가 있을 수 있습니다.</p>
@@ -151,14 +147,12 @@
                     방금 드신 <span id="rating-meal-name" class="text-rose-500">식사</span>가 만족스러우셨나요?
                 </p>
                 <p id="rating-menu-preview" class="text-[10px] text-slate-400 font-medium mb-6 px-4 truncate"></p>
-                
                 <div class="flex justify-center items-center">
                     <button id="heart-btn" onclick="submitHeart()" class="group flex flex-col items-center gap-3 transition-all duration-300">
                         <div id="heart-icon" class="text-6xl grayscale opacity-30 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300">❤️</div>
                         <span id="heart-label" class="mt-3 text-[10px] font-black text-slate-400 group-hover:text-rose-500 transition-colors uppercase tracking-widest">눌러서 좋아요 표시하기</span>
                     </button>
                 </div>
-
                 <p id="feedback-msg" class="text-rose-500 dark:text-rose-400 text-[11px] font-bold mt-6 h-4 opacity-0 transition-opacity">좋아요가 전달되었습니다! ❤️</p>
             </div>
         </section>
@@ -166,24 +160,18 @@
         <section id="dev-contact-section" class="mt-12 mb-10 px-2 text-center">
             <div class="p-8 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-[40px] border border-dashed border-indigo-100 dark:border-indigo-900/30">
                 <div class="inline-block p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm mb-4">🚀</div>
-                <h4 class="text-sm font-black text-indigo-900 dark:text-indigo-200 mb-4 leading-relaxed px-4">
-                    기능 추가 요청 및 버그 제보
-                </h4>
+                <h4 class="text-sm font-black text-indigo-900 dark:text-indigo-200 mb-4 leading-relaxed px-4">기능 추가 요청 및 버그 제보</h4>
                 <div id="email-area" class="flex flex-col items-center gap-3">
                     <a href="https://forms.gle/CSuTJa8defrhDELr5" target="_blank" class="w-full max-w-[220px]">
-                        <button class="w-full bg-indigo-600 text-white px-6 py-4 rounded-2xl text-xs font-black shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 transition-all">
-                            익명으로 의견 남기기
-                        </button>
+                        <button class="w-full bg-indigo-600 text-white px-6 py-4 rounded-2xl text-xs font-black shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 transition-all">익명으로 의견 남기기</button>
                     </a>
                 </div>
             </div>
         </section>
-
         <section id="admin-view" class="hidden p-6 bg-slate-900 rounded-[32px] text-xs font-mono text-slate-300 shadow-2xl border border-slate-700 space-y-6"></section>
     </main>
 
     <script>
-        /* 1. 시스템 컨텍스트 메뉴(우클릭/롱탭) 강제 차단 로직 추가 */
         window.oncontextmenu = function(event) {
             event.preventDefault();
             event.stopPropagation();
@@ -192,43 +180,36 @@
 
         const ADMIN_PASSWORD = "0617"; 
         const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG35dKFaOFHN5Cls4pcWGX9Q_5J1qa2pOxjBhFpoFddIJucw/formResponse";
-        const ENTRY_IDS = {
-            date: "entry.1731866414", meal: "entry.475926623", menu: "entry.525600404", score: "entry.615065306", feedback: "entry.119301674"
-        };
+        const ENTRY_IDS = { date: "entry.1731866414", meal: "entry.475926623", menu: "entry.525600404", score: "entry.615065306", feedback: "entry.119301674" };
 
         let now = new Date();
         const week = ['일', '월', '화', '수', '목', '금', '토'];
+        const weekEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; // 요일 매칭을 위해 추가
         const mealNameKR = { 'breakfast': '아침', 'lunch': '점심', 'dinner': '저녁' };
         let currentMenuData = null;
 
         function getFixedRandom(value, mealKey, menuText, range = 0.1) {
             const dateStr = new Date().toISOString().split('T')[0];
             const seedStr = dateStr + mealKey + menuText + value;
-            
             let hash = 0;
             for (let i = 0; i < seedStr.length; i++) {
                 hash = ((hash << 5) - hash) + seedStr.charCodeAt(i);
                 hash |= 0;
             }
-            
             const fixedRandom = (Math.abs(hash) % 100) / 100 * 2 - 1;
             const variation = value * range * fixedRandom;
-            
             return Math.round(value + variation);
         }
 
         function estimateNutrition(menuText, mealKey) {
             if (!menuText || menuText.includes("식단 없음")) return null;
             let cal = 0, carb = 0, prot = 0, fat = 0, sugar = 0;
-
             if (menuText.includes("밥") || menuText.includes("면") || menuText.includes("죽")) { cal += 420; carb += 75; prot += 7; }
             if (menuText.includes("고기") || menuText.includes("닭") || menuText.includes("돈육") || menuText.includes("생선")) { cal += 280; prot += 22; fat += 14; }
             if (menuText.includes("튀김") || menuText.includes("가스") || menuText.includes("전")) { cal += 220; fat += 18; }
             if (menuText.includes("찌개") || menuText.includes("국")) { cal += 120; carb += 12; sugar += 4; }
             if (menuText.includes("음료") || menuText.includes("요거트")) { cal += 90; sugar += 18; }
-
             cal = cal || 650; carb = carb || 95; prot = prot || 28; fat = fat || 16; sugar = sugar || 12;
-
             return {
                 calories: getFixedRandom(cal, mealKey, menuText),
                 carbs: getFixedRandom(carb, mealKey, menuText),
@@ -271,11 +252,7 @@
             if (hm < 830) { mealKey = 'breakfast'; mealLabel = 'BREAKFAST 🍳'; }
             else if (hm < 1330) { mealKey = 'lunch'; mealLabel = 'LUNCH 🍱'; }
             else if (hm < 1830) { mealKey = 'dinner'; mealLabel = 'DINNER 🌙'; }
-            else { 
-                mealKey = 'breakfast'; 
-                mealLabel = 'NEXT BREAKFAST ☀️'; 
-                targetDayOffset = 1; 
-            }
+            else { mealKey = 'breakfast'; mealLabel = 'NEXT BREAKFAST ☀️'; targetDayOffset = 1; }
 
             if (hm >= 830 && hm <= 1300) rateKey = 'breakfast';
             else if (hm >= 1330 && hm <= 1830) rateKey = 'lunch'; 
@@ -283,27 +260,17 @@
 
             const targetDate = new Date(now);
             targetDate.setDate(now.getDate() + targetDayOffset);
-            
             const day = targetDate.getDay();
-            const isWeekend = day === 6 || day === 0;
-            const isHoliday = getHolidayName(targetDate) !== null;
-            const isRest = isWeekend || isHoliday;
+            const isRest = day === 6 || day === 0 || getHolidayName(targetDate) !== null;
 
-            let returnText = targetDayOffset === 1 ? "내일 다시 만나요!" : "잠시만 기다려주세요!";
-            let greetingText = "맛있는 식사 하세요! 🍱";
-            
-            if (isRest) {
-                returnText = (day === 6 || day === 0) ? "평일에 다시 만나요!" : "휴일이 끝나면 다시 만나요!";
-                greetingText = "편안한 휴식 되세요! ✨";
-            }
-
-            return { mealKey, mealLabel, rateKey, isRest, isHolidayMsg: isHoliday, returnText, greetingText, targetDayOffset };
+            return { mealKey, mealLabel, rateKey, isRest, isHolidayMsg: getHolidayName(targetDate) !== null, 
+                     returnText: targetDayOffset === 1 ? "내일 다시 만나요!" : "잠시만 기다려주세요!", 
+                     greetingText: isRest ? "편안한 휴식 되세요! ✨" : "맛있는 식사 하세요! 🍱", targetDayOffset };
         }
 
         function updateHeaderUI(status) {
             const dateStr = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-            const dayName = week[now.getDay()];
-            document.getElementById('current-date').innerText = `${dateStr} (${dayName})`;
+            document.getElementById('current-date').innerText = `${dateStr} (${week[now.getDay()]})`;
             document.getElementById('meal-type-tag').innerText = status.mealLabel;
             document.getElementById('greeting').innerText = status.greetingText;
         }
@@ -324,13 +291,12 @@
 
                 const displayDate = new Date(now);
                 displayDate.setDate(now.getDate() + status.targetDayOffset);
-                const targetDayNameEn = week[displayDate.getDay()];
+                const targetDayNameEn = weekEn[displayDate.getDay()]; // weekEn 사용
                 const mealData = data.meals ? data.meals[targetDayNameEn] : null;
                 const currentMeal = mealData ? mealData[status.mealKey] : "식단 없음";
 
-                const todayNameEn = week[now.getDay()];
+                const todayNameEn = weekEn[now.getDay()];
                 const todayData = data.meals ? data.meals[todayNameEn] : null;
-
                 const rateMenuRaw = (status.rateKey && todayData) ? todayData[status.rateKey] : null;
                 const isRestToday = (now.getDay() === 6 || now.getDay() === 0 || getHolidayName(now) !== null);
                 
@@ -338,13 +304,8 @@
                     document.getElementById('rating-section').classList.remove('hidden');
                     document.getElementById('rating-meal-name').innerText = mealNameKR[status.rateKey];
                     document.getElementById('rating-menu-preview').innerText = rateMenuRaw.replace(/\s+/g, ' ').replace(/ ,/g, ',').trim();
-                    
-                    const dateStr = now.toISOString().split('T')[0];
-                    if (localStorage.getItem(`rated_${dateStr}_${status.rateKey}`)) {
-                        lockHeartUI();
-                    } else {
-                        resetHeartUI();
-                    }
+                    if (localStorage.getItem(`rated_${now.toISOString().split('T')[0]}_${status.rateKey}`)) lockHeartUI();
+                    else resetHeartUI();
                 } else {
                     document.getElementById('rating-section').classList.add('hidden');
                 }
@@ -360,39 +321,27 @@
                     document.getElementById('meal-content').classList.remove('hidden');
                     document.getElementById('weekend-message').classList.add('hidden');
                     document.getElementById('main-card').classList.remove('rest-bg');
-                    document.getElementById('display-day-tag').innerText = targetDayEn + "요일 식단";
+                    document.getElementById('display-day-tag').innerText = week[displayDate.getDay()] + "요일 식단";
                     
                     if (currentMeal && currentMeal !== "식단 없음") {
                         const items = currentMeal.split(/,\s*/).filter(i => i.trim());
                         document.getElementById('menu-list').innerHTML = items.map(m => `<li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl text-slate-700 dark:text-slate-200 font-bold border border-slate-100 dark:border-slate-700 shadow-sm animate-fadeIn"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m}</li>`).join('');
                         
                         let nut = (mealData && mealData.nutrition) ? mealData.nutrition[status.mealKey] : null;
-                        
-                        if (!nut || (!nut.calories && !nut.carbs)) {
-                            nut = estimateNutrition(currentMeal, status.mealKey);
-                        }
+                        if (!nut || (!nut.calories && !nut.carbs)) nut = estimateNutrition(currentMeal, status.mealKey);
 
                         if (nut) {
-                            const calPercent = Math.min((nut.calories / 1000) * 100, 100);
-                            const carbPercent = Math.min((nut.carbs / 150) * 100, 100);
-                            const protPercent = Math.min((nut.protein / 60) * 100, 100);
-                            const fatPercent = Math.min((nut.fat / 40) * 100, 100);
-                            const sugarPercent = Math.min((nut.sugar / 30) * 100, 100);
-
                             document.getElementById('nutrition-bars').innerHTML = `
-                                ${renderBar('총 열량(Calories)', calPercent, 'bg-indigo-500', nut.calories + ' kcal')}
+                                ${renderBar('총 열량(Calories)', Math.min((nut.calories / 1000) * 100, 100), 'bg-indigo-500', nut.calories + ' kcal')}
                                 <div class="h-px bg-slate-200 dark:bg-slate-700 my-2"></div>
-                                ${renderBar('탄수화물(Carbs)', carbPercent, 'bg-blue-400', nut.carbs + 'g')}
-                                ${renderBar('단백질(Protein)', protPercent, 'bg-emerald-500', nut.protein + 'g')}
-                                ${renderBar('지방(Fat)', fatPercent, 'bg-amber-400', nut.fat + 'g')}
-                                ${renderBar('당류(Sugar)', sugarPercent, 'bg-rose-400', nut.sugar + 'g')}
+                                ${renderBar('탄수화물(Carbs)', Math.min((nut.carbs / 150) * 100, 100), 'bg-blue-400', nut.carbs + 'g')}
+                                ${renderBar('단백질(Protein)', Math.min((nut.protein / 60) * 100, 100), 'bg-emerald-500', nut.protein + 'g')}
+                                ${renderBar('지방(Fat)', Math.min((nut.fat / 40) * 100, 100), 'bg-amber-400', nut.fat + 'g')}
+                                ${renderBar('당류(Sugar)', Math.min((nut.sugar / 30) * 100, 100), 'bg-rose-400', nut.sugar + 'g')}
                             `;
-                        } else {
-                             document.getElementById('nutrition-bars').innerHTML = `<p class="text-center text-[10px] text-slate-400 py-4 font-bold">등록된 영양 성분 데이터가 없습니다.</p>`;
                         }
                     } else {
                         document.getElementById('menu-list').innerHTML = `<li class="p-8 text-center text-slate-400 font-medium">등록된 식단 정보가 없습니다.</li>`;
-                        document.getElementById('nutrition-bars').innerHTML = `<p class="text-center text-[10px] text-slate-400 py-4">영양 정보 없음</p>`;
                     }
                 }
             } catch (e) { console.error("Data Load Error:", e); }
@@ -406,14 +355,12 @@
             const status = getMealStatus();
             const dateStr = now.toISOString().split('T')[0];
             const ratingKey = `rated_${dateStr}_${status.rateKey}`;
-            const menuText = document.getElementById('rating-menu-preview').innerText;
-
             if (localStorage.getItem(ratingKey)) return;
 
             const formData = new FormData();
             formData.append(ENTRY_IDS.date, dateStr);
             formData.append(ENTRY_IDS.meal, mealNameKR[status.rateKey]);
-            formData.append(ENTRY_IDS.menu, menuText);
+            formData.append(ENTRY_IDS.menu, document.getElementById('rating-menu-preview').innerText);
             formData.append(ENTRY_IDS.score, "좋아요❤️");
             formData.append(ENTRY_IDS.feedback, "(하트 피드백)");
 
@@ -433,10 +380,7 @@
         }
 
         function lockHeartUI() {
-            const btn = document.getElementById('heart-btn');
-            const icon = document.getElementById('heart-icon');
-            const label = document.getElementById('heart-label');
-            
+            const btn = document.getElementById('heart-btn'), icon = document.getElementById('heart-icon'), label = document.getElementById('heart-label');
             btn.classList.add('disabled-heart');
             icon.classList.remove('grayscale', 'opacity-30');
             icon.classList.add('heart-active', 'animate-heart');
@@ -446,10 +390,7 @@
         }
 
         function resetHeartUI() {
-            const btn = document.getElementById('heart-btn');
-            const icon = document.getElementById('heart-icon');
-            const label = document.getElementById('heart-label');
-            
+            const btn = document.getElementById('heart-btn'), icon = document.getElementById('heart-icon'), label = document.getElementById('heart-label');
             btn.classList.remove('disabled-heart');
             icon.classList.add('grayscale', 'opacity-30');
             icon.classList.remove('heart-active', 'animate-heart');
@@ -471,14 +412,7 @@
                 let reportHtml = `<h4 class="text-emerald-400 font-bold mb-4 text-sm">🛠️ ADMIN DASHBOARD</h4>`;
                 Object.entries(stats).reverse().forEach(([k, v]) => {
                     const [date, meal] = k.split('_');
-                    reportHtml += `
-                        <div class="bg-slate-800/50 p-4 rounded-2xl mb-4 border border-slate-700">
-                            <div class="flex justify-between">
-                                <span class="text-indigo-400 font-bold">${date}</span>
-                                <span class="text-rose-400">❤️ ${v.count}명</span>
-                            </div>
-                            <h5 class="text-white font-bold mt-1">${mealNameKR[meal]}</h5>
-                        </div>`;
+                    reportHtml += `<div class="bg-slate-800/50 p-4 rounded-2xl mb-4 border border-slate-700"><div class="flex justify-between"><span class="text-indigo-400 font-bold">${date}</span><span class="text-rose-400">❤️ ${v.count}명</span></div><h5 class="text-white font-bold mt-1">${mealNameKR[meal]}</h5></div>`;
                 });
                 adminView.innerHTML = reportHtml + `<button onclick="resetStats()" class="w-full py-2 bg-rose-500/20 text-rose-400 rounded-xl text-[10px]">초기화</button>`;
                 adminView.classList.remove('hidden');
@@ -494,10 +428,7 @@
         }
 
         document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible") {
-                now = new Date();
-                loadData();
-            }
+            if (document.visibilityState === "visible") { now = new Date(); loadData(); }
         });
 
         loadData();
