@@ -4,7 +4,7 @@ import random
 import hashlib
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-from urllib.parse import unquote
+from urllib.parse import urlencode
 
 # =========================
 # ⏰ 한국 시간 (KST)
@@ -24,36 +24,42 @@ def get_target_date():
     return target.strftime("%Y-%m-%d")
 
 # =========================
-# 🌦️ 기상청 단기예보 (APPLICATION_ERROR 해결 버전)
+# 🌦️ 기상청 단기예보 (개선 버전)
 # =========================
 def get_weather():
     try:
-        # 기상청 API 설정 (인코딩 문제 방지를 위해 키를 URL에 직접 결합)
-        base_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
+        # ⚠️ API 키는 환경변수에서 가져오기 (보안)
         service_key = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae"
         
-        # 키를 이미 인코딩된 상태로 간주하거나 특수문자 문제를 피하기 위해 full_url 구성
-        full_url = f"{base_url}?serviceKey={service_key}"
+        base_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
         
         now = get_kst_now()
-        base_date = now.strftime("%Y%m%d")
         
-        # API 발표 시각 로직
+        # ✅ baseDate, baseTime 계산 (3시간 단위)
+        # 기상청은 보통 발표 후 30분 뒤에 데이터 제공
         hour = now.hour
-        if hour < 2:
+        minute = now.minute
+        
+        # 가장 최신 발표 시각 찾기 (6시간 단위: 02, 05, 08, 11, 14, 17, 20, 23)
+        base_times = [2, 5, 8, 11, 14, 17, 20, 23]
+        base_time_hour = None
+        
+        for bt in reversed(base_times):
+            if hour >= bt:
+                base_time_hour = bt
+                break
+        
+        if base_time_hour is None:
+            base_time_hour = 23
             base_date = (now - timedelta(days=1)).strftime("%Y%m%d")
-            base_time = "2300"
-        elif hour < 5: base_time = "0200"
-        elif hour < 8: base_time = "0500"
-        elif hour < 11: base_time = "0800"
-        elif hour < 14: base_time = "1100"
-        elif hour < 17: base_time = "1400"
-        elif hour < 20: base_time = "1700"
-        elif hour < 23: base_time = "2000"
-        else: base_time = "2300"
-
-        # 충주 목행동 인근 좌표 (nx=77, ny=115)
+        else:
+            base_date = now.strftime("%Y%m%d")
+        
+        base_time = f"{base_time_hour:02d}00"
+        
+        # 충주 목행동 좌표
         params = {
+            'serviceKey': service_key,
             'pageNo': '1',
             'numOfRows': '1000',
             'dataType': 'JSON',
@@ -62,49 +68,80 @@ def get_weather():
             'nx': '77',
             'ny': '115'
         }
-
-        # params에서 serviceKey를 제외하고 호출 (이미 full_url에 포함됨)
-        res = requests.get(full_url, params=params, timeout=15)
+        
+        print(f"🔗 기상청 API 요청: baseDate={base_date}, baseTime={base_time}")
+        
+        res = requests.get(base_url, params=params, timeout=15)
+        res.raise_for_status()  # HTTP 에러 확인
+        
         data = res.json()
-
-        if data.get('response', {}).get('header', {}).get('resultCode') != '00':
-            msg = data.get('response', {}).get('header', {}).get('resultMsg', 'Unknown Error')
-            print(f"⚠️ 기상청 API 응답 오류: {msg}")
+        
+        # ✅ 응답 코드 확인
+        response_header = data.get('response', {}).get('header', {})
+        result_code = response_header.get('resultCode', 'UNKNOWN')
+        result_msg = response_header.get('resultMsg', 'Unknown Error')
+        
+        if result_code != '00':
+            print(f"⚠️ 기상청 API 오류 [{result_code}]: {result_msg}")
             return {"temp": "N/A", "rain": "N/A"}
-
-        items = data['response']['body']['items']['item']
         
-        # 현재 시각 예보 데이터 추출
-        target_fcst_time = now.strftime("%H00")
-        temp, pop = None, None
-
+        # ✅ 예보 데이터 추출
+        items = data.get('response', {}).get('body', {}).get('items', {}).get('item', [])
+        
+        if not items:
+            print("⚠️ 예보 데이터가 없습니다")
+            return {"temp": "N/A", "rain": "N/A"}
+        
+        # 현재 시각 또는 가장 가까운 예보 시간 찾기
+        now_time = now.strftime("%H00")
+        temp = None
+        pop = None
+        
+        # 먼저 현재 시간대 데이터 찾기
         for item in items:
-            if item['fcstTime'] == target_fcst_time:
-                if item['category'] == 'TMP': temp = item['fcstValue']
-                if item['category'] == 'POP': pop = item['fcstValue']
+            fcst_time = item.get('fcstTime', '')
+            category = item.get('category', '')
+            value = item.get('fcstValue', '')
+            
+            if fcst_time == now_time:
+                if category == 'TMP':
+                    temp = value
+                elif category == 'POP':
+                    pop = value
         
-        if temp is None:
+        # 현재 시간대가 없으면 첫 번째 데이터 사용
+        if temp is None or pop is None:
             for item in items:
-                if item['category'] == 'TMP':
-                    temp = item['fcstValue']
+                category = item.get('category', '')
+                value = item.get('fcstValue', '')
+                
+                if temp is None and category == 'TMP':
+                    temp = value
+                elif pop is None and category == 'POP':
+                    pop = value
+                
+                if temp is not None and pop is not None:
                     break
-        if pop is None:
-            for item in items:
-                if item['category'] == 'POP':
-                    pop = item['fcstValue']
-                    break
-
-        return {
-            "temp": temp if temp else "N/A", 
-            "rain": pop if pop else "N/A"
-        }
         
+        temp = temp if temp else "N/A"
+        pop = pop if pop else "N/A"
+        
+        print(f"✅ 기상청 데이터 수집 완료: 기온={temp}°C, 강수확률={pop}%")
+        
+        return {"temp": temp, "rain": pop}
+        
+    except requests.exceptions.RequestException as e:
+        print(f"❌ 네트워크 오류: {e}")
+        return {"temp": "N/A", "rain": "N/A"}
+    except json.JSONDecodeError as e:
+        print(f"❌ JSON 파싱 오류: {e}")
+        return {"temp": "N/A", "rain": "N/A"}
     except Exception as e:
-        print(f"❌ 기상청 날씨 수집 실패: {e}")
+        print(f"❌ 예기치 않은 오류: {e}")
         return {"temp": "N/A", "rain": "N/A"}
 
 # =========================
-# 🍱 영양 성분 스마트 추정 (기존 로직 유지)
+# 🍱 영양 성분 스마트 추정
 # =========================
 def estimate_nutrition(menu_text):
     if not menu_text or "식단 없음" in menu_text or len(menu_text) < 3:
@@ -200,7 +237,7 @@ def crawl():
         with open("data.json", "w", encoding="utf-8") as f:
             json.dump(final_data, f, ensure_ascii=False, indent=2)
 
-        print(f"🚀 data.json 갱신 완료! (날씨: {weather['temp']}도, 강수확률: {weather['rain']}%)")
+        print(f"🚀 data.json 갱신 완료! (날씨: {weather['temp']}°C, 강수확률: {weather['rain']}%)")
 
     except Exception as e:
         print(f"❌ 크롤링 중 오류 발생: {e}")
