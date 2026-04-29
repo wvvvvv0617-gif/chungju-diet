@@ -22,10 +22,26 @@
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
+        
+        /* 텍스트 선택 및 드래그 방지, 롱탭 메뉴 차단 */
+        * {
+            -webkit-user-select: none;  /* Safari/Chrome */
+            -moz-user-select: none;     /* Firefox */
+            -ms-user-select: none;      /* IE/Edge */
+            user-select: none;          /* 표준 */
+            -webkit-touch-callout: none; /* iOS 길게 누르기 메뉴 차단 */
+            -webkit-tap-highlight-color: transparent; /* 클릭 시 파란 잔상 제거 */
+        }
+
+        /* 입력창이나 텍스트 선택이 필요한 요소가 생길 경우를 위한 예외 처리 */
+        input, textarea {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
         body { 
             font-family: 'Pretendard', sans-serif; 
             background-color: #f8fafc; 
-            -webkit-tap-highlight-color: transparent;
             padding-bottom: env(safe-area-inset-bottom);
             overscroll-behavior-y: contain;
             transition: background-color 0.3s ease;
