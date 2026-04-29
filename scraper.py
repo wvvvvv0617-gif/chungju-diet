@@ -24,18 +24,21 @@ def get_target_date():
     return target.strftime("%Y-%m-%d")
 
 # =========================
-# 🌦️ 기상청 단기예보 (날씨 수집으로 교체)
+# 🌦️ 기상청 단기예보 (APPLICATION_ERROR 해결 버전)
 # =========================
 def get_weather():
     try:
-        # 기상청 API 설정
-        url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
+        # 기상청 API 설정 (인코딩 문제 방지를 위해 키를 URL에 직접 결합)
+        base_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
         service_key = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae"
+        
+        # 키를 이미 인코딩된 상태로 간주하거나 특수문자 문제를 피하기 위해 full_url 구성
+        full_url = f"{base_url}?serviceKey={service_key}"
         
         now = get_kst_now()
         base_date = now.strftime("%Y%m%d")
         
-        # API 발표 시각에 맞춘 base_time 설정 로직
+        # API 발표 시각 로직
         hour = now.hour
         if hour < 2:
             base_date = (now - timedelta(days=1)).strftime("%Y%m%d")
@@ -50,9 +53,7 @@ def get_weather():
         else: base_time = "2300"
 
         # 충주 목행동 인근 좌표 (nx=77, ny=115)
-        # 서비스키 유효성 문제 방지를 위해 unquote 후 사용
         params = {
-            'serviceKey': unquote(service_key),
             'pageNo': '1',
             'numOfRows': '1000',
             'dataType': 'JSON',
@@ -62,11 +63,13 @@ def get_weather():
             'ny': '115'
         }
 
-        res = requests.get(url, params=params, timeout=15)
+        # params에서 serviceKey를 제외하고 호출 (이미 full_url에 포함됨)
+        res = requests.get(full_url, params=params, timeout=15)
         data = res.json()
 
-        if data['response']['header']['resultCode'] != '00':
-            print(f"⚠️ 기상청 API 응답 오류: {data['response']['header']['resultMsg']}")
+        if data.get('response', {}).get('header', {}).get('resultCode') != '00':
+            msg = data.get('response', {}).get('header', {}).get('resultMsg', 'Unknown Error')
+            print(f"⚠️ 기상청 API 응답 오류: {msg}")
             return {"temp": "N/A", "rain": "N/A"}
 
         items = data['response']['body']['items']['item']
@@ -77,10 +80,9 @@ def get_weather():
 
         for item in items:
             if item['fcstTime'] == target_fcst_time:
-                if item['category'] == 'TMP': temp = item['fcstValue']  # 1시간 기온
-                if item['category'] == 'POP': pop = item['fcstValue']  # 강수확률
+                if item['category'] == 'TMP': temp = item['fcstValue']
+                if item['category'] == 'POP': pop = item['fcstValue']
         
-        # 만약 현재 시각 데이터가 없으면 리스트의 첫 번째 데이터 활용
         if temp is None:
             for item in items:
                 if item['category'] == 'TMP':
