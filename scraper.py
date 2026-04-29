@@ -24,13 +24,10 @@ def get_target_date():
     return target.strftime("%Y-%m-%d")
 
 # =========================
-# 🌦️ 기상청 단기예보 (urllib 사용)
+# 🌦️ 기상청 단기예보
 # =========================
 def get_weather():
     try:
-        import urllib.request
-        import urllib.error
-        
         service_key = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae"
         base_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
         
@@ -64,16 +61,11 @@ def get_weather():
             'ny': '115'
         }
         
-        query_string = urlencode(params)
-        full_url = f"{base_url}?{query_string}"
-        
         print(f"🔗 기상청 API 요청: baseDate={base_date}, baseTime={base_time}")
         
-        req = urllib.request.Request(full_url)
-        req.add_header('User-Agent', 'Mozilla/5.0')
-        
-        with urllib.request.urlopen(req, timeout=15) as response:
-            data = json.loads(response.read().decode('utf-8'))
+        # SSL 검증 무시하고 requests 사용
+        res = requests.get(base_url, params=params, timeout=15, verify=False)
+        data = res.json()
         
         response_header = data.get('response', {}).get('header', {})
         result_code = response_header.get('resultCode', 'UNKNOWN')
