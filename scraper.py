@@ -63,7 +63,6 @@ def get_weather():
         
         print(f"🔗 기상청 API 요청: baseDate={base_date}, baseTime={base_time}")
         
-        # SSL 검증 무시하고 requests 사용
         res = requests.get(base_url, params=params, timeout=15, verify=False)
         data = res.json()
         
