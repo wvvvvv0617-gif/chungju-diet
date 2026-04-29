@@ -183,6 +183,13 @@
     </main>
 
     <script>
+        /* 1. 시스템 컨텍스트 메뉴(우클릭/롱탭) 강제 차단 로직 추가 */
+        window.oncontextmenu = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        };
+
         const ADMIN_PASSWORD = "0617"; 
         const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG35dKFaOFHN5Cls4pcWGX9Q_5J1qa2pOxjBhFpoFddIJucw/formResponse";
         const ENTRY_IDS = {
@@ -324,17 +331,12 @@
                 const todayNameEn = week[now.getDay()];
                 const todayData = data.meals ? data.meals[todayNameEn] : null;
 
-                // --- 평가 섹션 노출 로직 수정 시작 ---
                 const rateMenuRaw = (status.rateKey && todayData) ? todayData[status.rateKey] : null;
-                
-                // 오늘이 휴일이 아니고 데이터상 메뉴가 "식단 없음"이 아닐 때만 표시
                 const isRestToday = (now.getDay() === 6 || now.getDay() === 0 || getHolidayName(now) !== null);
                 
                 if (status.rateKey && todayData && rateMenuRaw && rateMenuRaw !== "식단 없음" && !isRestToday) {
                     document.getElementById('rating-section').classList.remove('hidden');
                     document.getElementById('rating-meal-name').innerText = mealNameKR[status.rateKey];
-                    
-                    // 핵심 수정 부분: 줄바꿈을 쉼표로 치환하여 한 줄로 표시
                     document.getElementById('rating-menu-preview').innerText = rateMenuRaw.replace(/\s+/g, ' ').replace(/ ,/g, ',').trim();
                     
                     const dateStr = now.toISOString().split('T')[0];
@@ -346,7 +348,6 @@
                 } else {
                     document.getElementById('rating-section').classList.add('hidden');
                 }
-                // --- 평가 섹션 노출 로직 수정 끝 ---
 
                 if (status.isRest) {
                     document.getElementById('meal-content').classList.add('hidden');
@@ -359,7 +360,7 @@
                     document.getElementById('meal-content').classList.remove('hidden');
                     document.getElementById('weekend-message').classList.add('hidden');
                     document.getElementById('main-card').classList.remove('rest-bg');
-                    document.getElementById('display-day-tag').innerText = targetDayNameEn + "요일 식단";
+                    document.getElementById('display-day-tag').innerText = targetDayEn + "요일 식단";
                     
                     if (currentMeal && currentMeal !== "식단 없음") {
                         const items = currentMeal.split(/,\s*/).filter(i => i.trim());
