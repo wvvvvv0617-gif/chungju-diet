@@ -27,101 +27,90 @@ def get_target_date():
 # 🌦️ 기상청 단기예보
 # =========================
 def get_weather():
-    # ⚠️ 이전 데이터 로드 로직 (기존 파일에서 실제 수치가 있을 때만 백업으로 활용)
     prev_weather = {"temp": "N/A", "rain": "N/A"}
     try:
         with open("data.json", "r", encoding="utf-8") as f:
             old_data = json.load(f)
-            # 기존 weather 데이터가 있고, 값이 "N/A"가 아닐 때만 유지
             old_w = old_data.get("weather", {})
-            if old_w.get("temp") != "N/A":
-                prev_weather["temp"] = old_w.get("temp")
-            if old_w.get("rain") != "N/A":
-                prev_weather["rain"] = old_w.get("rain")
+            if old_w.get("temp") != "N/A": prev_weather["temp"] = old_w.get("temp")
+            if old_w.get("rain") != "N/A": prev_weather["rain"] = old_w.get("rain")
     except:
         pass
 
     try:
+        # 터미널에서 성공한 디코딩된 서비스 키 사용
         service_key = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae"
         base_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
         
         now = get_kst_now()
-        hour = now.hour
+        # 데이터 안정성을 위해 현재로부터 약 1시간 전 기준의 가장 가까운 base_time 선택
+        target_dt = now - timedelta(minutes=40) 
         
         base_times = [2, 5, 8, 11, 14, 17, 20, 23]
-        base_time_hour = None
-        
+        base_time_hour = 2
         for bt in reversed(base_times):
-            if hour >= bt:
+            if target_dt.hour >= bt:
                 base_time_hour = bt
                 break
         
-        if base_time_hour is None:
-            base_time_hour = 23
-            base_date = (now - timedelta(days=1)).strftime("%Y%m%d")
-        else:
-            base_date = now.strftime("%Y%m%d")
-        
+        # 터미널 성공 사례와 동일하게 언더바(_) 형식의 파라미터 우선 사용
+        base_date = target_dt.strftime("%Y%m%d")
         base_time = f"{base_time_hour:02d}00"
         
         params = {
             'serviceKey': service_key,
-            'pageNo': '1',
-            'numOfRows': '200', # 필요한 양만큼 효율적으로 조정
-            'dataType': 'JSON',
-            'baseDate': base_date,
-            'baseTime': base_time,
+            'base_date': base_date,
+            'base_time': base_time,
             'nx': '77',
-            'ny': '115'
+            'ny': '115',
+            'dataType': 'JSON',
+            'numOfRows': '200'
         }
         
-        print(f"🔗 기상청 API 요청: baseDate={base_date}, baseTime={base_time}")
+        print(f"🔗 기상청 API 요청: {base_date} / {base_time}")
         
+        # 1차 시도 (언더바 파라미터)
         res = requests.get(base_url, params=params, timeout=15, verify=False)
         data = res.json()
         
-        response_header = data.get('response', {}).get('header', {})
-        result_code = response_header.get('resultCode', 'UNKNOWN')
-        result_msg = response_header.get('resultMsg', 'Unknown Error')
-        
-        if result_code != '00':
-            print(f"⚠️ 기상청 API 오류 [{result_code}]: {result_msg}. 이전 데이터를 유지합니다.")
-            return prev_weather
-        
+        # 만약 APPLICATION_ERROR가 나면 표준 파라미터(대소문자)로 2차 시도
+        if data.get('response', {}).get('header', {}).get('resultCode') != '00':
+            print("🔄 1차 시도 실패, 파라미터 형식을 변경하여 재시도합니다.")
+            params['baseDate'] = params.pop('base_date')
+            params['baseTime'] = params.pop('base_time')
+            res = requests.get(base_url, params=params, timeout=15, verify=False)
+            data = res.json()
+
         items = data.get('response', {}).get('body', {}).get('items', {}).get('item', [])
         
         if not items:
-            print("⚠️ 예보 데이터가 없습니다. 이전 데이터를 유지합니다.")
+            print("⚠️ 예보 데이터가 없습니다.")
             return prev_weather
         
-        # 🎯 현재 시각에 가장 가까운 데이터 매칭 로직
         now_hour_str = now.strftime("%H") + "00"
-        temp = None
-        pop = None
+        temp, pop = None, None
         
-        # 1순위: 현재 시각과 정확히 일치하는 데이터 찾기
+        # 현재 시각 데이터 매칭
         for item in items:
-            fcst_time = item.get('fcstTime', '')
-            if fcst_time == now_hour_str:
+            if item.get('fcstTime') == now_hour_str:
                 if item.get('category') == 'TMP': temp = item.get('fcstValue')
                 elif item.get('category') == 'POP': pop = item.get('fcstValue')
         
-        # 2순위: 일치하는 시각이 없으면 전체 데이터 중 첫 번째(가장 가까운 미래 예보) 사용
+        # 데이터 부족 시 첫 번째 예보 활용
         if temp is None or pop is None:
             for item in items:
                 if temp is None and item.get('category') == 'TMP': temp = item.get('fcstValue')
                 if pop is None and item.get('category') == 'POP': pop = item.get('fcstValue')
                 if temp and pop: break
-        
-        # 최종 결과 보정: 새로 가져온 수치가 없으면 백업값 사용
+            
         final_temp = temp if temp is not None else prev_weather["temp"]
         final_pop = pop if pop is not None else prev_weather["rain"]
-            
+        
         print(f"✅ 기상청 데이터 수집 완료: 기온={final_temp}°C, 강수확률={final_pop}%")
         return {"temp": final_temp, "rain": final_pop}
         
     except Exception as e:
-        print(f"❌ 기상청 API 오류: {e}. 이전 데이터를 유지합니다.")
+        print(f"❌ 기상청 API 오류: {e}")
         return prev_weather
 
 # =========================
