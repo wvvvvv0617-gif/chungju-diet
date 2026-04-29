@@ -312,15 +312,16 @@
                 const displayDate = new Date(now);
                 displayDate.setDate(now.getDate() + status.targetDayOffset);
                 
-                const daysFullEn = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                const targetDayKeyEn = daysFullEn[displayDate.getDay()];
+                // 데이터 매칭을 위해 요일 키값을 한글로 설정합니다.
+                const targetDayKeyKR = week[displayDate.getDay()];
                 const targetDayNameKR = week[displayDate.getDay()];
                 
-                const mealData = data.meals ? data.meals[targetDayKeyEn] : null;
+                const mealData = data.meals ? data.meals[targetDayKeyKR] : null;
                 const currentMeal = mealData ? mealData[status.mealKey] : "식단 없음";
 
-                const todayKeyEn = daysFullEn[now.getDay()];
-                const todayData = data.meals ? data.meals[todayKeyEn] : null;
+                // 평가용 오늘 데이터도 한글 키값으로 조회합니다.
+                const todayKeyKR = week[now.getDay()];
+                const todayData = data.meals ? data.meals[todayKeyKR] : null;
 
                 const rateMenuRaw = (status.rateKey && todayData) ? todayData[status.rateKey] : null;
                 const isRestToday = (now.getDay() === 6 || now.getDay() === 0 || getHolidayName(now) !== null);
