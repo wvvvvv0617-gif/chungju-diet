@@ -48,6 +48,7 @@ def get_weather():
 
     try:
         service_key = os.getenv("KMA_API_KEY")
+        print("🔑 API KEY:", service_key)
         base_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
 
         now = get_kst_now()
