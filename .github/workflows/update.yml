@@ -1,34 +1,36 @@
 name: Auto Menu Update
-
 on:
   schedule:
-    - cron: "0 23 * * *"  # 매일 08:00 KST
+    # 한국 시간 기준: 매일 자정, 아침 8시, 정오, 오후 6시에 실행
+    - cron: "0 15 * * *"   # 한국 시간 자정 (UTC 15:00)
+    - cron: "0 23 * * *"   # 한국 시간 08:00 (UTC 23:00)
+    - cron: "0 3 * * *"    # 한국 시간 12:00 (UTC 03:00)
+    - cron: "0 9 * * *"    # 한국 시간 18:00 (UTC 09:00)
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
-
+      
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: "3.10"
-
+        
     - name: Install dependencies
       run: |
         pip install requests beautifulsoup4
-
+        
     - name: Run scraper
       run: python scraper.py
-
+      
     - name: Commit data.json
       run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
         git add data.json
-        git commit -m "auto update" || echo "no changes"
+        git commit -m "auto update: $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "no changes"
         git push
