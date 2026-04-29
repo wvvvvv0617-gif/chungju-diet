@@ -2,6 +2,7 @@ import json
 import requests
 import random
 import hashlib
+import os
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 
