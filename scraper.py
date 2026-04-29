@@ -27,12 +27,17 @@ def get_target_date():
 # 🌦️ 기상청 단기예보
 # =========================
 def get_weather():
-    # ⚠️ 이전 데이터 로드 로직 추가 (N/A 방지)
+    # ⚠️ 이전 데이터 로드 로직 (기존 파일에서 실제 수치가 있을 때만 백업으로 활용)
     prev_weather = {"temp": "N/A", "rain": "N/A"}
     try:
         with open("data.json", "r", encoding="utf-8") as f:
             old_data = json.load(f)
-            prev_weather = old_data.get("weather", {"temp": "N/A", "rain": "N/A"})
+            # 기존 weather 데이터가 있고, 값이 "N/A"가 아닐 때만 유지
+            old_w = old_data.get("weather", {})
+            if old_w.get("temp") != "N/A":
+                prev_weather["temp"] = old_w.get("temp")
+            if old_w.get("rain") != "N/A":
+                prev_weather["rain"] = old_w.get("rain")
     except:
         pass
 
@@ -62,7 +67,7 @@ def get_weather():
         params = {
             'serviceKey': service_key,
             'pageNo': '1',
-            'numOfRows': '1000',
+            'numOfRows': '200', # 필요한 양만큼 효율적으로 조정
             'dataType': 'JSON',
             'baseDate': base_date,
             'baseTime': base_time,
@@ -89,7 +94,7 @@ def get_weather():
             print("⚠️ 예보 데이터가 없습니다. 이전 데이터를 유지합니다.")
             return prev_weather
         
-        # 🎯 현재 시각에 가장 가까운 데이터 매칭 로직 개선
+        # 🎯 현재 시각에 가장 가까운 데이터 매칭 로직
         now_hour_str = now.strftime("%H") + "00"
         temp = None
         pop = None
@@ -101,19 +106,19 @@ def get_weather():
                 if item.get('category') == 'TMP': temp = item.get('fcstValue')
                 elif item.get('category') == 'POP': pop = item.get('fcstValue')
         
-        # 2순위: 일치하는 시각이 없으면 전체 데이터 중 첫 번째(가장 빠른 예보) 사용
+        # 2순위: 일치하는 시각이 없으면 전체 데이터 중 첫 번째(가장 가까운 미래 예보) 사용
         if temp is None or pop is None:
             for item in items:
                 if temp is None and item.get('category') == 'TMP': temp = item.get('fcstValue')
                 if pop is None and item.get('category') == 'POP': pop = item.get('fcstValue')
                 if temp and pop: break
         
-        # 최종 결과가 없으면 이전 값 반환
-        if temp is None or pop is None:
-            return prev_weather
+        # 최종 결과 보정: 새로 가져온 수치가 없으면 백업값 사용
+        final_temp = temp if temp is not None else prev_weather["temp"]
+        final_pop = pop if pop is not None else prev_weather["rain"]
             
-        print(f"✅ 기상청 데이터 수집 완료: 기온={temp}°C, 강수확률={pop}%")
-        return {"temp": temp, "rain": pop}
+        print(f"✅ 기상청 데이터 수집 완료: 기온={final_temp}°C, 강수확률={final_pop}%")
+        return {"temp": final_temp, "rain": final_pop}
         
     except Exception as e:
         print(f"❌ 기상청 API 오류: {e}. 이전 데이터를 유지합니다.")
