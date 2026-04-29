@@ -24,23 +24,19 @@ def get_target_date():
     return target.strftime("%Y-%m-%d")
 
 # =========================
-# 🌦️ 기상청 단기예보 (개선 버전)
+# 🌦️ 기상청 단기예보 (urllib 사용)
 # =========================
 def get_weather():
     try:
-        # ⚠️ API 키는 환경변수에서 가져오기 (보안)
-        service_key = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae"
+        import urllib.request
+        import urllib.error
         
+        service_key = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae"
         base_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
         
         now = get_kst_now()
-        
-        # ✅ baseDate, baseTime 계산 (3시간 단위)
-        # 기상청은 보통 발표 후 30분 뒤에 데이터 제공
         hour = now.hour
-        minute = now.minute
         
-        # 가장 최신 발표 시각 찾기 (6시간 단위: 02, 05, 08, 11, 14, 17, 20, 23)
         base_times = [2, 5, 8, 11, 14, 17, 20, 23]
         base_time_hour = None
         
@@ -57,7 +53,6 @@ def get_weather():
         
         base_time = f"{base_time_hour:02d}00"
         
-        # 충주 목행동 좌표
         params = {
             'serviceKey': service_key,
             'pageNo': '1',
@@ -69,14 +64,17 @@ def get_weather():
             'ny': '115'
         }
         
+        query_string = urlencode(params)
+        full_url = f"{base_url}?{query_string}"
+        
         print(f"🔗 기상청 API 요청: baseDate={base_date}, baseTime={base_time}")
         
-        res = requests.get(base_url, params=params, timeout=15)
-        res.raise_for_status()  # HTTP 에러 확인
+        req = urllib.request.Request(full_url)
+        req.add_header('User-Agent', 'Mozilla/5.0')
         
-        data = res.json()
+        with urllib.request.urlopen(req, timeout=15) as response:
+            data = json.loads(response.read().decode('utf-8'))
         
-        # ✅ 응답 코드 확인
         response_header = data.get('response', {}).get('header', {})
         result_code = response_header.get('resultCode', 'UNKNOWN')
         result_msg = response_header.get('resultMsg', 'Unknown Error')
@@ -85,19 +83,16 @@ def get_weather():
             print(f"⚠️ 기상청 API 오류 [{result_code}]: {result_msg}")
             return {"temp": "N/A", "rain": "N/A"}
         
-        # ✅ 예보 데이터 추출
         items = data.get('response', {}).get('body', {}).get('items', {}).get('item', [])
         
         if not items:
             print("⚠️ 예보 데이터가 없습니다")
             return {"temp": "N/A", "rain": "N/A"}
         
-        # 현재 시각 또는 가장 가까운 예보 시간 찾기
         now_time = now.strftime("%H00")
         temp = None
         pop = None
         
-        # 먼저 현재 시간대 데이터 찾기
         for item in items:
             fcst_time = item.get('fcstTime', '')
             category = item.get('category', '')
@@ -109,7 +104,6 @@ def get_weather():
                 elif category == 'POP':
                     pop = value
         
-        # 현재 시간대가 없으면 첫 번째 데이터 사용
         if temp is None or pop is None:
             for item in items:
                 category = item.get('category', '')
@@ -130,14 +124,8 @@ def get_weather():
         
         return {"temp": temp, "rain": pop}
         
-    except requests.exceptions.RequestException as e:
-        print(f"❌ 네트워크 오류: {e}")
-        return {"temp": "N/A", "rain": "N/A"}
-    except json.JSONDecodeError as e:
-        print(f"❌ JSON 파싱 오류: {e}")
-        return {"temp": "N/A", "rain": "N/A"}
     except Exception as e:
-        print(f"❌ 예기치 않은 오류: {e}")
+        print(f"❌ 기상청 API 오류: {e}")
         return {"temp": "N/A", "rain": "N/A"}
 
 # =========================
