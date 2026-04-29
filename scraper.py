@@ -80,33 +80,54 @@ def get_weather():
             print("⚠️ 예보 데이터가 없습니다")
             return {"temp": "N/A", "rain": "N/A"}
         
-        now_time = now.strftime("%H00")
+        # 🎯 기상청 API: 03, 06, 09, 12, 15, 18, 21, 00시에만 데이터 제공
+        # → 현재 시간이 없으면 가장 최신의 이전 타임 데이터를 찾음
+        valid_hours = ['00', '03', '06', '09', '12', '15', '18', '21']
+        now_hour = int(now.strftime("%H"))
+        
+        # 현재 시간보다 작거나 같은 가장 최신 타임 찾기
+        closest_hour = None
+        for hour in reversed(valid_hours):
+            if int(hour) <= now_hour:
+                closest_hour = hour
+                break
+        
+        # 못 찾으면 전날 23시 데이터 사용
+        if closest_hour is None:
+            closest_hour = '23'
+        
+        target_time = f"{closest_hour}00"
+        print(f"📍 목표 시간: {target_time} (현재: {now.strftime('%H:%M')})")
+        
         temp = None
         pop = None
         
+        # 1단계: 목표 시간의 데이터 찾기
         for item in items:
             fcst_time = item.get('fcstTime', '')
             category = item.get('category', '')
             value = item.get('fcstValue', '')
             
-            if fcst_time == now_time:
+            if fcst_time == target_time:
                 if category == 'TMP':
                     temp = value
                 elif category == 'POP':
                     pop = value
         
+        # 2단계: 목표 시간에 없으면 가장 최신 데이터 찾기
         if temp is None or pop is None:
-            for item in items:
-                category = item.get('category', '')
-                value = item.get('fcstValue', '')
-                
-                if temp is None and category == 'TMP':
-                    temp = value
-                elif pop is None and category == 'POP':
-                    pop = value
-                
-                if temp is not None and pop is not None:
-                    break
+            all_times = sorted(set(item.get('fcstTime', '') for item in items), reverse=True)
+            for search_time in all_times:
+                if temp is None or pop is None:
+                    for item in items:
+                        if item.get('fcstTime', '') == search_time:
+                            if temp is None and item.get('category', '') == 'TMP':
+                                temp = item.get('fcstValue', '')
+                            if pop is None and item.get('category', '') == 'POP':
+                                pop = item.get('fcstValue', '')
+                    
+                    if temp is not None and pop is not None:
+                        break
         
         temp = temp if temp else "N/A"
         pop = pop if pop else "N/A"
