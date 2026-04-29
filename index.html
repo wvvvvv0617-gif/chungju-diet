@@ -309,7 +309,6 @@
                     document.getElementById('precipitation').innerText = getRainStatusText(data.weather.rain);
                 }
 
-                // 날짜 계산 및 영문 요일 매칭 (오류 수정 부분)
                 const displayDate = new Date(now);
                 displayDate.setDate(now.getDate() + status.targetDayOffset);
                 
@@ -403,6 +402,9 @@
 
             if (localStorage.getItem(ratingKey)) return;
 
+            // 햅틱 진동 피드백 추가
+            if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+
             const formData = new FormData();
             formData.append(ENTRY_IDS.date, dateStr);
             formData.append(ENTRY_IDS.meal, mealNameKR[status.rateKey]);
@@ -484,6 +486,17 @@
                 Object.keys(localStorage).forEach(key => { if (key.startsWith('rated_')) localStorage.removeItem(key); });
                 location.reload();
             }
+        }
+
+        // 서비스 워커 등록 (PWA 기능을 위해 추가)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    console.log('Service Worker registered.');
+                }).catch(err => {
+                    console.log('Service Worker registration failed: ', err);
+                });
+            });
         }
 
         document.addEventListener("visibilitychange", () => {
