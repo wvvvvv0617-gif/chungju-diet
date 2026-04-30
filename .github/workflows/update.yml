@@ -1,11 +1,9 @@
 name: Auto Menu Update
 on:
   schedule:
-    # 한국 시간 기준: 매일 자정, 아침 8시, 정오, 오후 6시에 실행
-    - cron: "0 15 * * *"   # 한국 시간 자정 (UTC 15:00)
-    - cron: "0 23 * * *"   # 한국 시간 08:00 (UTC 23:00)
-    - cron: "0 3 * * *"    # 한국 시간 12:00 (UTC 03:00)
-    - cron: "0 9 * * *"    # 한국 시간 18:00 (UTC 09:00)
+    # 한국 시간 기준 약 3시간마다 실행 (00:20, 03:20, 06:20, 09:20, 12:20, 15:20, 18:20, 21:20)
+    # 정각을 피하면 실행 대기 시간을 줄일 수 있습니다.
+    - cron: "20 */3 * * *"
   workflow_dispatch:
 
 jobs:
@@ -34,5 +32,6 @@ jobs:
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
         git add data.json
+        # 변경 사항이 없을 경우 에러 없이 통과
         git commit -m "auto update: $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "no changes"
         git push
