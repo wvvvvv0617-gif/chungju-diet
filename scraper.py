@@ -11,11 +11,9 @@ from datetime import datetime, timedelta
 # =========================
 
 def get_kst_now():
-    # 함수 내부로 4칸 들여쓰기
     return datetime.utcnow() + timedelta(hours=9)
 
 def get_target_date():
-    # 함수 내부로 4칸 들여쓰기
     now = get_kst_now()
     weekday = now.weekday()
     hm = now.hour * 100 + now.minute
@@ -31,26 +29,17 @@ def get_target_date():
 # 🌦️ 기상청 단기예보
 # =========================
 
-def get_weather():
-    prev_weather = {"temp": "N/A", "rain": "N/A"}
-
-    # 이전 값 백업
-    try:
-        with open("data.json", "r", encoding="utf-8") as f:
-            old_data = json.load(f)
-            old_w = old_data.get("weather", {})
-            if old_w.get("temp") != "N/A":
-                prev_weather["temp"] = old_w.get("temp")
-            if old_w.get("rain") != "N/A":
-                prev_weather["rain"] = old_w.get("rain")
-    except:
-        pass
+def get_weather(existing_weather):
+    # 기본적으로 기존 데이터를 유지하도록 설정
+    final_weather = existing_weather.copy()
 
     try:
         service_key = os.getenv("KMA_API_KEY")
-        print("🔑 API KEY:", service_key)
-        base_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
+        if not service_key:
+            print("⚠️ API KEY가 설정되지 않았습니다.")
+            return final_weather
 
+        base_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
         now = get_kst_now()
 
         # ✅ 안정적인 base_time 계산
@@ -62,12 +51,13 @@ def get_weather():
                 base_time_hour = bt
                 break
 
-        # 새벽이면 전날 23시 사용
         if base_time_hour is None:
             base_time_hour = 23
-            now = now - timedelta(days=1)
+            now_bt = now - timedelta(days=1)
+        else:
+            now_bt = now
 
-        base_date = now.strftime("%Y%m%d")
+        base_date = now_bt.strftime("%Y%m%d")
         base_time = f"{base_time_hour:02d}00"
 
         params = {
@@ -85,41 +75,41 @@ def get_weather():
         res = requests.get(base_url, params=params, timeout=10)
         data = res.json()
 
-        # ✅ 응답 체크 강화
-        if not data.get('response'):
-            return prev_weather
-
-        header = data['response']['header']
-        if header.get('resultCode') != '00':
-            print("❌ API 응답 오류")
-            return prev_weather
+        if not data.get('response') or data['response']['header'].get('resultCode') != '00':
+            print("❌ API 응답 오류 (기존 데이터 유지)")
+            return final_weather
 
         items = data['response']['body']['items']['item']
-        if not items:
-            print("❌ 예보 데이터 없음")
-            return prev_weather
+        
+        # 현재 시간과 가장 가까운 예보 찾기
+        target_date = now.strftime("%Y%m%d")
+        target_time = f"{now.hour:02d}00"
 
-        temp = None
-        pop = None
-
+        temp, pop = None, None
         for item in items:
-            if item.get('category') == 'TMP' and temp is None:
-                temp = item.get('fcstValue')
-            elif item.get('category') == 'POP' and pop is None:
-                pop = item.get('fcstValue')
+            item_date = item.get('fcstDate')
+            item_time = item.get('fcstTime')
+
+            # 현재 시간 이후의 데이터 중 첫 번째 TMP와 POP를 가져옴
+            if item_date > target_date or (item_date == target_date and item_time >= target_time):
+                if item.get('category') == 'TMP' and temp is None:
+                    temp = item.get('fcstValue')
+                elif item.get('category') == 'POP' and pop is None:
+                    pop = item.get('fcstValue')
 
             if temp is not None and pop is not None:
                 break
 
-        final_temp = temp if temp else prev_weather["temp"]
-        final_pop = pop if pop else prev_weather["rain"]
+        if temp: final_weather["temp"] = temp
+        if pop: final_weather["rain"] = pop
+        final_weather["last_update"] = now.strftime("%Y-%m-%d %H:%M")
 
-        print(f"✅ 날씨: {final_temp}°C / 강수 {final_pop}%")
-        return {"temp": final_temp, "rain": final_pop}
+        print(f"✅ 날씨 갱신 완료: {final_weather['temp']}°C / {final_weather['rain']}%")
+        return final_weather
 
     except Exception as e:
         print(f"❌ 날씨 오류: {e}")
-        return prev_weather
+        return final_weather
 
 # =========================
 # 🍱 영양 성분 추정
@@ -147,40 +137,46 @@ def estimate_nutrition(menu_text):
         base["carbs"] += random.randint(15, 25)
 
     base["calories"] = int((base["carbs"]*4)+(base["protein"]*4)+(base["fat"]*9)+280)
-
     random.seed(None)
     return base
 
 # =========================
-# 🕷️ 크롤링
+# 🚀 메인 실행부
 # =========================
 
-def crawl():
+def main():
+    # 1. 기존 데이터 읽기 (파일이 없으면 기본값 생성)
+    data_path = "data.json"
+    if os.path.exists(data_path):
+        with open(data_path, "r", encoding="utf-8") as f:
+            try:
+                final_data = json.load(f)
+            except:
+                final_data = {"weather": {}, "meals": {}}
+    else:
+        final_data = {"weather": {}, "meals": {}}
+
+    # 2. 식단 크롤링 (실패해도 기존 식단 유지)
     target_date = get_target_date()
     url = f"https://www.kopo.ac.kr/chungju/content.do?menu=2830&search_day={target_date}"
-
-    print(f"📡 크롤링: {url}")
+    print(f"📡 식단 크롤링: {url}")
 
     try:
         res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
-
         meal_result = {}
         days_list = ["월", "화", "수", "목", "금"]
+        found_any = False
 
         for row in soup.find_all("tr"):
             cols = row.find_all(["td", "th"])
-            if len(cols) < 4:
-                continue
-
+            if len(cols) < 4: continue
             header = cols[0].get_text(strip=True)
-
             for d in days_list:
                 if d in header:
                     b = cols[1].get_text(" ", strip=True)
                     l = cols[2].get_text(" ", strip=True)
                     dnr = cols[3].get_text(" ", strip=True)
-
                     meal_result[d] = {
                         "breakfast": b if len(b)>3 else "식단 없음",
                         "lunch": l if len(l)>3 else "식단 없음",
@@ -191,25 +187,21 @@ def crawl():
                             "dinner": estimate_nutrition(dnr)
                         }
                     }
-
-        weather = get_weather()
-
-        final_data = {
-            "weather": {
-                "temp": weather["temp"],
-                "rain": weather["rain"],
-                "last_update": get_kst_now().strftime("%Y-%m-%d %H:%M")
-            },
-            "meals": meal_result
-        }
-
-        with open("data.json", "w", encoding="utf-8") as f:
-            json.dump(final_data, f, ensure_ascii=False, indent=2)
-
-        print("🚀 완료!")
-
+                    found_any = True
+        
+        if found_any:
+            final_data["meals"] = meal_result
+            print("🍱 식단 데이터 갱신 성공")
     except Exception as e:
-        print(f"❌ 오류: {e}")
+        print(f"❌ 식단 크롤링 실패 (기존 데이터 보존): {e}")
+
+    # 3. 날씨 업데이트 (실패해도 기존 날씨 유지)
+    final_data["weather"] = get_weather(final_data.get("weather", {"temp": "N/A", "rain": "N/A"}))
+
+    # 4. 최종 데이터 저장
+    with open(data_path, "w", encoding="utf-8") as f:
+        json.dump(final_data, f, ensure_ascii=False, indent=2)
+    print("🚀 모든 작업이 완료되었습니다!")
 
 if __name__ == "__main__":
-    crawl()
+    main()
