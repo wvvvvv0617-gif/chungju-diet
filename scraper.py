@@ -112,31 +112,60 @@ def get_weather(existing_weather):
         return final_weather
 
 # =========================
-# 🍱 영양 성분 추정
+# 🍱 영양 성분 추정 (업그레이드 버전)
 # =========================
 
 def estimate_nutrition(menu_text):
     if not menu_text or "식단 없음" in menu_text:
         return {"carbs": 0, "protein": 0, "fat": 0, "sugar": 0, "calories": 0}
 
+    # 메뉴 텍스트를 기반으로 고정된 랜덤 시드 생성 (메뉴가 같으면 결과도 같음)
     seed_value = int(hashlib.md5(menu_text.encode()).hexdigest(), 16) % 10000
     random.seed(seed_value)
 
+    # 1. 기초 수치 설정 (채소류 및 밑반찬 기본 베이스)
     base = {
-        "carbs": 55 + random.randint(-3, 3),
-        "protein": 20 + random.randint(-2, 2),
-        "fat": 15 + random.randint(-2, 2),
-        "sugar": 5 + random.randint(-1, 1)
+        "carbs": 45 + random.randint(-5, 5),
+        "protein": 15 + random.randint(-3, 3),
+        "fat": 10 + random.randint(-2, 5),
+        "sugar": 3 + random.randint(-1, 2)
     }
 
-    if any(k in menu_text for k in ["고기","닭","돈육","생선","계란"]):
-        base["protein"] += random.randint(15, 20)
-        base["fat"] += random.randint(5, 10)
+    # 2. 주식 (탄수화물) 감지
+    if any(k in menu_text for k in ["밥", "죽", "국수", "라면", "우동", "스파게티", "파스타", "떡", "빵"]):
+        base["carbs"] += random.randint(30, 45)
+        if any(k in menu_text for k in ["볶음밥", "비빔밥"]): 
+            base["fat"] += 5
+            base["sugar"] += 3
 
-    if any(k in menu_text for k in ["국수","라면","밥","빵","떡"]):
-        base["carbs"] += random.randint(15, 25)
+    # 3. 메인 요리 (단백질/지방) 감지
+    if any(k in menu_text for k in ["고기", "닭", "돈육", "우육", "제육", "생선", "계란", "카츠", "가스", "함박", "스테이크"]):
+        base["protein"] += random.randint(18, 28)
+        base["fat"] += random.randint(10, 18)
 
-    base["calories"] = int((base["carbs"]*4)+(base["protein"]*4)+(base["fat"]*9)+280)
+    # 4. 튀김류 (지방/탄수화물 폭증)
+    if any(k in menu_text for k in ["튀김", "가스", "전", "부침", "치킨", "너겟", "탕수"]):
+        base["fat"] += random.randint(12, 20)
+        base["carbs"] += random.randint(5, 12)
+
+    # 5. 소스 및 양념류 (숨겨진 당류 캐치)
+    if any(k in menu_text for k in ["양념", "탕수", "강정", "데리야끼", "소스", "조림", "볶음", "무침"]):
+        base["sugar"] += random.randint(6, 12)
+        base["carbs"] += random.randint(2, 5)
+
+    # 6. 당류 특화 키워드 (후식/음료) - 요청 사항 집중 보완
+    if any(k in menu_text for k in ["요거트", "요구르트", "주스", "음료", "푸딩", "에이드", "쿨피스", "식혜", "수정과"]):
+        base["sugar"] += random.randint(15, 25) # 당류 대폭 상승
+        base["carbs"] += random.randint(8, 15)
+
+    # 7. 과일류 감지
+    if any(k in menu_text for k in ["과일", "바나나", "사과", "포도", "오렌지", "수박", "참외", "멜론", "방울토마토"]):
+        base["sugar"] += random.randint(10, 18)
+        base["carbs"] += random.randint(5, 10)
+
+    # 8. 최종 칼로리 계산 (탄4, 단4, 지9 공식 적용 + 국물/나트륨 오차 보정값)
+    base["calories"] = int((base["carbs"] * 4) + (base["protein"] * 4) + (base["fat"] * 9) + random.randint(80, 120))
+    
     random.seed(None)
     return base
 
