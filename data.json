@@ -1,125 +1,13 @@
 {
   "weather": {
-    "temp": "17",
+    "temp": "15",
     "rain": "30",
-    "last_update": "2026-05-02 20:34"
+    "last_update": "2026-05-03 00:07"
   },
   "meals": {
     "월": {
-      "breakfast": "쌀밥\r, 청국장찌개\r, 그린빈햄맛살볶음\r, 콩나물무침\r, 떠먹는요거트\r, 섞박지",
-      "lunch": "쌀밥\r, 뼈없는감자탕\r, 주꾸미채소볶음\r, 달걀찜\r, 양념깻잎무침/청경채겉절이\r, 배추김치",
-      "dinner": "쌀밥\r, 닭개장\r, 두부달걀부침\r, 해물볶음우동\r, 오이지무침\r, 배추김치",
-      "nutrition": {
-        "breakfast": {
-          "carbs": 101,
-          "protein": 12,
-          "fat": 10,
-          "sugar": 30,
-          "calories": 651
-        },
-        "lunch": {
-          "carbs": 83,
-          "protein": 18,
-          "fat": 12,
-          "sugar": 10,
-          "calories": 627
-        },
-        "dinner": {
-          "carbs": 95,
-          "protein": 32,
-          "fat": 43,
-          "sugar": 11,
-          "calories": 986
-        }
-      }
-    },
-    "화": {
-      "breakfast": "쌀밥\r, 조랭이떡국\r, 훈제오리채소볶음\r, 브로콜리흑임자무침\r, 궁채절임\r, 배추김치",
-      "lunch": "쌀밥\r, 알탕\r, 돈육버섯볶음\r, 옥수수김치전\r, 마늘종어묵볶음\r, 섞박지(총각김치)",
-      "dinner": "하이라이스\r, 얼갈이된장국\r, 생선커틀릿\r, 고추지양념무침\r, 음료\r, 배추김치",
-      "nutrition": {
-        "breakfast": {
-          "carbs": 83,
-          "protein": 16,
-          "fat": 10,
-          "sugar": 11,
-          "calories": 606
-        },
-        "lunch": {
-          "carbs": 94,
-          "protein": 37,
-          "fat": 42,
-          "sugar": 14,
-          "calories": 1011
-        },
-        "dinner": {
-          "carbs": 55,
-          "protein": 41,
-          "fat": 18,
-          "sugar": 40,
-          "calories": 651
-        }
-      }
-    },
-    "수": {
-      "breakfast": "쌀밥\r, 누룽지(숭늉)\r, 순살닭갈비\r, 분홍소시지전\r, 무말랭이무침\r, 배추김치",
-      "lunch": "쌀밥\r, 크림스프\r, 멘치가스\r, 토마토스파게티\r, 메추리알샐러드\r, 배추김치",
-      "dinner": "쌀밥\r, 동태국\r, 돈육고추장볶음\r, 숙주무침\r, 도시락김\r, 배추김치",
-      "nutrition": {
-        "breakfast": {
-          "carbs": 92,
-          "protein": 37,
-          "fat": 45,
-          "sugar": 8,
-          "calories": 1010
-        },
-        "lunch": {
-          "carbs": 102,
-          "protein": 37,
-          "fat": 43,
-          "sugar": 5,
-          "calories": 1043
-        },
-        "dinner": {
-          "carbs": 84,
-          "protein": 38,
-          "fat": 28,
-          "sugar": 12,
-          "calories": 847
-        }
-      }
-    },
-    "목": {
-      "breakfast": "쌀밥\r, 해물순두부국\r, 미트볼강정\r, 매콤감자조림\r, 요구르트\r, 배추김치",
-      "lunch": "나물비빔밥&약고추장\r, 팽이버섯된장국\r, 순살치킨강정\r, 요거트\r, 배추김치",
-      "dinner": "떡만두라면\r, 쌀밥\r, 음료\r, 단무지\r, 배추김치",
-      "nutrition": {
-        "breakfast": {
-          "carbs": 97,
-          "protein": 15,
-          "fat": 13,
-          "sugar": 32,
-          "calories": 672
-        },
-        "lunch": {
-          "carbs": 113,
-          "protein": 17,
-          "fat": 35,
-          "sugar": 40,
-          "calories": 937
-        },
-        "dinner": {
-          "carbs": 106,
-          "protein": 13,
-          "fat": 15,
-          "sugar": 18,
-          "calories": 701
-        }
-      }
-    },
-    "금": {
       "breakfast": "식단 없음",
-      "lunch": "식단 없음",
+      "lunch": "가정일손돕기(수업없음)",
       "dinner": "식단 없음",
       "nutrition": {
         "breakfast": {
@@ -130,11 +18,11 @@
           "calories": 0
         },
         "lunch": {
-          "carbs": 0,
-          "protein": 0,
-          "fat": 0,
-          "sugar": 0,
-          "calories": 0
+          "carbs": 50,
+          "protein": 18,
+          "fat": 13,
+          "sugar": 3,
+          "calories": 499
         },
         "dinner": {
           "carbs": 0,
@@ -142,6 +30,118 @@
           "fat": 0,
           "sugar": 0,
           "calories": 0
+        }
+      }
+    },
+    "화": {
+      "breakfast": "식단 없음",
+      "lunch": "어린이날",
+      "dinner": "식단 없음",
+      "nutrition": {
+        "breakfast": {
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0,
+          "calories": 0
+        },
+        "lunch": {
+          "carbs": 42,
+          "protein": 16,
+          "fat": 8,
+          "sugar": 2,
+          "calories": 386
+        },
+        "dinner": {
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0,
+          "calories": 0
+        }
+      }
+    },
+    "수": {
+      "breakfast": "쌀밥\r, 누룽지(숭늉)\r, 낙지수제비볶음\r, 메추리알조림\r, 도시락김\r, 배추김치",
+      "lunch": "쌀밥\r, 육개장\r, 돈육고추장볶음\r, 분홍소시지전\r, 알감자조림\r, 배추김치",
+      "dinner": "사골칼국수\r, 쌀밥\r, 언양식불고기\r, 무생채무침\r, 배추김치",
+      "nutrition": {
+        "breakfast": {
+          "carbs": 79,
+          "protein": 14,
+          "fat": 15,
+          "sugar": 13,
+          "calories": 605
+        },
+        "lunch": {
+          "carbs": 86,
+          "protein": 32,
+          "fat": 34,
+          "sugar": 14,
+          "calories": 866
+        },
+        "dinner": {
+          "carbs": 83,
+          "protein": 42,
+          "fat": 31,
+          "sugar": 14,
+          "calories": 879
+        }
+      }
+    },
+    "목": {
+      "breakfast": "쌀밥\r, 어묵국\r, 매콤돈육찜\r, 돌나물&초장\r, 땅콩조림\r, 배추김치",
+      "lunch": "들기름마제덮밥\r, 미역된장국\r, 오징어커틀릿\r, 치커리오이무침\r, 섞박지(총각김치)",
+      "dinner": "쌀밥\r, 참치김치찌개\r, 돈채피망볶음\r, 크로켓튀김\r, 마늘종볶음\r, 섞박지",
+      "nutrition": {
+        "breakfast": {
+          "carbs": 79,
+          "protein": 37,
+          "fat": 31,
+          "sugar": 12,
+          "calories": 857
+        },
+        "lunch": {
+          "carbs": 91,
+          "protein": 15,
+          "fat": 12,
+          "sugar": 12,
+          "calories": 652
+        },
+        "dinner": {
+          "carbs": 100,
+          "protein": 15,
+          "fat": 28,
+          "sugar": 15,
+          "calories": 814
+        }
+      }
+    },
+    "금": {
+      "breakfast": "쌀밥\r, 물만두국\r, 돈육카레\r, 치킨너겟\r, 오이지무침\r, 배추김치",
+      "lunch": "잡곡밥\r, 우거지순대국\r, 꽈리고추달걀장조림\r, 두부구이&양념장\r, 숙주무침\r, 배추김치",
+      "dinner": "쌀밥\r, 얼갈이된장국\r, 돈육부대햄볶음\r, 청포묵김가루무침\r, 음료\r, 섞박지",
+      "nutrition": {
+        "breakfast": {
+          "carbs": 101,
+          "protein": 34,
+          "fat": 43,
+          "sugar": 14,
+          "calories": 1010
+        },
+        "lunch": {
+          "carbs": 81,
+          "protein": 15,
+          "fat": 15,
+          "sugar": 15,
+          "calories": 604
+        },
+        "dinner": {
+          "carbs": 94,
+          "protein": 34,
+          "fat": 26,
+          "sugar": 32,
+          "calories": 851
         }
       }
     }
