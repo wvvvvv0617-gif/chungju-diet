@@ -205,15 +205,28 @@
         }
 
         function estimateNutrition(menuText, mealKey) {
-            if (!menuText || menuText.includes("식단 없음")) return null;
+            // 1. 분석에서 제외할 키워드 목록
+            const excludeKeywords = ["식단 없음", "식단없음", "가정일손돕기", "수업없음", "수업 없음", "어린이날", "휴업", "공휴일", "재량휴업"];
+            
+            // 제외 키워드가 포함되어 있거나 텍스트가 너무 짧으면 null 반환
+            if (!menuText || menuText.length < 2 || excludeKeywords.some(key => menuText.includes(key))) {
+                return null;
+            }
+
             let cal = 0, carb = 0, prot = 0, fat = 0, sugar = 0;
+            let matched = false; // 음식 키워드 매칭 여부 체크
 
-            if (menuText.includes("밥") || menuText.includes("면") || menuText.includes("죽")) { cal += 420; carb += 75; prot += 7; }
-            if (menuText.includes("고기") || menuText.includes("닭") || menuText.includes("돈육") || menuText.includes("생선")) { cal += 280; prot += 22; fat += 14; }
-            if (menuText.includes("튀김") || menuText.includes("가스") || menuText.includes("전")) { cal += 220; fat += 18; }
-            if (menuText.includes("찌개") || menuText.includes("국")) { cal += 120; carb += 12; sugar += 4; }
-            if (menuText.includes("음료") || menuText.includes("요거트")) { cal += 90; sugar += 18; }
+            // 메뉴 기반 성분 매칭 로직
+            if (menuText.includes("밥") || menuText.includes("면") || menuText.includes("죽")) { cal += 420; carb += 75; prot += 7; matched = true; }
+            if (menuText.includes("고기") || menuText.includes("닭") || menuText.includes("돈육") || menuText.includes("생선") || menuText.includes("오리")) { cal += 280; prot += 22; fat += 14; matched = true; }
+            if (menuText.includes("튀김") || menuText.includes("가스") || menuText.includes("전") || menuText.includes("카츠")) { cal += 220; fat += 18; matched = true; }
+            if (menuText.includes("찌개") || menuText.includes("국") || menuText.includes("탕")) { cal += 120; carb += 12; sugar += 4; matched = true; }
+            if (menuText.includes("음료") || menuText.includes("요거트") || menuText.includes("주스") || menuText.includes("푸딩")) { cal += 90; sugar += 18; matched = true; }
 
+            // 만약 실제 음식 관련 키워드와 매칭된 것이 없다면 null 반환
+            if (!matched) return null;
+
+            // 매칭된 경우에만 기본 추정치를 보정한 뒤 랜덤 변동폭 적용
             cal = cal || 650; carb = carb || 95; prot = prot || 28; fat = fat || 16; sugar = sugar || 12;
 
             return {
@@ -312,14 +325,12 @@
                 const displayDate = new Date(now);
                 displayDate.setDate(now.getDate() + status.targetDayOffset);
                 
-                // 데이터 매칭을 위해 요일 키값을 한글로 설정합니다.
                 const targetDayKeyKR = week[displayDate.getDay()];
                 const targetDayNameKR = week[displayDate.getDay()];
                 
                 const mealData = data.meals ? data.meals[targetDayKeyKR] : null;
                 const currentMeal = mealData ? mealData[status.mealKey] : "식단 없음";
 
-                // 평가용 오늘 데이터도 한글 키값으로 조회합니다.
                 const todayKeyKR = week[now.getDay()];
                 const todayData = data.meals ? data.meals[todayKeyKR] : null;
 
@@ -403,7 +414,6 @@
 
             if (localStorage.getItem(ratingKey)) return;
 
-            // 햅틱 진동 피드백 추가
             if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
 
             const formData = new FormData();
@@ -489,7 +499,6 @@
             }
         }
 
-        // 서비스 워커 등록 (PWA 기능을 위해 추가)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').then(reg => {
