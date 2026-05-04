@@ -40,7 +40,7 @@
         .dark body { background-color: #020617; }
         
         .dark #main-header { 
-            background: linear-gradient(135deg, #0f172a 0%, #020617 100%) !important;
+            background: linear-gradient(135deg, #0f172a 0%, #020617 100%) !important; 
             box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
         }
 
@@ -112,7 +112,7 @@
                         <li class="h-14 skeleton"></li>
                     </ul>
                 </div>
-                <div class="bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner dark:bg-slate-900/50 dark:border-slate-700">
+                <div id="nutrition-area" class="bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner dark:bg-slate-900/50 dark:border-slate-700">
                     <h3 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest text-center">Nutrition Report</h3>
                     
                     <div id="nutrition-bars" class="space-y-5">
@@ -205,8 +205,8 @@
         }
 
         function estimateNutrition(menuText, mealKey) {
-            // 1. 분석에서 제외할 키워드 목록
-            const excludeKeywords = ["식단 없음", "식단없음", "가정일손돕기", "수업없음", "수업 없음", "어린이날", "휴업", "공휴일", "재량휴업"];
+            // 1. 분석에서 제외할 키워드 목록 (일손돕기 추가)
+            const excludeKeywords = ["식단 없음", "식단없음", "일손돕기", "가정일손돕기", "수업없음", "수업 없음", "어린이날", "휴업", "공휴일", "재량휴업"];
             
             // 제외 키워드가 포함되어 있거나 텍스트가 너무 짧으면 null 반환
             if (!menuText || menuText.length < 2 || excludeKeywords.some(key => menuText.includes(key))) {
@@ -254,6 +254,7 @@
         function getHolidayName(date) {
             const m = date.getMonth() + 1;
             const d = date.getDate();
+            // 우리나라 주요 법정 공휴일 (양력 기준)
             const solarHolidays = { '1-1': '신정', '3-1': '삼일절', '5-5': '어린이날', '6-6': '현충일', '8-15': '광복절', '10-3': '개천절', '10-9': '한글날', '12-25': '성탄절' };
             return solarHolidays[`${m}-${d}`] || null;
         }
@@ -331,16 +332,18 @@
                 const mealData = data.meals ? data.meals[targetDayKeyKR] : null;
                 const currentMeal = mealData ? mealData[status.mealKey] : "식단 없음";
 
+                // 오늘 평가 섹션 표시 여부 결정 (오늘이 공휴일/주말이면 숨김)
                 const todayKeyKR = week[now.getDay()];
                 const todayData = data.meals ? data.meals[todayKeyKR] : null;
-
                 const rateMenuRaw = (status.rateKey && todayData) ? todayData[status.rateKey] : null;
                 const isRestToday = (now.getDay() === 6 || now.getDay() === 0 || getHolidayName(now) !== null);
                 
-                if (status.rateKey && todayData && rateMenuRaw && rateMenuRaw !== "식단 없음" && !isRestToday) {
+                // 평가 섹션의 메뉴도 '일손돕기' 등인 경우 숨김 처리
+                const isInvalidRateMenu = !rateMenuRaw || rateMenuRaw === "식단 없음" || rateMenuRaw.includes("일손돕기");
+
+                if (status.rateKey && todayData && !isInvalidRateMenu && !isRestToday) {
                     document.getElementById('rating-section').classList.remove('hidden');
                     document.getElementById('rating-meal-name').innerText = mealNameKR[status.rateKey];
-                    
                     document.getElementById('rating-menu-preview').innerText = rateMenuRaw.replace(/\s+/g, ' ').replace(/ ,/g, ',').trim();
                     
                     const dateStr = now.toISOString().split('T')[0];
@@ -366,10 +369,15 @@
                     document.getElementById('main-card').classList.remove('rest-bg');
                     document.getElementById('display-day-tag').innerText = targetDayNameKR + "요일 식단";
                     
-                    if (currentMeal && currentMeal !== "식단 없음") {
+                    // '일손돕기'나 '식단 없음' 키워드가 있는지 검사
+                    const isNoMeal = !currentMeal || currentMeal === "식단 없음" || currentMeal.includes("일손돕기") || currentMeal.includes("가정일손돕기");
+
+                    if (!isNoMeal) {
                         const items = currentMeal.split(/,\s*/).filter(i => i.trim());
                         document.getElementById('menu-list').innerHTML = items.map(m => `<li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl text-slate-700 dark:text-slate-200 font-bold border border-slate-100 dark:border-slate-700 shadow-sm animate-fadeIn"><span class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></span>${m}</li>`).join('');
                         
+                        // 영양성분 영역 표시 및 계산
+                        document.getElementById('nutrition-area').classList.remove('hidden');
                         let nut = (mealData && mealData.nutrition) ? mealData.nutrition[status.mealKey] : null;
                         
                         if (!nut || (!nut.calories && !nut.carbs)) {
@@ -392,11 +400,14 @@
                                 ${renderBar('당류(Sugar)', sugarPercent, 'bg-rose-400', nut.sugar + 'g')}
                             `;
                         } else {
-                             document.getElementById('nutrition-bars').innerHTML = `<p class="text-center text-[10px] text-slate-400 py-4 font-bold">등록된 영양 성분 데이터가 없습니다.</p>`;
+                            // 음식이지만 성분 분석이 안되는 경우
+                            document.getElementById('nutrition-area').classList.add('hidden');
                         }
                     } else {
-                        document.getElementById('menu-list').innerHTML = `<li class="p-8 text-center text-slate-400 font-medium">등록된 식단 정보가 없습니다.</li>`;
-                        document.getElementById('nutrition-bars').innerHTML = `<p class="text-center text-[10px] text-slate-400 py-4">영양 정보 없음</p>`;
+                        // '일손돕기' 혹은 '식단 없음'인 경우 영양성분 자체를 숨김
+                        const emptyMsg = currentMeal.includes("일손돕기") ? currentMeal : "등록된 식단 정보가 없습니다.";
+                        document.getElementById('menu-list').innerHTML = `<li class="p-8 text-center text-slate-400 font-medium">${emptyMsg}</li>`;
+                        document.getElementById('nutrition-area').classList.add('hidden');
                     }
                 }
             } catch (e) { console.error("Data Load Error:", e); }
