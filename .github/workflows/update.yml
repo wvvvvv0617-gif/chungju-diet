@@ -1,9 +1,9 @@
 name: Auto Menu Update
 on:
   schedule:
-    # 매시간 16분에 실행 (1시간 간격)
+    # 매시간 16분과 46분에 실행 (30분 간격)
     # 정각을 피하면 실행 대기 시간을 줄일 수 있습니다.
-    - cron: "16 * * * *"
+    - cron: "16,46 * * * *"
   workflow_dispatch:
 
 jobs:
