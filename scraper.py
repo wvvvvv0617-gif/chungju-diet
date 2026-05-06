@@ -185,44 +185,48 @@ def main():
     else:
         final_data = {"weather": {}, "meals": {}}
 
-    # 2. 식단 크롤링 (실패해도 기존 식단 유지)
-    target_date = get_target_date()
-    url = f"https://www.kopo.ac.kr/chungju/content.do?menu=2830&search_day={target_date}"
-    print(f"📡 식단 크롤링: {url}")
+    # 2. 식단 크롤링 (요청 사항: 특정 시간에만 실행되도록 분리)
+    now = get_kst_now()
+    if now.hour == 6 or now.hour == 18:
+        target_date = get_target_date()
+        url = f"https://www.kopo.ac.kr/chungju/content.do?menu=2830&search_day={target_date}"
+        print(f"📡 식단 크롤링 수행 (현재 {now.hour}시): {url}")
 
-    try:
-        res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
-        soup = BeautifulSoup(res.text, "html.parser")
-        meal_result = {}
-        days_list = ["월", "화", "수", "목", "금"]
-        found_any = False
+        try:
+            res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+            soup = BeautifulSoup(res.text, "html.parser")
+            meal_result = {}
+            days_list = ["월", "화", "수", "목", "금"]
+            found_any = False
 
-        for row in soup.find_all("tr"):
-            cols = row.find_all(["td", "th"])
-            if len(cols) < 4: continue
-            header = cols[0].get_text(strip=True)
-            for d in days_list:
-                if d in header:
-                    b = cols[1].get_text(" ", strip=True)
-                    l = cols[2].get_text(" ", strip=True)
-                    dnr = cols[3].get_text(" ", strip=True)
-                    meal_result[d] = {
-                        "breakfast": b if len(b)>3 else "식단 없음",
-                        "lunch": l if len(l)>3 else "식단 없음",
-                        "dinner": dnr if len(dnr)>3 else "식단 없음",
-                        "nutrition": {
-                            "breakfast": estimate_nutrition(b),
-                            "lunch": estimate_nutrition(l),
-                            "dinner": estimate_nutrition(dnr)
+            for row in soup.find_all("tr"):
+                cols = row.find_all(["td", "th"])
+                if len(cols) < 4: continue
+                header = cols[0].get_text(strip=True)
+                for d in days_list:
+                    if d in header:
+                        b = cols[1].get_text(" ", strip=True)
+                        l = cols[2].get_text(" ", strip=True)
+                        dnr = cols[3].get_text(" ", strip=True)
+                        meal_result[d] = {
+                            "breakfast": b if len(b)>3 else "식단 없음",
+                            "lunch": l if len(l)>3 else "식단 없음",
+                            "dinner": dnr if len(dnr)>3 else "식단 없음",
+                            "nutrition": {
+                                "breakfast": estimate_nutrition(b),
+                                "lunch": estimate_nutrition(l),
+                                "dinner": estimate_nutrition(dnr)
+                            }
                         }
-                    }
-                    found_any = True
-        
-        if found_any:
-            final_data["meals"] = meal_result
-            print("🍱 식단 데이터 갱신 성공")
-    except Exception as e:
-        print(f"❌ 식단 크롤링 실패 (기존 데이터 보존): {e}")
+                        found_any = True
+            
+            if found_any:
+                final_data["meals"] = meal_result
+                print("🍱 식단 데이터 갱신 성공")
+        except Exception as e:
+            print(f"❌ 식단 크롤링 실패 (기존 데이터 보존): {e}")
+    else:
+        print(f"⏭️ 식단 크롤링 건너뜀 (현재 {now.hour}시는 크롤링 시간이 아닙니다. 기존 식단 유지)")
 
     # 3. 날씨 업데이트 (실패해도 기존 날씨 유지)
     final_data["weather"] = get_weather(final_data.get("weather", {"temp": "N/A", "rain": "N/A"}))
