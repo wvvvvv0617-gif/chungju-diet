@@ -339,7 +339,22 @@
                 const isRestToday = (now.getDay() === 6 || now.getDay() === 0 || getHolidayName(now) !== null);
                 
                 // 평가 섹션의 메뉴도 '일손돕기' 등인 경우 숨김 처리
-                const isInvalidRateMenu = !rateMenuRaw || rateMenuRaw === "식단 없음" || rateMenuRaw.includes("일손돕기");
+                const invalidRateKeywords = [
+    "식단 없음",
+    "식단없음",
+    "일손돕기",
+    "가정일손돕기",
+    "수업없음",
+    "수업 없음",
+    "어린이날",
+    "휴업",
+    "공휴일",
+    "재량휴업"
+];
+
+const isInvalidRateMenu =
+    !rateMenuRaw ||
+    invalidRateKeywords.some(keyword => rateMenuRaw.includes(keyword));
 
                 if (status.rateKey && todayData && !isInvalidRateMenu && !isRestToday) {
                     document.getElementById('rating-section').classList.remove('hidden');
@@ -370,7 +385,22 @@
                     document.getElementById('display-day-tag').innerText = targetDayNameKR + "요일 식단";
                     
                     // '일손돕기'나 '식단 없음' 키워드가 있는지 검사
-                    const isNoMeal = !currentMeal || currentMeal === "식단 없음" || currentMeal.includes("일손돕기") || currentMeal.includes("가정일손돕기");
+                    const noMealKeywords = [
+    "식단 없음",
+    "식단없음",
+    "일손돕기",
+    "가정일손돕기",
+    "수업없음",
+    "수업 없음",
+    "어린이날",
+    "휴업",
+    "공휴일",
+    "재량휴업"
+];
+
+const isNoMeal =
+    !currentMeal ||
+    noMealKeywords.some(keyword => currentMeal.includes(keyword));
 
                     if (!isNoMeal) {
                         const items = currentMeal.split(/,\s*/).filter(i => i.trim());
