@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -327,14 +327,11 @@
                 </div>
             </div>
         </section>
-
-        <section id="admin-view" class="hidden p-6 bg-slate-900 rounded-[32px] text-xs font-mono text-slate-300 shadow-2xl border border-slate-700 space-y-6"></section>
     </main>
 
     <script>
         window.addEventListener('contextmenu', (e) => e.preventDefault());
 
-        const ADMIN_PASSWORD = "0617"; 
         const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG35dKFaOFHN5Cls4pcWGX9Q_5J1qa2pOxjBhFpoFddIJucw/formResponse";
         const ENTRY_IDS = {
             date: "entry.1731866414", meal: "entry.475926623", menu: "entry.525600404", score: "entry.615065306", feedback: "entry.119301674"
@@ -721,12 +718,11 @@
             viewDate = new Date(now);
             viewDate.setDate(now.getDate() + status.targetDayOffset);
 
-            async function loadData() {
             try {
                 const response = await fetch('data.json?v=' + Date.now());
                 currentMenuData = await response.json();
                 
-                // ✅ [추가] 서버의 식단 기준 날짜(target_date)가 있다면 앱의 현재 날짜(now)를 동기화
+                // 서버의 식단 기준 날짜(target_date)가 있다면 앱의 현재 날짜(now)를 동기화
                 if (currentMenuData && currentMenuData.target_date) {
                     // 데이터의 target_date를 기준으로 날짜 객체 생성 (로컬 타임존 보정 포함)
                     now = new Date(currentMenuData.target_date + "T00:00:00");
@@ -744,9 +740,8 @@
                 // 동기화된 날짜를 바탕으로 화면 렌더링
                 renderDayMenu(viewDate, 1);
                 
-                // status 변수가 선언되어 있지 않다면 getMealStatus() 등으로 대체 필요할 수 있음
-                const status = typeof getMealStatus === 'function' ? getMealStatus() : null;
-                if (status) renderRatingSection(status);
+                const currentStatus = getMealStatus();
+                renderRatingSection(currentStatus);
 
             } catch (e) { 
                 console.error("Data Load Error:", e); 
@@ -799,17 +794,10 @@
 
             fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData });
             localStorage.setItem(ratingKey, "liked");
-            
-            let stats = JSON.parse(localStorage.getItem('admin_stats_v3') || '{}');
-            const key = `${dateStr}_${status.rateKey}`;
-            if (!stats[key]) stats[key] = { total: 0, count: 0, feedbacks: [] };
-            stats[key].count += 1;
-            localStorage.setItem('admin_stats_v3', JSON.stringify(stats));
 
             lockHeartUI();
             document.getElementById('feedback-msg').style.opacity = '1';
             setTimeout(() => { document.getElementById('feedback-msg').style.opacity = '0'; }, 3000);
-            updateAdmin();
         }
 
         function lockHeartUI() {
@@ -838,41 +826,6 @@
             document.getElementById('rating-title').innerHTML = `오늘 드신 <span class="text-rose-600">${mealNameKR[getMealStatus().rateKey] || '식사'}</span>는 어떠셨나요?`;
         }
 
-        function updateAdmin() {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('admin') === 'true') {
-                if (sessionStorage.getItem('admin_auth') !== 'true') {
-                    const pw = prompt("관리자 비밀번호:");
-                    if (pw === ADMIN_PASSWORD) sessionStorage.setItem('admin_auth', 'true');
-                    else { window.location.href = window.location.pathname; return; }
-                }
-                const stats = JSON.parse(localStorage.getItem('admin_stats_v3') || '{}');
-                const adminView = document.getElementById('admin-view');
-                let reportHtml = `<h4 class="text-emerald-400 font-bold mb-4 text-sm">🛠️ ADMIN DASHBOARD</h4>`;
-                Object.entries(stats).reverse().forEach(([k, v]) => {
-                    const [date, meal] = k.split('_');
-                    reportHtml += `
-                        <div class="bg-slate-800/50 p-4 rounded-2xl mb-4 border border-slate-700">
-                            <div class="flex justify-between">
-                                <span class="text-indigo-400 font-bold">${date}</span>
-                                <span class="text-rose-400">❤️ ${v.count}명</span>
-                            </div>
-                            <h5 class="text-white font-bold mt-1">${mealNameKR[meal]}</h5>
-                        </div>`;
-                });
-                adminView.innerHTML = reportHtml + `<button onclick="resetStats()" class="w-full py-2 bg-rose-500/20 text-rose-400 rounded-xl text-[10px]">초기화</button>`;
-                adminView.classList.remove('hidden');
-            }
-        }
-
-        function resetStats() {
-            if (confirm("삭제하시겠습니까?")) {
-                localStorage.removeItem('admin_stats_v3');
-                Object.keys(localStorage).forEach(key => { if (key.startsWith('rated_')) localStorage.removeItem(key); });
-                location.reload();
-            }
-        }
-
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').then(reg => {
@@ -885,7 +838,6 @@
 
         document.addEventListener("visibilitychange", () => {
             if (document.visibilityState === "visible") {
-                // 앱으로 돌아올 때 날짜를 다시 체크하지만, loadData에서 다시 보정됨
                 now = new Date();
                 loadData();
             }
@@ -893,4 +845,6 @@
 
         // 초기 실행
         loadData();
-        updateAdmin();
+    </script>
+</body>
+</html>
