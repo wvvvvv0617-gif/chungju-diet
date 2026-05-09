@@ -582,15 +582,16 @@
                             const sugarPercent= Math.min((nut.sugar    / 30)   * 100, 100);
 
                             html += `
-                            <div class="nutrition-card bg-gradient-to-br from-slate-100 to-slate-50 dark:bg-slate-800/60 p-5 rounded-[24px] border border-slate-200 dark:border-slate-700 shadow-inner">
+                            html += `
+                            <div class="nutrition-card bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-50 dark:bg-slate-800/60 p-5 rounded-[24px] border border-slate-200 dark:border-slate-700 shadow-inner">
                                 <h3 class="text-[11px] font-black text-slate-800 mb-4 uppercase tracking-widest text-center dark:text-yellow-400">Nutrition Report</h3>
                                 <div class="space-y-4">
-                                    ${renderBar('총 열량(Calories)', calPercent, 'bg-indigo-700 dark:bg-indigo-500', nut.calories + ' kcal')}
+                                    ${renderBar('총 열량(Calories)', calPercent, 'bg-indigo-500 dark:bg-indigo-400', nut.calories + ' kcal')}
                                     <div class="h-px bg-slate-300 dark:bg-slate-700 my-1"></div>
-                                    ${renderBar('탄수화물(Carbs)', carbPercent, 'bg-blue-600 dark:bg-blue-400', nut.carbs + 'g')}
-                                    ${renderBar('단백질(Protein)', protPercent, 'bg-emerald-700 dark:bg-emerald-500', nut.protein + 'g')}
-                                    ${renderBar('지방(Fat)', fatPercent, 'bg-amber-600 dark:bg-amber-400', nut.fat + 'g')}
-                                    ${renderBar('당류(Sugar)', sugarPercent, 'bg-rose-600 dark:bg-rose-400', nut.sugar + 'g')}
+                                    ${renderBar('탄수화물(Carbs)', carbPercent, 'bg-sky-500 dark:bg-sky-400', nut.carbs + 'g')}
+                                    ${renderBar('단백질(Protein)', protPercent, 'bg-emerald-500 dark:bg-emerald-400', nut.protein + 'g')}
+                                    ${renderBar('지방(Fat)', fatPercent, 'bg-amber-500 dark:bg-amber-400', nut.fat + 'g')}
+                                    ${renderBar('당류(Sugar)', sugarPercent, 'bg-rose-500 dark:bg-rose-400', nut.sugar + 'g')}
                                 </div>
                             </div>`;
                         }
