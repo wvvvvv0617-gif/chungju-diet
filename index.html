@@ -90,18 +90,17 @@
             cursor: not-allowed !important;
         }
 
-        /* 메인 메뉴 컨테이너: 라이트/다크 완전 분리 */
         #main-card {
             background: #ffffff;
             border: 1.5px solid #cbd5e1;
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.12);
         }
         .dark #main-card {
-        background: linear-gradient(180deg, #0f172a 0%, #111827 100%) !important;
-        border: 1px solid #334155 !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.28) !important;
+            background: linear-gradient(180deg, #0f172a 0%, #111827 100%) !important;
+            border: 1px solid #334155 !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.28) !important;
         }
-        /* 피드백/버그 제보 박스 */
+
         #dev-contact-box {
             background: #f1f5f9;
             border: 1px dashed #94a3b8 !important;
@@ -111,7 +110,6 @@
             border-color: rgba(99, 102, 241, 0.28) !important;
         }
 
-        /* 다크모드 식단 카드 눈부심 제거 */
         .dark .meal-item-card {
             background: #1e293b !important;
             border-color: #334155 !important;
@@ -129,57 +127,48 @@
             border-color: #475569 !important;
         }
 
-        /* 주말/휴일 가독성 강화 */
         .dark #display-date-tag {
             color: #f8fafc !important;
         }
 
         .dark #rest-title {
-        color: #f1f5f9 !important;
-        text-shadow: 0 2px 18px rgba(148, 163, 184, 0.12);
+            color: #f1f5f9 !important;
+            text-shadow: 0 2px 18px rgba(148, 163, 184, 0.12);
         }
 
         .dark #rest-subtitle {
-        color: #94a3b8 !important;
+            color: #94a3b8 !important;
         }
 
         .dark #return-msg {
-        color: #a5b4fc !important;
-        }
-        /* 다크모드 휴무 안내 박스 */
-        .dark #weekend-message .bg-white {
-        background: linear-gradient(135deg, #172554 0%, #1e293b 100%) !important;
-        border-color: #3730a3 !important;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+            color: #a5b4fc !important;
         }
 
-                /* =========================
-           다크모드 텍스트 가독성 개선
-        ========================== */
+        .dark #weekend-message .bg-white {
+            background: linear-gradient(135deg, #172554 0%, #1e293b 100%) !important;
+            border-color: #3730a3 !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+        }
 
         .dark .nutrition-card,
         .dark .daily-total-card {
-        background: #0f172a !important;
+            background: #0f172a !important;
         }
 
-        /* 아침 / 점심 / 저녁 제목 */
         .dark #meals-container h2 {
             color: #f8fafc !important;
         }
 
-        /* Nutrition Report / Daily Nutrition Total */
         .dark .nutrition-card h3,
         .dark .daily-total-card h3 {
             color: #fde047 !important;
         }
 
-        /* 총 열량 / 탄수화물 / 단백질 / 지방 / 당류 */
         .dark .nutrition-card span,
         .dark .daily-total-card span {
             color: #f8fafc;
         }
 
-        /* 영양 수치 강조 */
         .dark .nutrition-card .text-indigo-800,
         .dark .nutrition-card .dark\:text-indigo-300,
         .dark .daily-total-card .text-violet-800,
@@ -187,12 +176,10 @@
             color: #c4b5fd !important;
         }
 
-        /* 권장 섭취량 텍스트 */
         .dark .daily-total-card .text-slate-300 {
             color: #cbd5e1 !important;
         }
 
-        /* 하루 총 섭취량 제목 */
         .dark .daily-total-card h2,
         .dark .daily-total-card h3,
         .dark .daily-total-card p,
@@ -201,23 +188,19 @@
             color: inherit;
         }
 
-        /* 피드백 및 버그 제보 */
         .dark #dev-contact-section h4 {
             color: #f8fafc !important;
         }
 
-        /* 식단 카드 내부 기본 글씨 */
         .dark .meal-item-card {
             color: #f8fafc !important;
         }
 
-        /* 등록된 식단 정보 없음 */
         .dark .meal-content-empty,
         .dark .text-slate-950 {
             color: #f8fafc !important;
         }
 
-        /* Nutrition 라벨 */
         .dark .nutrition-card .text-slate-950,
         .dark .nutrition-card .text-slate-800,
         .dark .daily-total-card .text-slate-950,
@@ -258,7 +241,6 @@
 
     <main class="p-5 relative z-20 mt-4 space-y-6">
         <section id="main-card" class="rounded-[32px] p-6 overflow-hidden min-h-[420px] flex flex-col transition-all duration-500">
-            
             <div id="card-header" class="flex justify-between items-center mb-6">
                 <button id="btn-prev" onclick="changeDay(-1)" class="w-10 h-10 flex items-center justify-center bg-slate-200 text-slate-700 rounded-full dark:bg-slate-800 dark:text-white active:scale-90 transition-all shadow-sm border border-slate-300 dark:border-slate-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
@@ -273,8 +255,7 @@
             </div>
             
             <div id="meal-content" class="flex-1 flex flex-col min-h-0">
-                <div id="meals-container" class="flex-1 overflow-y-auto overscroll-contain pr-2 pb-4 space-y-10 custom-scrollbar" style="max-height: 50vh;">
-                </div>
+                <div id="meals-container" class="flex-1 overflow-y-auto overscroll-contain pr-2 pb-4 space-y-10 custom-scrollbar" style="max-height: 50vh;"></div>
                 
                 <div id="meal-disclaimer" class="mt-6 space-y-1 hidden">
                     <p class="text-[10px] text-slate-700 dark:text-slate-300 text-center leading-relaxed font-bold">표시된 영양 정보는 메뉴 기반 추정치이므로 참고용으로만 활용해 주세요.</p>
@@ -289,7 +270,7 @@
                     <p id="rest-subtitle" class="text-lg text-slate-800 dark:text-slate-100 leading-relaxed font-black"></p>
                 </div>
                 <div class="bg-white px-8 py-4 rounded-2xl border-2 border-indigo-200 shadow-md dark:bg-slate-800 dark:border-indigo-500">
-                <p id="return-msg" class="text-base font-black text-indigo-700 dark:text-indigo-300"></p>
+                    <p id="return-msg" class="text-base font-black text-indigo-700 dark:text-indigo-300"></p>
                 </div>
             </div>
         </section>
@@ -315,9 +296,7 @@
         <section id="dev-contact-section" class="mt-12 mb-10 px-2 text-center">
             <div id="dev-contact-box" class="p-8 rounded-[40px] border border-dashed">
                 <div class="inline-block p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm mb-4">🚀</div>
-                <h4 class="text-base font-black text-slate-950 dark:text-yellow-300 mb-4 leading-relaxed px-4">
-                    피드백 및 버그 제보
-                </h4>
+                <h4 class="text-base font-black text-slate-950 dark:text-yellow-300 mb-4 leading-relaxed px-4">피드백 및 버그 제보</h4>
                 <div id="email-area" class="flex flex-col items-center gap-3">
                     <a href="https://forms.gle/CSuTJa8defrhDELr5" target="_blank" class="w-full max-w-[220px]">
                         <button class="w-full bg-indigo-700 dark:bg-indigo-600 text-white px-6 py-4 rounded-2xl text-sm font-black shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 transition-all">
@@ -347,7 +326,6 @@
 
         let now = new Date();
         let viewDate = new Date();
-        let lastChangeDirection = 1;
         const week = ['일', '월', '화', '수', '목', '금', '토'];
         const mealNameKR = { 'breakfast': '아침', 'lunch': '점심', 'dinner': '저녁' };
         const mealLabels = { 'breakfast': 'BREAKFAST 🍳', 'lunch': 'LUNCH 🍱', 'dinner': 'DINNER 🌙' };
@@ -483,17 +461,11 @@
             const btnPrev = document.getElementById('btn-prev');
             const btnNext = document.getElementById('btn-next');
 
-            if (dayOfWeek === 1) {
-                btnPrev.classList.add('arrow-disabled');
-            } else {
-                btnPrev.classList.remove('arrow-disabled');
-            }
+            if (dayOfWeek === 1) btnPrev.classList.add('arrow-disabled');
+            else btnPrev.classList.remove('arrow-disabled');
 
-            if (dayOfWeek === 0) {
-                btnNext.classList.add('arrow-disabled');
-            } else {
-                btnNext.classList.remove('arrow-disabled');
-            }
+            if (dayOfWeek === 0) btnNext.classList.add('arrow-disabled');
+            else btnNext.classList.remove('arrow-disabled');
         }
 
         function applySlideAnimation(direction) {
@@ -603,10 +575,10 @@
                         const isSpecialDay = NO_MEAL_KEYWORDS.some(keyword => rawMenu && rawMenu.includes(keyword) && keyword !== "식단 없음" && keyword !== "식단없음");
                         const emptyMsg = isSpecialDay ? rawMenu : "등록된 식단 정보가 없습니다.";
                         html += `<div class="meal-item-card p-6 text-center font-black text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-700 rounded-2xl border border-slate-300 dark:border-slate-600 shadow-sm">${emptyMsg}</div>`;
-                        }
-                        html += `</div>`;
-                        container.innerHTML += html;
-                        });
+                    }
+                    html += `</div>`;
+                    container.innerHTML += html;
+                });
 
                 if (totalNutritionCount > 0) {
                     const totalCalPercent  = Math.min((totalNutrition.calories / 2000) * 100, 100);
@@ -622,60 +594,17 @@
                             <h2 class="text-2xl font-black text-slate-950 dark:text-white">하루 총 섭취량</h2>
                         </div>
                         <div class="daily-total-card bg-slate-100 dark:bg-slate-900 p-5 rounded-[24px] border border-slate-200 dark:border-slate-700 shadow-inner">
-    <h3 class="text-[11px] font-black text-slate-800 mb-1 uppercase tracking-widest text-center dark:text-yellow-400">
-        Daily Nutrition Total
-    </h3>
-
-    <p class="text-[10px] text-slate-800 dark:text-slate-200 text-center mb-4 font-bold">
-        오늘 식단 기준 추정치 · 권장 섭취량 대비
-    </p>
-
-    <div class="space-y-4">
-
-        ${renderBarTotal(
-            '총 열량(Calories)',
-            totalCalPercent,
-            'bg-indigo-500 dark:bg-indigo-400',
-            totalNutrition.calories + ' kcal',
-            '권장 2,000kcal'
-        )}
-
-        <div class="h-px bg-slate-300 dark:bg-slate-700 my-1"></div>
-
-        ${renderBarTotal(
-            '탄수화물(Carbs)',
-            totalCarbPercent,
-            'bg-sky-500 dark:bg-sky-400',
-            totalNutrition.carbs + 'g',
-            '권장 324g'
-        )}
-
-        ${renderBarTotal(
-            '단백질(Protein)',
-            totalProtPercent,
-            'bg-emerald-500 dark:bg-emerald-400',
-            totalNutrition.protein + 'g',
-            '권장 55g'
-        )}
-
-        ${renderBarTotal(
-            '지방(Fat)',
-            totalFatPercent,
-            'bg-amber-500 dark:bg-amber-400',
-            totalNutrition.fat + 'g',
-            '권장 54g'
-        )}
-
-        ${renderBarTotal(
-            '당류(Sugar)',
-            totalSugarPercent,
-            'bg-rose-500 dark:bg-rose-400',
-            totalNutrition.sugar + 'g',
-            '권장 100g'
-        )}
-
-    </div>
-</div>
+                            <h3 class="text-[11px] font-black text-slate-800 mb-1 uppercase tracking-widest text-center dark:text-yellow-400">Daily Nutrition Total</h3>
+                            <p class="text-[10px] text-slate-800 dark:text-slate-200 text-center mb-4 font-bold">오늘 식단 기준 추정치 · 권장 섭취량 대비</p>
+                            <div class="space-y-4">
+                                ${renderBarTotal('총 열량(Calories)', totalCalPercent, 'bg-indigo-500 dark:bg-indigo-400', totalNutrition.calories + ' kcal', '권장 2,000kcal')}
+                                <div class="h-px bg-slate-300 dark:bg-slate-700 my-1"></div>
+                                ${renderBarTotal('탄수화물(Carbs)', totalCarbPercent, 'bg-sky-500 dark:bg-sky-400', totalNutrition.carbs + 'g', '권장 324g')}
+                                ${renderBarTotal('단백질(Protein)', totalProtPercent, 'bg-emerald-500 dark:bg-emerald-400', totalNutrition.protein + 'g', '권장 55g')}
+                                ${renderBarTotal('지방(Fat)', totalFatPercent, 'bg-amber-500 dark:bg-amber-400', totalNutrition.fat + 'g', '권장 54g')}
+                                ${renderBarTotal('당류(Sugar)', totalSugarPercent, 'bg-rose-500 dark:bg-rose-400', totalNutrition.sugar + 'g', '권장 100g')}
+                            </div>
+                        </div>
                     </div>`;
                 }
             }
@@ -713,6 +642,7 @@
         }
 
         async function loadData() {
+            now = new Date();
             const status = getMealStatus();
             updateHeaderUI(status);
 
@@ -722,25 +652,14 @@
             try {
                 const response = await fetch('data.json?v=' + Date.now());
                 currentMenuData = await response.json();
-                
-                // 서버의 식단 기준 날짜(target_date)가 있다면 앱의 현재 날짜(now)를 동기화
-                if (currentMenuData && currentMenuData.target_date) {
-                    // 데이터의 target_date를 기준으로 날짜 객체 생성 (로컬 타임존 보정 포함)
-                    console.log("📅 식단 기준 날짜:", currentMenuData.target_date);
-                    // 현재 보여주는 날짜(viewDate)도 데이터 기준일로 맞춤
-                    viewDate = new Date(currentMenuData.target_date + "T00:00:00");
-                    console.log("📅 서버 데이터 날짜에 맞춰 앱 기준일이 업데이트되었습니다:", currentMenuData.target_date);
-                }
-                
+
                 if (currentMenuData.weather) {
                     document.getElementById('realtime-temp').innerText = currentMenuData.weather.temp + "°";
                     const rainText = typeof getRainStatusText === 'function' ? getRainStatusText(currentMenuData.weather.rain) : currentMenuData.weather.rain + "%";
                     document.getElementById('precipitation').innerText = rainText;
                 }
 
-                // 동기화된 날짜를 바탕으로 화면 렌더링
                 renderDayMenu(viewDate, 1);
-                
                 const currentStatus = getMealStatus();
                 renderRatingSection(currentStatus);
 
@@ -843,7 +762,6 @@
             }
         });
 
-        // 초기 실행
         loadData();
     </script>
 </body>
