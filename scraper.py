@@ -202,13 +202,15 @@ def main():
             for row in soup.find_all("tr"):
                 cols = row.find_all(["td", "th"])
                 if len(cols) < 4: continue
-                header = cols[0].get_text(strip=True)
+                header = cols[0].get_text(strip=True) # ✅ 홈페이지에 적힌 원본 날짜 (예: "05.11(월)")
+                
                 for d in days_list:
                     if d in header:
                         b = cols[1].get_text(" ", strip=True)
                         l = cols[2].get_text(" ", strip=True)
                         dnr = cols[3].get_text(" ", strip=True)
                         meal_result[d] = {
+                            "date_text": header, # ✅ JSON에 날짜 텍스트를 저장하도록 추가
                             "breakfast": b if len(b)>3 else "식단 없음",
                             "lunch": l if len(l)>3 else "식단 없음",
                             "dinner": dnr if len(dnr)>3 else "식단 없음",
@@ -222,6 +224,7 @@ def main():
             
             if found_any:
                 final_data["meals"] = meal_result
+                final_data["target_date"] = target_date # ✅ 이번 크롤링의 기준이 된 날짜(월요일) 저장
                 print("🍱 식단 데이터 갱신 성공")
         except Exception as e:
             print(f"❌ 식단 크롤링 실패 (기존 데이터 보존): {e}")
