@@ -29,8 +29,6 @@
             padding-bottom: env(safe-area-inset-bottom);
             overscroll-behavior-y: contain;
             transition: background-color 0.3s ease;
-            
-            /* 모바일 꾹 누르기(콜아웃) 및 텍스트 선택 방지 */
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -65,13 +63,11 @@
         }
         .animate-heart { animation: heartbeat 0.6s ease-in-out; }
 
-        /* 내부 스크롤바 디자인 */
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; }
 
-        /* ─── 1. 날짜 전환 슬라이드 애니메이션 ─── */
         @keyframes slideInRight {
             from { opacity: 0; transform: translateX(40px); }
             to   { opacity: 1; transform: translateX(0); }
@@ -83,7 +79,6 @@
         .slide-in-right { animation: slideInRight 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
         .slide-in-left  { animation: slideInLeft  0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 
-        /* ─── 3. 화살표 비활성화 스타일 ─── */
         .arrow-disabled {
             opacity: 0.25 !important;
             pointer-events: none !important;
@@ -124,7 +119,6 @@
     <main class="p-5 relative z-20 mt-4 space-y-6">
         <section id="main-card" class="bg-white rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50 overflow-hidden min-h-[420px] flex flex-col transition-all duration-500 dark:bg-slate-800 dark:border-slate-700 dark:shadow-none">
             
-            <!-- 변경된 헤더: 좌우 화살표 및 날짜 표시 -->
             <div id="card-header" class="flex justify-between items-center mb-6">
                 <button id="btn-prev" onclick="changeDay(-1)" class="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-500 rounded-full dark:bg-slate-700/50 dark:text-slate-300 active:scale-90 transition-all shadow-sm border border-slate-100 dark:border-slate-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
@@ -139,25 +133,23 @@
             </div>
             
             <div id="meal-content" class="flex-1 flex flex-col min-h-0">
-                <!-- 전체 식단이 스크롤 되는 영역 -->
                 <div id="meals-container" class="flex-1 overflow-y-auto overscroll-contain pr-2 pb-4 space-y-10 custom-scrollbar" style="max-height: 50vh;">
-                    <!-- 식단 리스트가 동적으로 생성되어 여기에 들어갑니다 -->
                 </div>
                 
-                <!-- 하단 공통 안내 문구 -->
                 <div id="meal-disclaimer" class="mt-6 space-y-1 hidden">
                     <p class="text-[9px] text-slate-400 text-center leading-relaxed font-medium">표시된 영양 정보는 메뉴 기반 추정치이므로 참고용으로만 활용해 주세요.</p>
                     <p class="text-[8px] text-slate-300 dark:text-slate-500 text-center leading-relaxed">본 서비스의 날씨 정보는 기상청 단기예보 API를 활용하며,<br>실제 기상 상황과 차이가 있을 수 있습니다.</p>
                 </div>
             </div>
 
+            <!-- 휴일 메시지: 라이트모드 글씨색 명시 수정 -->
             <div id="weekend-message" class="hidden flex-1 flex flex-col items-center justify-center py-12 text-center space-y-6">
                 <div class="text-7xl animate-bounce">😴</div>
                 <div>
                     <h2 id="rest-title" class="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">식당도 쿨쿨 자는 중!</h2>
-                    <p id="rest-subtitle" class="text-base text-slate-500 dark:text-slate-400 leading-relaxed font-medium"></p>
+                    <p id="rest-subtitle" class="text-base text-slate-600 dark:text-slate-400 leading-relaxed font-medium"></p>
                 </div>
-                <div class="bg-white/70 backdrop-blur-sm px-8 py-3 rounded-2xl border border-orange-100 shadow-sm dark:bg-slate-800/70 dark:border-indigo-900/50">
+                <div class="bg-white/90 backdrop-blur-sm px-8 py-3 rounded-2xl border border-orange-200 shadow-sm dark:bg-slate-800/70 dark:border-indigo-900/50">
                     <p id="return-msg" class="text-sm font-black text-orange-600 dark:text-orange-400"></p>
                 </div>
             </div>
@@ -181,8 +173,9 @@
             </div>
         </section>
 
+        <!-- 피드백 섹션: 라이트모드 텍스트 색상 명시 수정 -->
         <section id="dev-contact-section" class="mt-12 mb-10 px-2 text-center">
-            <div class="p-8 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-[40px] border border-dashed border-indigo-100 dark:border-indigo-900/30">
+            <div class="p-8 bg-indigo-50 dark:bg-indigo-900/10 rounded-[40px] border border-dashed border-indigo-200 dark:border-indigo-900/30">
                 <div class="inline-block p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm mb-4">🚀</div>
                 <h4 class="text-sm font-black text-indigo-900 dark:text-indigo-200 mb-4 leading-relaxed px-4">
                     피드백 및 버그 제보
@@ -209,7 +202,6 @@
             date: "entry.1731866414", meal: "entry.475926623", menu: "entry.525600404", score: "entry.615065306", feedback: "entry.119301674"
         };
 
-        // ─── 4. 공휴일/특수 키워드 목록 (영양성분 및 식단 판단에 모두 사용) ───
         const NO_MEAL_KEYWORDS = [
             "식단 없음", "식단없음", "일손돕기", "가정일손돕기", "수업없음", "수업 없음",
             "어린이날", "휴업", "공휴일", "재량휴업", "신정", "삼일절", "현충일",
@@ -220,7 +212,7 @@
 
         let now = new Date();
         let viewDate = new Date();
-        let lastChangeDirction = 1; // 1: 오른쪽(다음날), -1: 왼쪽(이전날) — 애니메이션 방향용
+        let lastChangeDirection = 1;
         const week = ['일', '월', '화', '수', '목', '금', '토'];
         const mealNameKR = { 'breakfast': '아침', 'lunch': '점심', 'dinner': '저녁' };
         const mealLabels = { 'breakfast': 'BREAKFAST 🍳', 'lunch': 'LUNCH 🍱', 'dinner': 'DINNER 🌙' };
@@ -229,27 +221,20 @@
         function getFixedRandom(value, mealKey, menuText, range = 0.1) {
             const dateStr = new Date().toISOString().split('T')[0];
             const seedStr = dateStr + mealKey + menuText + value;
-            
             let hash = 0;
             for (let i = 0; i < seedStr.length; i++) {
                 hash = ((hash << 5) - hash) + seedStr.charCodeAt(i);
                 hash |= 0;
             }
-            
             const fixedRandom = (Math.abs(hash) % 100) / 100 * 2 - 1;
             const variation = value * range * fixedRandom;
-            
             return Math.round(value + variation);
         }
 
-        // ─── 4. 공휴일/특수 텍스트가 포함된 경우 영양성분 추정 차단 ───
         function estimateNutrition(menuText, mealKey) {
             if (!menuText || menuText.trim().length < 2) return null;
-
-            // 특수 키워드가 하나라도 포함되면 영양성분 표시 안 함
             if (NO_MEAL_KEYWORDS.some(key => menuText.includes(key))) return null;
 
-            // 실제 음식 재료/조리법 키워드가 하나도 없으면 영양성분 표시 안 함
             const foodKeywords = [
                 "밥", "면", "죽", "빵", "떡", "볶음", "구이", "조림", "찜",
                 "튀김", "전", "카츠", "가스", "국", "찌개", "탕", "soup",
@@ -351,21 +336,17 @@
             document.getElementById('greeting').innerText = status.greetingText;
         }
 
-        // ─── 3. 화살표 버튼 활성/비활성 업데이트 ───
-        // 현재 주의 월요일(dayOfWeek=1)이면 왼쪽 비활성, 일요일(dayOfWeek=0)이면 오른쪽 비활성
         function updateArrowButtons(targetDate) {
-            const dayOfWeek = targetDate.getDay(); // 0=일, 1=월, ..., 6=토
+            const dayOfWeek = targetDate.getDay();
             const btnPrev = document.getElementById('btn-prev');
             const btnNext = document.getElementById('btn-next');
 
-            // 월요일(1): 왼쪽 화살표 비활성
             if (dayOfWeek === 1) {
                 btnPrev.classList.add('arrow-disabled');
             } else {
                 btnPrev.classList.remove('arrow-disabled');
             }
 
-            // 일요일(0): 오른쪽 화살표 비활성
             if (dayOfWeek === 0) {
                 btnNext.classList.add('arrow-disabled');
             } else {
@@ -373,16 +354,13 @@
             }
         }
 
-        // ─── 1. 슬라이드 애니메이션 적용 함수 ───
         function applySlideAnimation(direction) {
             const container = document.getElementById('meals-container');
             const weekendMsg = document.getElementById('weekend-message');
 
-            // 기존 애니메이션 클래스 제거
             container.classList.remove('slide-in-right', 'slide-in-left');
             weekendMsg.classList.remove('slide-in-right', 'slide-in-left');
 
-            // 브라우저가 변경을 인식할 수 있도록 짧게 대기 후 재적용
             void container.offsetWidth;
             void weekendMsg.offsetWidth;
 
@@ -391,7 +369,6 @@
             weekendMsg.classList.add(animClass);
         }
 
-        // 렌더링 할 식단을 날짜 기반으로 생성하는 함수
         function renderDayMenu(targetDate, direction = 1) {
             if (!currentMenuData) return;
 
@@ -402,11 +379,7 @@
             const isRest = isWeekend || isHoliday;
 
             document.getElementById('display-date-tag').innerText = displayDateStr;
-
-            // ─── 3. 화살표 상태 업데이트 ───
             updateArrowButtons(targetDate);
-
-            // ─── 1. 슬라이드 애니메이션 적용 ───
             applySlideAnimation(direction);
             
             if (isRest) {
@@ -430,13 +403,14 @@
 
                 const mealsToRender = ['breakfast', 'lunch', 'dinner'];
 
+                // 하루 총 영양성분 합산용
+                let totalNutrition = { calories: 0, carbs: 0, protein: 0, fat: 0, sugar: 0 };
+                let totalNutritionCount = 0;
+
                 mealsToRender.forEach(key => {
                     const rawMenu = mealData ? mealData[key] : "식단 없음";
-
-                    // ─── 4. NO_MEAL_KEYWORDS 기준으로 식단 없음 판단 ───
                     const isNoMeal = !rawMenu || NO_MEAL_KEYWORDS.some(keyword => rawMenu.includes(keyword));
                     
-                    // ─── 2. 다크모드 대응 메뉴 아이템 배경색 적용 (인라인 스타일 제거, Tailwind 클래스 사용) ───
                     let html = `<div class="animate-fadeIn">`;
                     html += `<div class="flex items-center gap-2 mb-3">
                                 <span class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase dark:bg-indigo-900/40 dark:text-indigo-400">${mealLabels[key]}</span>
@@ -446,7 +420,7 @@
                     if (!isNoMeal) {
                         const items = rawMenu.split(/,\s*/).filter(i => i.trim());
 
-                        // ─── 2. 메뉴 아이템: bg-slate-50 dark:bg-slate-700 로 다크모드 색상 명시 ───
+                        // 라이트모드 bg-slate-50, 다크모드 dark:bg-slate-700 명시
                         html += `<ul class="grid grid-cols-1 gap-2 mb-4">
                                     ${items.map(m => `
                                         <li class="flex items-center gap-3 p-3.5 bg-slate-50 dark:bg-slate-700 rounded-2xl text-slate-700 dark:text-slate-200 font-bold border border-slate-100 dark:border-slate-600 shadow-sm">
@@ -459,13 +433,20 @@
                         if (!nut || (!nut.calories && !nut.carbs)) nut = estimateNutrition(rawMenu, key);
 
                         if (nut) {
-                            const calPercent = Math.min((nut.calories / 1000) * 100, 100);
-                            const carbPercent = Math.min((nut.carbs / 150) * 100, 100);
-                            const protPercent = Math.min((nut.protein / 60) * 100, 100);
-                            const fatPercent = Math.min((nut.fat / 40) * 100, 100);
-                            const sugarPercent = Math.min((nut.sugar / 30) * 100, 100);
+                            // 총 영양성분 합산
+                            totalNutrition.calories += nut.calories || 0;
+                            totalNutrition.carbs    += nut.carbs    || 0;
+                            totalNutrition.protein  += nut.protein  || 0;
+                            totalNutrition.fat      += nut.fat      || 0;
+                            totalNutrition.sugar    += nut.sugar    || 0;
+                            totalNutritionCount++;
 
-                            // ─── 2. 영양성분 박스: dark:bg-slate-800 명시 ───
+                            const calPercent  = Math.min((nut.calories / 1000) * 100, 100);
+                            const carbPercent = Math.min((nut.carbs    / 150)  * 100, 100);
+                            const protPercent = Math.min((nut.protein  / 60)   * 100, 100);
+                            const fatPercent  = Math.min((nut.fat      / 40)   * 100, 100);
+                            const sugarPercent= Math.min((nut.sugar    / 30)   * 100, 100);
+
                             html += `
                             <div class="bg-slate-50 dark:bg-slate-800 p-5 rounded-[24px] border border-slate-100 dark:border-slate-600 shadow-inner">
                                 <h3 class="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-widest text-center">Nutrition Report</h3>
@@ -480,24 +461,50 @@
                             </div>`;
                         }
                     } else {
-                        // ─── 4. 공휴일/특수 키워드인 경우 해당 텍스트를 안내 문구로 표시 ───
                         const isSpecialDay = NO_MEAL_KEYWORDS.some(keyword => rawMenu && rawMenu.includes(keyword) && keyword !== "식단 없음" && keyword !== "식단없음");
                         const emptyMsg = isSpecialDay ? rawMenu : "등록된 식단 정보가 없습니다.";
-                        html += `<div class="p-6 text-center text-slate-400 font-medium bg-slate-50 dark:bg-slate-700/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600">${emptyMsg}</div>`;
+                        html += `<div class="p-6 text-center text-slate-500 dark:text-slate-400 font-medium bg-slate-50 dark:bg-slate-700/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600">${emptyMsg}</div>`;
                     }
                     html += `</div>`;
                     container.innerHTML += html;
                 });
+
+                // 하루 총 영양성분 합계 카드 (영양성분 있는 끼니가 1개 이상일 때만 표시)
+                if (totalNutritionCount > 0) {
+                    const totalCalPercent  = Math.min((totalNutrition.calories / 2000) * 100, 100);
+                    const totalCarbPercent = Math.min((totalNutrition.carbs    / 324)  * 100, 100);
+                    const totalProtPercent = Math.min((totalNutrition.protein  / 55)   * 100, 100);
+                    const totalFatPercent  = Math.min((totalNutrition.fat      / 54)   * 100, 100);
+                    const totalSugarPercent= Math.min((totalNutrition.sugar    / 100)  * 100, 100);
+
+                    container.innerHTML += `
+                    <div class="animate-fadeIn">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="bg-violet-100 text-violet-600 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase dark:bg-violet-900/40 dark:text-violet-400">TODAY 📊</span>
+                            <h2 class="text-xl font-black text-gray-800 dark:text-slate-100">하루 총 섭취량</h2>
+                        </div>
+                        <div class="bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 p-5 rounded-[24px] border border-violet-100 dark:border-slate-600 shadow-inner">
+                            <h3 class="text-[10px] font-black text-slate-400 mb-1 uppercase tracking-widest text-center">Daily Nutrition Total</h3>
+                            <p class="text-[9px] text-slate-400 dark:text-slate-500 text-center mb-4">${totalNutritionCount}끼 기준 추정치 · 권장 섭취량 대비</p>
+                            <div class="space-y-4">
+                                ${renderBarTotal('총 열량(Calories)', totalCalPercent, 'bg-indigo-500', totalNutrition.calories + ' kcal', '권장 2,000kcal')}
+                                <div class="h-px bg-violet-100 dark:bg-slate-700 my-1"></div>
+                                ${renderBarTotal('탄수화물(Carbs)', totalCarbPercent, 'bg-blue-400', totalNutrition.carbs + 'g', '권장 324g')}
+                                ${renderBarTotal('단백질(Protein)', totalProtPercent, 'bg-emerald-500', totalNutrition.protein + 'g', '권장 55g')}
+                                ${renderBarTotal('지방(Fat)', totalFatPercent, 'bg-amber-400', totalNutrition.fat + 'g', '권장 54g')}
+                                ${renderBarTotal('당류(Sugar)', totalSugarPercent, 'bg-rose-400', totalNutrition.sugar + 'g', '권장 100g')}
+                            </div>
+                        </div>
+                    </div>`;
+                }
             }
         }
 
-        // ─── 1. 날짜 변경 시 방향 정보를 renderDayMenu에 전달 ───
         function changeDay(offset) {
             viewDate.setDate(viewDate.getDate() + offset);
             renderDayMenu(viewDate, offset);
         }
 
-        // 실시간(오늘) 기준 식단 평가 섹션 렌더링
         function renderRatingSection(status) {
             if (!currentMenuData) return;
 
@@ -506,7 +513,6 @@
             const rateMenuRaw = (status.rateKey && todayData) ? todayData[status.rateKey] : null;
             const isRestToday = (now.getDay() === 6 || now.getDay() === 0 || getHolidayName(now) !== null);
             
-            // ─── 4. NO_MEAL_KEYWORDS 기준으로 평가 섹션 노출 여부 판단 ───
             const isInvalidRateMenu = !rateMenuRaw || NO_MEAL_KEYWORDS.some(keyword => rateMenuRaw.includes(keyword));
 
             if (status.rateKey && todayData && !isInvalidRateMenu && !isRestToday) {
@@ -547,12 +553,27 @@
             } catch (e) { console.error("Data Load Error:", e); }
         }
 
-        // ─── 2. renderBar: 다크모드 텍스트 클래스 보완 ───
         function renderBar(label, val, color, weight) {
             return `<div>
                         <div class="flex justify-between items-end mb-1">
                             <span class="text-[11px] font-black text-slate-800 dark:text-slate-200">${label}</span>
                             <span class="text-[10px] font-black text-indigo-600 dark:text-indigo-400">${weight}</span>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                            <div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div>
+                        </div>
+                    </div>`;
+        }
+
+        // 하루 총합 바 렌더링 (권장량 표시 포함)
+        function renderBarTotal(label, val, color, weight, recommended) {
+            return `<div>
+                        <div class="flex justify-between items-end mb-1">
+                            <span class="text-[11px] font-black text-slate-800 dark:text-slate-200">${label}</span>
+                            <div class="flex flex-col items-end gap-0.5">
+                                <span class="text-[10px] font-black text-violet-600 dark:text-violet-400">${weight}</span>
+                                <span class="text-[8px] text-slate-400 dark:text-slate-500">${recommended}</span>
+                            </div>
                         </div>
                         <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
                             <div class="${color} h-full transition-all duration-1000" style="width: ${val}%"></div>
