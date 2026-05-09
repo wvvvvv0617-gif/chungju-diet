@@ -84,6 +84,28 @@
             pointer-events: none !important;
             cursor: not-allowed !important;
         }
+
+        /* 메인 메뉴 컨테이너: 라이트/다크 완전 분리 */
+        #main-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 20px 45px -22px rgba(59, 130, 246, 0.25);
+        }
+        .dark #main-card {
+            background: linear-gradient(180deg, #0f172a 0%, #111827 100%) !important;
+            border: 1px solid #334155 !important;
+            box-shadow: none !important;
+        }
+
+        /* 피드백/버그 제보 박스: 라이트/다크 완전 분리 */
+        #dev-contact-box {
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+            border-color: #c7d2fe !important;
+        }
+        .dark #dev-contact-box {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%) !important;
+            border-color: rgba(99, 102, 241, 0.28) !important;
+        }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen bg-white shadow-2xl pb-10 dark:bg-slate-900 dark:shadow-none">
@@ -117,17 +139,17 @@
     </header>
 
     <main class="p-5 relative z-20 mt-4 space-y-6">
-        <section id="main-card" class="bg-gradient-to-br from-white via-slate-50 to-blue-50 rounded-[32px] shadow-2xl shadow-blue-100 p-6 border border-gray-50 overflow-hidden min-h-[420px] flex flex-col transition-all duration-500 dark:bg-slate-800 dark:border-slate-700 dark:shadow-none">
+        <section id="main-card" class="rounded-[32px] p-6 overflow-hidden min-h-[420px] flex flex-col transition-all duration-500">
             
             <div id="card-header" class="flex justify-between items-center mb-6">
-                <button id="btn-prev" onclick="changeDay(-1)" class="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-500 rounded-full dark:bg-slate-700/50 dark:text-slate-300 active:scale-90 transition-all shadow-sm border border-slate-100 dark:border-slate-700">
+                <button id="btn-prev" onclick="changeDay(-1)" class="w-10 h-10 flex items-center justify-center bg-slate-100 text-slate-500 rounded-full dark:bg-slate-700/70 dark:text-slate-300 active:scale-90 transition-all shadow-sm border border-slate-200 dark:border-slate-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
                 </button>
                 <div class="flex flex-col items-center gap-1">
                     <span id="display-date-tag" class="text-sm font-black text-slate-800 dark:text-slate-100"></span>
-                    <span id="display-day-tag" class="text-[10px] text-blue-500 font-bold bg-blue-50 px-2.5 py-1 rounded-md dark:bg-blue-900/30 dark:text-blue-300 tracking-wide"></span>
+                    <span id="display-day-tag" class="text-[10px] text-blue-600 font-bold bg-blue-100 px-2.5 py-1 rounded-md dark:bg-blue-900/30 dark:text-blue-300 tracking-wide"></span>
                 </div>
-                <button id="btn-next" onclick="changeDay(1)" class="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-500 rounded-full dark:bg-slate-700/50 dark:text-slate-300 active:scale-90 transition-all shadow-sm border border-slate-100 dark:border-slate-700">
+                <button id="btn-next" onclick="changeDay(1)" class="w-10 h-10 flex items-center justify-center bg-slate-100 text-slate-500 rounded-full dark:bg-slate-700/70 dark:text-slate-300 active:scale-90 transition-all shadow-sm border border-slate-200 dark:border-slate-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
                 </button>
             </div>
@@ -137,19 +159,18 @@
                 </div>
                 
                 <div id="meal-disclaimer" class="mt-6 space-y-1 hidden">
-                    <p class="text-[9px] text-slate-400 text-center leading-relaxed font-medium">표시된 영양 정보는 메뉴 기반 추정치이므로 참고용으로만 활용해 주세요.</p>
-                    <p class="text-[8px] text-slate-300 dark:text-slate-500 text-center leading-relaxed">본 서비스의 날씨 정보는 기상청 단기예보 API를 활용하며,<br>실제 기상 상황과 차이가 있을 수 있습니다.</p>
+                    <p class="text-[9px] text-slate-500 dark:text-slate-400 text-center leading-relaxed font-medium">표시된 영양 정보는 메뉴 기반 추정치이므로 참고용으로만 활용해 주세요.</p>
+                    <p class="text-[8px] text-slate-400 dark:text-slate-500 text-center leading-relaxed">본 서비스의 날씨 정보는 기상청 단기예보 API를 활용하며,<br>실제 기상 상황과 차이가 있을 수 있습니다.</p>
                 </div>
             </div>
 
-            <!-- 휴일 메시지: 라이트모드 글씨색 명시 수정 -->
             <div id="weekend-message" class="hidden flex-1 flex flex-col items-center justify-center py-12 text-center space-y-6">
                 <div class="text-7xl animate-bounce">😴</div>
                 <div>
                     <h2 id="rest-title" class="text-2xl font-black text-slate-900 dark:text-slate-100 mb-2">식당도 쿨쿨 자는 중!</h2>
                     <p id="rest-subtitle" class="text-base text-slate-700 dark:text-slate-400 leading-relaxed font-semibold"></p>
                 </div>
-                <div class="bg-white/90 backdrop-blur-sm px-8 py-3 rounded-2xl border border-orange-200 shadow-sm dark:bg-slate-800/70 dark:border-indigo-900/50">
+                <div class="bg-white/95 backdrop-blur-sm px-8 py-3 rounded-2xl border border-orange-200 shadow-sm dark:bg-slate-800/70 dark:border-indigo-900/50">
                     <p id="return-msg" class="text-sm font-black text-orange-700 dark:text-orange-400"></p>
                 </div>
             </div>
@@ -173,11 +194,10 @@
             </div>
         </section>
 
-        <!-- 피드백 섹션: 라이트모드 텍스트 색상 명시 수정 -->
         <section id="dev-contact-section" class="mt-12 mb-10 px-2 text-center">
-            <div class="p-8 bg-indigo-50 dark:bg-indigo-900/10 rounded-[40px] border border-dashed border-indigo-200 dark:border-indigo-900/30">
+            <div id="dev-contact-box" class="p-8 rounded-[40px] border border-dashed">
                 <div class="inline-block p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm mb-4">🚀</div>
-                <h4 class="text-sm font-black text-indigo-950 dark:text-indigo-200 mb-4 leading-relaxed px-4">
+                <h4 class="text-sm font-black text-slate-800 dark:text-indigo-100 mb-4 leading-relaxed px-4">
                     피드백 및 버그 제보
                 </h4>
                 <div id="email-area" class="flex flex-col items-center gap-3">
@@ -403,7 +423,6 @@
 
                 const mealsToRender = ['breakfast', 'lunch', 'dinner'];
 
-                // 하루 총 영양성분 합산용
                 let totalNutrition = { calories: 0, carbs: 0, protein: 0, fat: 0, sugar: 0 };
                 let totalNutritionCount = 0;
 
@@ -420,10 +439,9 @@
                     if (!isNoMeal) {
                         const items = rawMenu.split(/,\s*/).filter(i => i.trim());
 
-                        // 라이트모드 bg-slate-50, 다크모드 dark:bg-slate-700 명시
                         html += `<ul class="grid grid-cols-1 gap-2 mb-4">
                                     ${items.map(m => `
-                                        <li class="flex items-center gap-3 p-3.5 bg-slate-50 dark:bg-slate-700 rounded-2xl text-slate-700 dark:text-slate-200 font-bold border border-slate-100 dark:border-slate-600 shadow-sm">
+                                        <li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-700 rounded-2xl text-slate-800 dark:text-slate-200 font-bold border border-slate-200 dark:border-slate-600 shadow-sm">
                                             <span class="w-2.5 h-2.5 bg-indigo-400 rounded-full flex-shrink-0"></span>
                                             ${m}
                                         </li>`).join('')}
@@ -433,7 +451,6 @@
                         if (!nut || (!nut.calories && !nut.carbs)) nut = estimateNutrition(rawMenu, key);
 
                         if (nut) {
-                            // 총 영양성분 합산
                             totalNutrition.calories += nut.calories || 0;
                             totalNutrition.carbs    += nut.carbs    || 0;
                             totalNutrition.protein  += nut.protein  || 0;
@@ -448,8 +465,8 @@
                             const sugarPercent= Math.min((nut.sugar    / 30)   * 100, 100);
 
                             html += `
-                            <div class="bg-slate-50 dark:bg-slate-800 p-5 rounded-[24px] border border-slate-100 dark:border-slate-600 shadow-inner">
-                                <h3 class="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-widest text-center">Nutrition Report</h3>
+                            <div class="bg-slate-50 dark:bg-slate-800 p-5 rounded-[24px] border border-slate-200 dark:border-slate-600 shadow-inner">
+                                <h3 class="text-[10px] font-black text-slate-500 mb-4 uppercase tracking-widest text-center dark:text-slate-400">Nutrition Report</h3>
                                 <div class="space-y-4">
                                     ${renderBar('총 열량(Calories)', calPercent, 'bg-indigo-500', nut.calories + ' kcal')}
                                     <div class="h-px bg-slate-200 dark:bg-slate-700 my-1"></div>
@@ -463,13 +480,12 @@
                     } else {
                         const isSpecialDay = NO_MEAL_KEYWORDS.some(keyword => rawMenu && rawMenu.includes(keyword) && keyword !== "식단 없음" && keyword !== "식단없음");
                         const emptyMsg = isSpecialDay ? rawMenu : "등록된 식단 정보가 없습니다.";
-                        html += `<div class="p-6 text-center text-slate-500 dark:text-slate-400 font-medium bg-slate-50 dark:bg-slate-700/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600">${emptyMsg}</div>`;
+                        html += `<div class="p-6 text-center text-slate-600 dark:text-slate-400 font-medium bg-slate-50 dark:bg-slate-700/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600">${emptyMsg}</div>`;
                     }
                     html += `</div>`;
                     container.innerHTML += html;
                 });
 
-                // 하루 총 영양성분 합계 카드 (영양성분 있는 끼니가 1개 이상일 때만 표시)
                 if (totalNutritionCount > 0) {
                     const totalCalPercent  = Math.min((totalNutrition.calories / 2000) * 100, 100);
                     const totalCarbPercent = Math.min((totalNutrition.carbs    / 324)  * 100, 100);
@@ -484,8 +500,8 @@
                             <h2 class="text-xl font-black text-gray-800 dark:text-slate-100">하루 총 섭취량</h2>
                         </div>
                         <div class="bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 p-5 rounded-[24px] border border-violet-100 dark:border-slate-600 shadow-inner">
-                            <h3 class="text-[10px] font-black text-slate-400 mb-1 uppercase tracking-widest text-center">Daily Nutrition Total</h3>
-                            <p class="text-[9px] text-slate-400 dark:text-slate-500 text-center mb-4">${totalNutritionCount}끼 기준 추정치 · 권장 섭취량 대비</p>
+                            <h3 class="text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest text-center dark:text-slate-400">Daily Nutrition Total</h3>
+                            <p class="text-[9px] text-slate-500 dark:text-slate-500 text-center mb-4">${totalNutritionCount}끼 기준 추정치 · 권장 섭취량 대비</p>
                             <div class="space-y-4">
                                 ${renderBarTotal('총 열량(Calories)', totalCalPercent, 'bg-indigo-500', totalNutrition.calories + ' kcal', '권장 2,000kcal')}
                                 <div class="h-px bg-violet-100 dark:bg-slate-700 my-1"></div>
@@ -565,14 +581,13 @@
                     </div>`;
         }
 
-        // 하루 총합 바 렌더링 (권장량 표시 포함)
         function renderBarTotal(label, val, color, weight, recommended) {
             return `<div>
                         <div class="flex justify-between items-end mb-1">
                             <span class="text-[11px] font-black text-slate-800 dark:text-slate-200">${label}</span>
                             <div class="flex flex-col items-end gap-0.5">
                                 <span class="text-[10px] font-black text-violet-600 dark:text-violet-400">${weight}</span>
-                                <span class="text-[8px] text-slate-400 dark:text-slate-500">${recommended}</span>
+                                <span class="text-[8px] text-slate-500 dark:text-slate-500">${recommended}</span>
                             </div>
                         </div>
                         <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
