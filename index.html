@@ -357,7 +357,7 @@
         let currentMenuData = null;
 
         function getFixedRandom(value, mealKey, menuText, range = 0.1) {
-            const dateStr = new Date().toISOString().split('T')[0];
+            const dateStr = now.toISOString().split('T')[0];
             const seedStr = dateStr + mealKey + menuText + value;
             let hash = 0;
             for (let i = 0; i < seedStr.length; i++) {
