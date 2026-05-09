@@ -145,6 +145,73 @@
         .dark #return-msg {
             color: #fde68a !important;
         }
+
+                /* =========================
+           다크모드 텍스트 가독성 개선
+        ========================== */
+
+        /* 아침 / 점심 / 저녁 제목 */
+        .dark #meals-container h2 {
+            color: #f8fafc !important;
+        }
+
+        /* Nutrition Report / Daily Nutrition Total */
+        .dark .nutrition-card h3,
+        .dark .daily-total-card h3 {
+            color: #fde047 !important;
+        }
+
+        /* 총 열량 / 탄수화물 / 단백질 / 지방 / 당류 */
+        .dark .nutrition-card span,
+        .dark .daily-total-card span {
+            color: #f8fafc;
+        }
+
+        /* 영양 수치 강조 */
+        .dark .nutrition-card .text-indigo-800,
+        .dark .nutrition-card .dark\:text-indigo-300,
+        .dark .daily-total-card .text-violet-800,
+        .dark .daily-total-card .dark\:text-violet-300 {
+            color: #c4b5fd !important;
+        }
+
+        /* 권장 섭취량 텍스트 */
+        .dark .daily-total-card .text-slate-300 {
+            color: #cbd5e1 !important;
+        }
+
+        /* 하루 총 섭취량 제목 */
+        .dark .daily-total-card h2,
+        .dark .daily-total-card h3,
+        .dark .daily-total-card p,
+        .dark .daily-total-card span,
+        .dark .daily-total-card div {
+            color: inherit;
+        }
+
+        /* 피드백 및 버그 제보 */
+        .dark #dev-contact-section h4 {
+            color: #f8fafc !important;
+        }
+
+        /* 식단 카드 내부 기본 글씨 */
+        .dark .meal-item-card {
+            color: #f8fafc !important;
+        }
+
+        /* 등록된 식단 정보 없음 */
+        .dark .meal-content-empty,
+        .dark .text-slate-950 {
+            color: #f8fafc !important;
+        }
+
+        /* Nutrition 라벨 */
+        .dark .nutrition-card .text-slate-950,
+        .dark .nutrition-card .text-slate-800,
+        .dark .daily-total-card .text-slate-950,
+        .dark .daily-total-card .text-slate-800 {
+            color: #f8fafc !important;
+        }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen bg-white shadow-2xl pb-10 dark:bg-slate-900 dark:shadow-none">
