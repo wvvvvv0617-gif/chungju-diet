@@ -598,11 +598,11 @@
                     } else {
                         const isSpecialDay = NO_MEAL_KEYWORDS.some(keyword => rawMenu && rawMenu.includes(keyword) && keyword !== "식단 없음" && keyword !== "식단없음");
                         const emptyMsg = isSpecialDay ? rawMenu : "등록된 식단 정보가 없습니다.";
-                        html += `<div class="p-6 text-center text-slate-950 dark:text-slate-100 font-black bg-slate-200 dark:bg-gradient-to-br dark:from-slate-800 dark:to-indigo-950/40 rounded-2xl border border-dashed border-slate-400 dark:border-indigo-800/60 shadow-sm dark:shadow-black/20">`;
-                    }
-                    html += `</div>`;
-                    container.innerHTML += html;
-                });
+                        html += `<div class="p-6 text-center font-black text-slate-900 dark:text-slate-100 bg-slate-200 dark:bg-gradient-to-br dark:from-slate-800 dark:to-indigo-950/40 rounded-2xl border border-dashed border-slate-400 dark:border-indigo-800/60 shadow-sm dark:shadow-black/20">${emptyMsg}</div>`;
+                        }
+                        html += `</div>`;
+                        container.innerHTML += html;
+                        });
 
                 if (totalNutritionCount > 0) {
                     const totalCalPercent  = Math.min((totalNutrition.calories / 2000) * 100, 100);
