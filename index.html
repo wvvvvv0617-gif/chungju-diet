@@ -46,7 +46,10 @@
         .disabled-heart { pointer-events: none; }
         
         .rest-bg { background: linear-gradient(135deg, #fff5f5 0%, #fff0f6 100%) !important; }
-        .dark .rest-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; border: 1px solid #1e293b; }
+        .dark .rest-bg { 
+            background: linear-gradient(135deg, #0b1220 0%, #111827 100%) !important; 
+            border: 1px solid #334155;
+        }
 
         @keyframes shimmer { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
         .skeleton { animation: shimmer 1.5s infinite ease-in-out; background-color: #e2e8f0; border-radius: 1rem; }
@@ -97,7 +100,7 @@
             box-shadow: none !important;
         }
 
-        /* 피드백/버그 제보 박스: 라이트/다크 완전 분리 */
+        /* 피드백/버그 제보 박스 */
         #dev-contact-box {
             background: #f1f5f9;
             border: 1px dashed #94a3b8 !important;
@@ -105,6 +108,42 @@
         .dark #dev-contact-box {
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%) !important;
             border-color: rgba(99, 102, 241, 0.28) !important;
+        }
+
+        /* 다크모드 식단 카드 눈부심 제거 */
+        .dark .meal-item-card {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+        }
+
+        .dark .nutrition-card {
+            background: rgba(15, 23, 42, 0.88) !important;
+            border-color: #334155 !important;
+        }
+
+        .dark .daily-total-card {
+            background: linear-gradient(135deg, #111827 0%, #1e293b 100%) !important;
+            border-color: #475569 !important;
+        }
+
+        /* 주말/휴일 가독성 강화 */
+        .dark #display-date-tag {
+            color: #f8fafc !important;
+        }
+
+        .dark #rest-title {
+            color: #facc15 !important;
+            text-shadow: 0 2px 10px rgba(250, 204, 21, 0.15);
+        }
+
+        .dark #rest-subtitle {
+            color: #e2e8f0 !important;
+        }
+
+        .dark #return-msg {
+            color: #fde68a !important;
         }
     </style>
 </head>
@@ -146,7 +185,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
                 </button>
                 <div class="flex flex-col items-center gap-1">
-                    <span id="display-date-tag" class="text-base font-black text-slate-950 dark:text-yellow-300"></span>
+                    <span id="display-date-tag" class="text-base font-black text-slate-950 dark:text-slate-100"></span>
                     <span id="display-day-tag" class="text-[11px] text-blue-800 font-black bg-blue-200 px-3 py-1 rounded-md dark:bg-indigo-600 dark:text-white tracking-wide border border-blue-300 dark:border-transparent"></span>
                 </div>
                 <button id="btn-next" onclick="changeDay(1)" class="w-10 h-10 flex items-center justify-center bg-slate-200 text-slate-700 rounded-full dark:bg-slate-800 dark:text-white active:scale-90 transition-all shadow-sm border border-slate-300 dark:border-slate-600">
@@ -168,10 +207,10 @@
                 <div class="text-7xl animate-bounce">😴</div>
                 <div>
                     <h2 id="rest-title" class="text-3xl font-black text-slate-950 dark:text-yellow-400 mb-2">식당도 쿨쿨 자는 중!</h2>
-                    <p id="rest-subtitle" class="text-lg text-slate-800 dark:text-white leading-relaxed font-black"></p>
+                    <p id="rest-subtitle" class="text-lg text-slate-800 dark:text-slate-100 leading-relaxed font-black"></p>
                 </div>
                 <div class="bg-white px-8 py-4 rounded-2xl border-2 border-orange-300 shadow-md dark:bg-slate-800 dark:border-indigo-500">
-                    <p id="return-msg" class="text-base font-black text-orange-800 dark:text-orange-400"></p>
+                    <p id="return-msg" class="text-base font-black text-orange-800 dark:text-amber-200"></p>
                 </div>
             </div>
         </section>
@@ -447,7 +486,7 @@
 
                         html += `<ul class="grid grid-cols-1 gap-2 mb-4">
                                     ${items.map(m => `
-                                        <li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-800 rounded-2xl text-slate-950 dark:text-white font-black border border-slate-300 dark:border-slate-700 shadow-sm">
+                                        <li class="meal-item-card flex items-center gap-3 p-3.5 bg-white dark:bg-slate-700 rounded-2xl text-slate-950 dark:text-white font-black border border-slate-300 dark:border-slate-600 shadow-sm">
                                             <span class="w-2.5 h-2.5 bg-indigo-600 dark:bg-yellow-400 rounded-full flex-shrink-0"></span>
                                             ${m}
                                         </li>`).join('')}
@@ -471,7 +510,7 @@
                             const sugarPercent= Math.min((nut.sugar    / 30)   * 100, 100);
 
                             html += `
-                            <div class="bg-slate-200 dark:bg-slate-800/60 p-5 rounded-[24px] border border-slate-300 dark:border-slate-700 shadow-inner">
+                            <div class="nutrition-card bg-slate-200 dark:bg-slate-800/60 p-5 rounded-[24px] border border-slate-300 dark:border-slate-700 shadow-inner">
                                 <h3 class="text-[11px] font-black text-slate-800 mb-4 uppercase tracking-widest text-center dark:text-yellow-400">Nutrition Report</h3>
                                 <div class="space-y-4">
                                     ${renderBar('총 열량(Calories)', calPercent, 'bg-indigo-700 dark:bg-indigo-500', nut.calories + ' kcal')}
@@ -505,7 +544,7 @@
                             <span class="bg-violet-200 text-violet-900 px-3 py-1 rounded-full text-[11px] font-black tracking-widest uppercase dark:bg-violet-600 dark:text-white border border-violet-300 dark:border-violet-400">TODAY 📊</span>
                             <h2 class="text-2xl font-black text-slate-950 dark:text-white">하루 총 섭취량</h2>
                         </div>
-                        <div class="bg-gradient-to-br from-violet-200 to-indigo-200 dark:from-slate-800/80 dark:to-slate-900/80 p-5 rounded-[24px] border border-violet-300 dark:border-slate-700 shadow-inner">
+                        <div class="daily-total-card bg-gradient-to-br from-violet-200 to-indigo-200 dark:from-slate-800/80 dark:to-slate-900/80 p-5 rounded-[24px] border border-violet-300 dark:border-slate-700 shadow-inner">
                             <h3 class="text-[11px] font-black text-slate-800 mb-1 uppercase tracking-widest text-center dark:text-yellow-400">Daily Nutrition Total</h3>
                             <p class="text-[10px] text-slate-800 dark:text-slate-200 text-center mb-4 font-bold">${totalNutritionCount}끼 기준 추정치 · 권장 섭취량 대비</p>
                             <div class="space-y-4">
