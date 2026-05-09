@@ -721,19 +721,36 @@
             viewDate = new Date(now);
             viewDate.setDate(now.getDate() + status.targetDayOffset);
 
+            async function loadData() {
             try {
                 const response = await fetch('data.json?v=' + Date.now());
                 currentMenuData = await response.json();
                 
+                // ✅ [추가] 서버의 식단 기준 날짜(target_date)가 있다면 앱의 현재 날짜(now)를 동기화
+                if (currentMenuData && currentMenuData.target_date) {
+                    // 데이터의 target_date를 기준으로 날짜 객체 생성 (로컬 타임존 보정 포함)
+                    now = new Date(currentMenuData.target_date + "T00:00:00");
+                    // 현재 보여주는 날짜(viewDate)도 데이터 기준일로 맞춤
+                    viewDate = new Date(currentMenuData.target_date + "T00:00:00");
+                    console.log("📅 서버 데이터 날짜에 맞춰 앱 기준일이 업데이트되었습니다:", currentMenuData.target_date);
+                }
+                
                 if (currentMenuData.weather) {
                     document.getElementById('realtime-temp').innerText = currentMenuData.weather.temp + "°";
-                    document.getElementById('precipitation').innerText = getRainStatusText(currentMenuData.weather.rain);
+                    const rainText = typeof getRainStatusText === 'function' ? getRainStatusText(currentMenuData.weather.rain) : currentMenuData.weather.rain + "%";
+                    document.getElementById('precipitation').innerText = rainText;
                 }
 
+                // 동기화된 날짜를 바탕으로 화면 렌더링
                 renderDayMenu(viewDate, 1);
-                renderRatingSection(status);
+                
+                // status 변수가 선언되어 있지 않다면 getMealStatus() 등으로 대체 필요할 수 있음
+                const status = typeof getMealStatus === 'function' ? getMealStatus() : null;
+                if (status) renderRatingSection(status);
 
-            } catch (e) { console.error("Data Load Error:", e); }
+            } catch (e) { 
+                console.error("Data Load Error:", e); 
+            }
         }
 
         function renderBar(label, val, color, weight) {
@@ -868,13 +885,12 @@
 
         document.addEventListener("visibilitychange", () => {
             if (document.visibilityState === "visible") {
+                // 앱으로 돌아올 때 날짜를 다시 체크하지만, loadData에서 다시 보정됨
                 now = new Date();
                 loadData();
             }
         });
 
+        // 초기 실행
         loadData();
         updateAdmin();
-    </script>
-</body>
-</html>
