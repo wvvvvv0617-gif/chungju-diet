@@ -35,7 +35,7 @@
             -ms-user-select: none;
             user-select: none;
         }
-        .dark body { background-color: #020617; }
+        .dark body { background-color: #020617 !important; color: #ffffff !important; }
         
         .dark #main-header { 
             background: linear-gradient(135deg, #0f172a 0%, #020617 100%) !important; 
@@ -142,14 +142,14 @@
         <section id="main-card" class="rounded-[32px] p-6 overflow-hidden min-h-[420px] flex flex-col transition-all duration-500">
             
             <div id="card-header" class="flex justify-between items-center mb-6">
-                <button id="btn-prev" onclick="changeDay(-1)" class="w-10 h-10 flex items-center justify-center bg-slate-200 text-slate-700 rounded-full dark:bg-slate-700/70 dark:text-slate-100 active:scale-90 transition-all shadow-sm border border-slate-300 dark:border-slate-600">
+                <button id="btn-prev" onclick="changeDay(-1)" class="w-10 h-10 flex items-center justify-center bg-slate-200 text-slate-700 rounded-full dark:bg-slate-800 dark:text-white active:scale-90 transition-all shadow-sm border border-slate-300 dark:border-slate-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
                 </button>
                 <div class="flex flex-col items-center gap-1">
-                    <span id="display-date-tag" class="text-base font-black text-slate-950 dark:text-white"></span>
-                    <span id="display-day-tag" class="text-[11px] text-blue-800 font-black bg-blue-200 px-3 py-1 rounded-md dark:bg-indigo-500 dark:text-white tracking-wide border border-blue-300 dark:border-transparent"></span>
+                    <span id="display-date-tag" class="text-base font-black text-slate-950 dark:text-yellow-300"></span>
+                    <span id="display-day-tag" class="text-[11px] text-blue-800 font-black bg-blue-200 px-3 py-1 rounded-md dark:bg-indigo-600 dark:text-white tracking-wide border border-blue-300 dark:border-transparent"></span>
                 </div>
-                <button id="btn-next" onclick="changeDay(1)" class="w-10 h-10 flex items-center justify-center bg-slate-200 text-slate-700 rounded-full dark:bg-slate-700/70 dark:text-slate-100 active:scale-90 transition-all shadow-sm border border-slate-300 dark:border-slate-600">
+                <button id="btn-next" onclick="changeDay(1)" class="w-10 h-10 flex items-center justify-center bg-slate-200 text-slate-700 rounded-full dark:bg-slate-800 dark:text-white active:scale-90 transition-all shadow-sm border border-slate-300 dark:border-slate-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
                 </button>
             </div>
@@ -167,11 +167,11 @@
             <div id="weekend-message" class="hidden flex-1 flex flex-col items-center justify-center py-12 text-center space-y-6">
                 <div class="text-7xl animate-bounce">😴</div>
                 <div>
-                    <h2 id="rest-title" class="text-3xl font-black text-slate-950 dark:text-white mb-2">식당도 쿨쿨 자는 중!</h2>
-                    <p id="rest-subtitle" class="text-lg text-slate-800 dark:text-slate-300 leading-relaxed font-black"></p>
+                    <h2 id="rest-title" class="text-3xl font-black text-slate-950 dark:text-yellow-400 mb-2">식당도 쿨쿨 자는 중!</h2>
+                    <p id="rest-subtitle" class="text-lg text-slate-800 dark:text-white leading-relaxed font-black"></p>
                 </div>
                 <div class="bg-white px-8 py-4 rounded-2xl border-2 border-orange-300 shadow-md dark:bg-slate-800 dark:border-indigo-500">
-                    <p id="return-msg" class="text-base font-black text-orange-800 dark:text-orange-300"></p>
+                    <p id="return-msg" class="text-base font-black text-orange-800 dark:text-orange-400"></p>
                 </div>
             </div>
         </section>
@@ -186,7 +186,7 @@
                 <div class="flex justify-center items-center">
                     <button id="heart-btn" onclick="submitHeart()" class="group flex flex-col items-center active:scale-95 transition-all">
                         <div id="heart-icon" class="text-5xl grayscale opacity-30 group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-500 cursor-pointer drop-shadow-sm">❤️</div>
-                        <span id="heart-label" class="mt-3 text-[11px] font-black text-slate-700 dark:text-slate-300 group-hover:text-rose-600 transition-colors uppercase tracking-widest">눌러서 좋아요 표시하기</span>
+                        <span id="heart-label" class="mt-3 text-[11px] font-black text-slate-700 dark:text-slate-200 group-hover:text-rose-600 transition-colors uppercase tracking-widest">눌러서 좋아요 표시하기</span>
                     </button>
                 </div>
 
@@ -197,7 +197,7 @@
         <section id="dev-contact-section" class="mt-12 mb-10 px-2 text-center">
             <div id="dev-contact-box" class="p-8 rounded-[40px] border border-dashed">
                 <div class="inline-block p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm mb-4">🚀</div>
-                <h4 class="text-base font-black text-slate-950 dark:text-white mb-4 leading-relaxed px-4">
+                <h4 class="text-base font-black text-slate-950 dark:text-yellow-300 mb-4 leading-relaxed px-4">
                     피드백 및 버그 제보
                 </h4>
                 <div id="email-area" class="flex flex-col items-center gap-3">
@@ -448,7 +448,7 @@
                         html += `<ul class="grid grid-cols-1 gap-2 mb-4">
                                     ${items.map(m => `
                                         <li class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-800 rounded-2xl text-slate-950 dark:text-white font-black border border-slate-300 dark:border-slate-700 shadow-sm">
-                                            <span class="w-2.5 h-2.5 bg-indigo-600 dark:bg-indigo-400 rounded-full flex-shrink-0"></span>
+                                            <span class="w-2.5 h-2.5 bg-indigo-600 dark:bg-yellow-400 rounded-full flex-shrink-0"></span>
                                             ${m}
                                         </li>`).join('')}
                                  </ul>`;
@@ -472,7 +472,7 @@
 
                             html += `
                             <div class="bg-slate-200 dark:bg-slate-800/60 p-5 rounded-[24px] border border-slate-300 dark:border-slate-700 shadow-inner">
-                                <h3 class="text-[11px] font-black text-slate-800 mb-4 uppercase tracking-widest text-center dark:text-slate-200">Nutrition Report</h3>
+                                <h3 class="text-[11px] font-black text-slate-800 mb-4 uppercase tracking-widest text-center dark:text-yellow-400">Nutrition Report</h3>
                                 <div class="space-y-4">
                                     ${renderBar('총 열량(Calories)', calPercent, 'bg-indigo-700 dark:bg-indigo-500', nut.calories + ' kcal')}
                                     <div class="h-px bg-slate-300 dark:bg-slate-700 my-1"></div>
@@ -506,8 +506,8 @@
                             <h2 class="text-2xl font-black text-slate-950 dark:text-white">하루 총 섭취량</h2>
                         </div>
                         <div class="bg-gradient-to-br from-violet-200 to-indigo-200 dark:from-slate-800/80 dark:to-slate-900/80 p-5 rounded-[24px] border border-violet-300 dark:border-slate-700 shadow-inner">
-                            <h3 class="text-[11px] font-black text-slate-800 mb-1 uppercase tracking-widest text-center dark:text-slate-200">Daily Nutrition Total</h3>
-                            <p class="text-[10px] text-slate-800 dark:text-slate-300 text-center mb-4 font-bold">${totalNutritionCount}끼 기준 추정치 · 권장 섭취량 대비</p>
+                            <h3 class="text-[11px] font-black text-slate-800 mb-1 uppercase tracking-widest text-center dark:text-yellow-400">Daily Nutrition Total</h3>
+                            <p class="text-[10px] text-slate-800 dark:text-slate-200 text-center mb-4 font-bold">${totalNutritionCount}끼 기준 추정치 · 권장 섭취량 대비</p>
                             <div class="space-y-4">
                                 ${renderBarTotal('총 열량(Calories)', totalCalPercent, 'bg-indigo-700 dark:bg-indigo-500', totalNutrition.calories + ' kcal', '권장 2,000kcal')}
                                 <div class="h-px bg-violet-300 dark:bg-slate-700 my-1"></div>
@@ -593,7 +593,7 @@
                             <span class="text-[12px] font-black text-slate-950 dark:text-white">${label}</span>
                             <div class="flex flex-col items-end gap-0.5">
                                 <span class="text-[11px] font-black text-violet-800 dark:text-violet-300">${weight}</span>
-                                <span class="text-[9px] text-slate-800 dark:text-slate-400 font-bold">${recommended}</span>
+                                <span class="text-[9px] text-slate-800 dark:text-slate-300 font-bold">${recommended}</span>
                             </div>
                         </div>
                         <div class="w-full bg-slate-300 dark:bg-slate-900 rounded-full h-2.5 overflow-hidden">
