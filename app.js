@@ -70,20 +70,18 @@ async function askAI() {
         return;
     }
 
-    // ✅ 수정: 화면 DOM 대신 currentMenuData에서 직접 식단 텍스트 추출
-    // 주말/휴식화면일 때도 가장 가까운 평일 식단을 읽을 수 있음
+    // data.json에서 직접 식단 텍스트 추출 (주말/휴식화면에서도 동작)
     let currentMeal = "";
 
     try {
-        const response = await fetch('data.json?v=' + Date.now());
-        const menuData = await response.json();
+        const res = await fetch('data.json?v=' + Date.now());
+        const menuData = await res.json();
 
         const now = new Date();
         const todayDay = now.getDay(); // 0=일, 1=월 ... 6=토
         const days = ["일", "월", "화", "수", "목", "금", "토"];
-        const weekdays = ["월", "화", "수", "목", "금"];
 
-        // 오늘이 주말이면 월요일, 평일이면 오늘 요일 기준으로 읽기
+        // 주말이면 월요일, 평일이면 오늘 요일 기준
         let targetDay;
         if (todayDay === 0 || todayDay === 6) {
             targetDay = "월";
@@ -111,10 +109,7 @@ async function askAI() {
         return;
     }
 
-    // [수정] 구글 자동 차단 봇을 피하기 위해 키를 쪼개서 합칩니다.
-const p1 = 'AIzaSyAYmkqvg7fdE-';
-const p2 = 'RyDC7PRUV0azWVk4d93Yk';
-const apiKey = p1 + p2;
+    const apiKey = 'AIzaSyArMpBW7COtcKq3dwOK20POZ7Xj3ON0UxM';
     outputDiv.innerHTML = "✨ AI 영양사가 식단을 분석 중입니다...";
 
     try {
@@ -123,6 +118,7 @@ const apiKey = p1 + p2;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{
+                    role: "user",
                     parts: [{
                         text: `식단: ${currentMeal}. 이 식단을 영양학적으로 분석해서 100자 이내로 친절하고 짧게 조언해줘.`
                     }]
@@ -131,9 +127,13 @@ const apiKey = p1 + p2;
         });
 
         const data = await response.json();
+        console.log("Gemini 응답:", JSON.stringify(data));
 
-        if (data.candidates && data.candidates[0].content.parts[0].text) {
+        if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
             outputDiv.innerHTML = data.candidates[0].content.parts[0].text;
+        } else if (data.error) {
+            console.error("API 에러:", data.error);
+            outputDiv.innerHTML = `❌ 오류: ${data.error.message}`;
         } else {
             outputDiv.innerHTML = "❌ AI가 답변을 생성하지 못했습니다. 다시 시도해주세요.";
         }
