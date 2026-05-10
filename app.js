@@ -64,26 +64,54 @@ function getMeal(data) {
 // [4] AI 영양사 조언 기능
 async function askAI() {
     const outputDiv = document.getElementById('ai-output');
-    
+
     if (!outputDiv) {
         console.error("ai-output 요소를 찾을 수 없습니다.");
         return;
     }
 
-    // ✅ 수정: li.meal-item-card에서 cloneNode로 점(span) 제외하고 텍스트만 추출
-    const menuElements = document.querySelectorAll('li.meal-item-card');
-    let currentMeal = Array.from(menuElements).map(el => {
-        const clone = el.cloneNode(true);
-        clone.querySelectorAll('span').forEach(s => s.remove());
-        return clone.innerText.trim();
-    }).filter(text => text.length > 0).join(', ');
+    // ✅ 수정: 화면 DOM 대신 currentMenuData에서 직접 식단 텍스트 추출
+    // 주말/휴식화면일 때도 가장 가까운 평일 식단을 읽을 수 있음
+    let currentMeal = "";
+
+    try {
+        const response = await fetch('data.json?v=' + Date.now());
+        const menuData = await response.json();
+
+        const now = new Date();
+        const todayDay = now.getDay(); // 0=일, 1=월 ... 6=토
+        const days = ["일", "월", "화", "수", "목", "금", "토"];
+        const weekdays = ["월", "화", "수", "목", "금"];
+
+        // 오늘이 주말이면 월요일, 평일이면 오늘 요일 기준으로 읽기
+        let targetDay;
+        if (todayDay === 0 || todayDay === 6) {
+            targetDay = "월";
+        } else {
+            targetDay = days[todayDay];
+        }
+
+        const meals = menuData.meals ? menuData.meals[targetDay] : null;
+
+        if (meals) {
+            const allMenus = [
+                meals.breakfast || "",
+                meals.lunch || "",
+                meals.dinner || ""
+            ].filter(m => m && m !== "식단 없음" && m.length > 3);
+
+            currentMeal = allMenus.join(', ');
+        }
+    } catch (e) {
+        console.error("식단 데이터 로드 실패:", e);
+    }
 
     if (!currentMeal || currentMeal.length < 5) {
-        outputDiv.innerHTML = "❌ 분석할 식단 정보가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.";
+        outputDiv.innerHTML = "❌ 분석할 식단 정보가 없습니다.";
         return;
     }
 
-    const apiKey = 'AIzaSyArMpBW7COtcKq3dwOK20POZ7Xj3ON0UxM'; 
+    const apiKey = 'AIzaSyArMpBW7COtcKq3dwOK20POZ7Xj3ON0UxM';
     outputDiv.innerHTML = "✨ AI 영양사가 식단을 분석 중입니다...";
 
     try {
@@ -100,7 +128,7 @@ async function askAI() {
         });
 
         const data = await response.json();
-        
+
         if (data.candidates && data.candidates[0].content.parts[0].text) {
             outputDiv.innerHTML = data.candidates[0].content.parts[0].text;
         } else {
