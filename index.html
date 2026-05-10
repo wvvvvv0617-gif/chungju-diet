@@ -292,6 +292,22 @@
                 <p id="feedback-msg" class="text-rose-600 dark:text-rose-400 text-[12px] font-black mt-6 h-4 opacity-0 transition-opacity"> </p>
             </div>
         </section>
+        <section id="ai-advice-section" class="mt-8 bg-white rounded-[40px] p-8 border-2 border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+            <div class="text-center">
+                <div class="inline-block p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl mb-4">
+                    <span class="text-2xl">✨</span>
+                </div>
+                <h4 class="text-base font-black text-slate-950 dark:text-yellow-300 mb-4">AI 영양사 식단 분석</h4>
+                
+                <div id="ai-output" class="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-[24px] text-sm text-slate-700 dark:text-slate-200 font-bold leading-relaxed min-h-[80px] flex items-center justify-center border border-dashed border-slate-300 dark:border-slate-600 mb-6">
+                    오늘의 영양 섭취는 어떨까요? <br>아래 버튼을 눌러 조언을 받아보세요!
+                </div>
+
+                <button onclick="askAI()" class="w-full bg-indigo-700 dark:bg-indigo-600 text-white px-6 py-4 rounded-2xl text-sm font-black shadow-lg hover:bg-indigo-800 active:scale-95 transition-all">
+                    💡 AI에게 식단 조언 듣기
+                </button>
+            </div>
+        </section>
 
         <section id="dev-contact-section" class="mt-12 mb-10 px-2 text-center">
             <div id="dev-contact-box" class="p-8 rounded-[40px] border border-dashed">
