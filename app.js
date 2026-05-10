@@ -83,7 +83,7 @@ async function askAI() {
         return;
     }
 
-    const apiKey = 'AIzaSyC7ogfiYSF1GXCCBltcyNXP9TgrBe-E-SI'; 
+    const apiKey = 'AIzaSyArMpBW7COtcKq3dwOK20POZ7Xj3ON0UxM'; 
     outputDiv.innerHTML = "✨ AI 영양사가 식단을 분석 중입니다...";
 
     try {
