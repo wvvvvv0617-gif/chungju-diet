@@ -61,3 +61,45 @@ function getMeal(data) {
 
     return { data: data[d]?.breakfast, nutrition: data[d]?.nutrition };
 }
+// [4] AI 영양사 조언 기능 (추가됨)
+async function askAI() {
+    const outputDiv = document.getElementById('ai-output');
+    // 아래 따옴표 안에 아까 복사한 본인의 API 키를 붙여넣으세요.
+    const apiKey = 'AIzaSyC7ogfiYSF1GXCCBltcyNXP9TgrBe-E-SI'; 
+    
+    // 식단 정보를 가져오기 위해 현재 화면의 텍스트를 읽습니다.
+    const currentMeal = document.getElementById("meal").innerText;
+
+    if (currentMeal === "식단 정보가 없습니다." || currentMeal === "데이터 로드 실패") {
+        outputDiv.innerHTML = "❌ 식단 정보가 없어서 분석할 수 없어요.";
+        return;
+    }
+
+    outputDiv.innerHTML = "✨ AI 영양사가 식단을 분석 중입니다...";
+
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ 
+                    parts: [{ 
+                        text: `식단: ${currentMeal}. 이 식단을 분석해서 영양학적 조언을 100자 이내로 친절하고 짧게 해줘.` 
+                    }] 
+                }]
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.candidates && data.candidates[0].content.parts[0].text) {
+            const advice = data.candidates[0].content.parts[0].text;
+            outputDiv.innerHTML = advice;
+        } else {
+            outputDiv.innerHTML = "❌ 조언을 가져오지 못했습니다. 다시 시도해주세요.";
+        }
+    } catch (error) {
+        console.error(error);
+        outputDiv.innerHTML = "❌ 연결 오류가 발생했습니다. API 키나 인터넷 연결을 확인해주세요.";
+    }
+}
