@@ -16,7 +16,7 @@
     <link rel="manifest" href="./manifest.json">
 
     <title>충주캠퍼스 스마트 식단</title>
-    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { darkMode: 'class' }
     </script>
@@ -219,6 +219,12 @@
                     <p id="current-date" class="text-white text-sm font-black mb-1"></p>
                     <h1 id="greeting" class="text-2xl font-black tracking-tight leading-tight">맛있는 식사 하세요! 🍱</h1>
                     <h2 id="meal" class="text-2xl font-black text-white mt-2">식단을 불러오는 중...</h2>
+                <div style="display:none;">
+    <span id="carb"></span>
+    <span id="protein"></span>
+    <span id="fat"></span>
+    <span id="sugar"></span>
+</div>
                 </div>
                 <div class="flex flex-col gap-3 items-end">
                     <div class="bg-white/20 backdrop-blur-md p-3 rounded-2xl text-center min-w-[85px] border border-white/20 flex flex-col gap-2 shadow-sm relative">
