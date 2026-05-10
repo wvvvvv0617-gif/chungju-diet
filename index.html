@@ -817,22 +817,25 @@
         }
 
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then(reg => {
-                    console.log('Service Worker registered.');
-                }).catch(err => {
-                    console.log('Service Worker registration failed: ', err);
-                });
+        window.addEventListener('load', () => {
+            // 파일명을 service-worker.js로 정확히 수정했습니다.
+            navigator.serviceWorker.register('./service-worker.js').then(reg => {
+                console.log('Service Worker registered.');
+            }).catch(err => {
+                console.log('Service Worker registration failed: ', err);
             });
-        }
-
-        document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible") {
-                loadData();
-            }
         });
+    }
 
-        loadData();
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            loadData();
+        }
+    });
+
+    loadData();
     </script>
+
+    <script src="app.js"></script>
 </body>
 </html>
