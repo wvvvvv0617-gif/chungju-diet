@@ -13,7 +13,6 @@ fetch(`data.json?v=${new Date().getTime()}`)
     .then(data => {
         const result = getMeal(data);
 
-        // 데이터가 없을 경우를 대비해 '정보 없음' 처리를 강화했습니다.
         document.getElementById("meal").innerText =
             result.data || "식단 정보가 없습니다.";
 
@@ -62,7 +61,7 @@ function getMeal(data) {
     return { data: data[d]?.breakfast, nutrition: data[d]?.nutrition };
 }
 
-// [4] AI 영양사 조언 기능 (최종 완성 버전)
+// [4] AI 영양사 조언 기능
 async function askAI() {
     const outputDiv = document.getElementById('ai-output');
     
@@ -71,11 +70,14 @@ async function askAI() {
         return;
     }
 
-    // [중요 수정] 화면에 나열된 모든 메뉴 리스트(쌀밥, 국 등)를 한꺼번에 읽어옵니다.
-    const menuElements = document.querySelectorAll('li span, .menu-item'); 
-    let currentMeal = Array.from(menuElements).map(el => el.innerText.trim()).filter(text => text.length > 0).join(', ');
+    // ✅ 수정: li.meal-item-card에서 cloneNode로 점(span) 제외하고 텍스트만 추출
+    const menuElements = document.querySelectorAll('li.meal-item-card');
+    let currentMeal = Array.from(menuElements).map(el => {
+        const clone = el.cloneNode(true);
+        clone.querySelectorAll('span').forEach(s => s.remove());
+        return clone.innerText.trim();
+    }).filter(text => text.length > 0).join(', ');
 
-    // 식단 정보가 제대로 로드되지 않았을 때의 처리
     if (!currentMeal || currentMeal.length < 5) {
         outputDiv.innerHTML = "❌ 분석할 식단 정보가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.";
         return;
