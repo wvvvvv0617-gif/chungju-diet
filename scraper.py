@@ -11,17 +11,18 @@ from datetime import datetime, timedelta
 # ⏰ 한국 시간 (KST)
 # =========================
 
-def get_kst_now():
-    return datetime.utcnow() + timedelta(hours=9)
-
 def get_target_date():
     now = get_kst_now()
     
-    # ✅ 항상 "이번 주 월요일 기준 고정"
     weekday = now.weekday()  # 0=월 ~ 6=일
-    monday = now - timedelta(days=weekday)
-    
-    return monday.strftime("%Y-%m-%d")
+
+    # ✅ 일요일이면 "다음 주 월요일" 기준으로 이동 (중요 핵심 수정)
+    if weekday == 6:
+        target = now + timedelta(days=1)  # 일요일 → 다음날 월요일(다음 주)
+    else:
+        target = now - timedelta(days=weekday)  # 이번 주 월요일
+
+    return target.strftime("%Y-%m-%d")
 
 def parse_date_text_to_isodate(date_text, reference_year):
     """
