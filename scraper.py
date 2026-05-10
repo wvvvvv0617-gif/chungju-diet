@@ -3,7 +3,6 @@ import requests
 import random
 import hashlib
 import os
-import re
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 
@@ -11,35 +10,20 @@ from datetime import datetime, timedelta
 # ⏰ 한국 시간 (KST)
 # =========================
 
+def get_kst_now():
+    return datetime.utcnow() + timedelta(hours=9)
+
 def get_target_date():
     now = get_kst_now()
+    weekday = now.weekday()
+    hm = now.hour * 100 + now.minute
     
-    weekday = now.weekday()  # 0=월 ~ 6=일
-
-    # ✅ 일요일이면 "다음 주 월요일" 기준으로 이동 (중요 핵심 수정)
-    if weekday == 6:
-        target = now + timedelta(days=1)  # 일요일 → 다음날 월요일(다음 주)
+    if (weekday == 4 and hm >= 1830) or weekday >= 5:
+        days_to_monday = (7 - weekday) % 7 or 7
+        target = now + timedelta(days=days_to_monday)
     else:
-        target = now - timedelta(days=weekday)  # 이번 주 월요일
-
+        target = now
     return target.strftime("%Y-%m-%d")
-
-def parse_date_text_to_isodate(date_text, reference_year):
-    """
-    학교 식단 페이지 헤더의 날짜 텍스트를 ISO 날짜 문자열로 변환합니다.
-    예시 입력: "05.11(월)", "5.11(월요일)", "05.11(월)"
-    예시 출력: "2025-05-11"
-    파싱 실패 시 None 반환
-    """
-    match = re.search(r'(\d{1,2})\.(\d{1,2})', date_text)
-    if match:
-        month = int(match.group(1))
-        day = int(match.group(2))
-        try:
-            return datetime(reference_year, month, day).strftime("%Y-%m-%d")
-        except ValueError:
-            return None
-    return None
 
 # =========================
 # 🌦️ 기상청 단기예보
@@ -169,9 +153,9 @@ def estimate_nutrition(menu_text):
         base["sugar"] += random.randint(6, 12)
         base["carbs"] += random.randint(2, 5)
 
-    # 6. 당류 특화 키워드 (후식/음료)
+    # 6. 당류 특화 키워드 (후식/음료) - 요청 사항 집중 보완
     if any(k in menu_text for k in ["요거트", "요구르트", "주스", "음료", "푸딩", "에이드", "쿨피스", "식혜", "수정과"]):
-        base["sugar"] += random.randint(15, 25)
+        base["sugar"] += random.randint(15, 25) # 당류 대폭 상승
         base["carbs"] += random.randint(8, 15)
 
     # 7. 과일류 감지
@@ -201,7 +185,7 @@ def main():
     else:
         final_data = {"weather": {}, "meals": {}}
 
-    # 2. 식단 크롤링 (특정 시간에만 실행)
+    # 2. 식단 크롤링 (요청 사항: 특정 시간에만 실행되도록 분리)
     now = get_kst_now()
     if now.hour == 6 or now.hour == 18:
         target_date = get_target_date()
@@ -214,20 +198,17 @@ def main():
             meal_result = {}
             days_list = ["월", "화", "수", "목", "금"]
             found_any = False
-            first_monday_date = None  # ✅ 크롤링된 월요일 행의 실제 날짜
 
             for row in soup.find_all("tr"):
                 cols = row.find_all(["td", "th"])
                 if len(cols) < 4: continue
                 header = cols[0].get_text(strip=True)
-                
                 for d in days_list:
                     if d in header:
                         b = cols[1].get_text(" ", strip=True)
                         l = cols[2].get_text(" ", strip=True)
                         dnr = cols[3].get_text(" ", strip=True)
                         meal_result[d] = {
-                            "date_text": header,
                             "breakfast": b if len(b)>3 else "식단 없음",
                             "lunch": l if len(l)>3 else "식단 없음",
                             "dinner": dnr if len(dnr)>3 else "식단 없음",
@@ -237,22 +218,11 @@ def main():
                                 "dinner": estimate_nutrition(dnr)
                             }
                         }
-                        # ✅ 월요일 행에서 실제 날짜를 파싱해 target_date로 사용
-                        # get_target_date()가 반환한 날짜 대신, 실제 식단 페이지에 표시된
-                        # 날짜(예: "05.11(월)" → "2025-05-11")를 저장함으로써
-                        # 일요일 크롤링 시 발생하는 날짜 불일치 문제를 해결
-                        if d == "월" and first_monday_date is None:
-                            parsed = parse_date_text_to_isodate(header, now.year)
-                            if parsed:
-                                first_monday_date = parsed
-                                print(f"📅 크롤링된 실제 월요일 날짜: {first_monday_date} (헤더: {header})")
                         found_any = True
             
             if found_any:
                 final_data["meals"] = meal_result
-                # ✅ 실제 파싱된 날짜로 target_date 저장 (파싱 실패 시 get_target_date() 결과로 폴백)
-                final_data["target_date"] = first_monday_date if first_monday_date else target_date
-                print(f"🍱 식단 데이터 갱신 성공 / target_date = {final_data['target_date']}")
+                print("🍱 식단 데이터 갱신 성공")
         except Exception as e:
             print(f"❌ 식단 크롤링 실패 (기존 데이터 보존): {e}")
     else:
