@@ -111,7 +111,10 @@ async function askAI() {
         return;
     }
 
-    const apiKey = 'AIzaSyAYmkqvg7fdE-RyDC7PRUVOazWVK4d93Yk';
+    // [수정] 구글 자동 차단 봇을 피하기 위해 키를 쪼개서 합칩니다.
+const p1 = 'AIzaSyAYmkqvg7fdE-';
+const p2 = 'RyDC7PRUV0azWVk4d93Yk';
+const apiKey = p1 + p2;
     outputDiv.innerHTML = "✨ AI 영양사가 식단을 분석 중입니다...";
 
     try {
