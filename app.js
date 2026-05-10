@@ -78,7 +78,7 @@ async function askAI() {
         const menuData = await res.json();
 
         const now = new Date();
-        const todayDay = now.getDay(); // 0=일, 1=월 ... 6=토
+        const todayDay = now.getDay();
         const days = ["일", "월", "화", "수", "목", "금", "토"];
 
         // 주말이면 월요일, 평일이면 오늘 요일 기준
@@ -109,11 +109,10 @@ async function askAI() {
         return;
     }
 
-    const apiKey = 'AIzaSyArMpBW7COtcKq3dwOK20POZ7Xj3ON0UxM';
     outputDiv.innerHTML = "✨ AI 영양사가 식단을 분석 중입니다...";
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        const response = await fetch('https://gemini-proxy.wvvvvv0617.workers.dev', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
