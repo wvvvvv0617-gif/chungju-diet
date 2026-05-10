@@ -87,7 +87,11 @@ async function askAI() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: `식단: ${currentMeal}. 이 식단을 분석해서 건강 조언을 100자 이내로 친절하게 해줘.` }] }]
+                contents: [{
+                    parts: [{
+                        text: `식단: ${currentMeal}. 이 식단을 분석해서 영양학적 조언을 100자 이내로 친절하고 짧게 해줘.`
+                    }]
+                }]
             })
         });
 
