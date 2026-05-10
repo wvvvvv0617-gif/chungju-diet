@@ -316,7 +316,7 @@
             date: "entry.1731866414", meal: "entry.475926623", menu: "entry.525600404", score: "entry.615065306", feedback: "entry.119301674"
         };
 
-        const NO_MEAL_KEYWORDS = [
+        const NO_MEAL_KEYWORDS =[
             "식단 없음", "식단없음", "일손돕기", "가정일손돕기", "수업없음", "수업 없음",
             "어린이날", "휴업", "공휴일", "재량휴업", "신정", "삼일절", "현충일",
             "광복절", "개천절", "한글날", "성탄절", "추석", "설날", "대체공휴일",
@@ -326,7 +326,7 @@
 
         let now = new Date();
         let viewDate = new Date();
-        const week = ['일', '월', '화', '수', '목', '금', '토'];
+        const week =['일', '월', '화', '수', '목', '금', '토'];
         const mealNameKR = { 'breakfast': '아침', 'lunch': '점심', 'dinner': '저녁' };
         const mealLabels = { 'breakfast': 'BREAKFAST 🍳', 'lunch': 'LUNCH 🍱', 'dinner': 'DINNER 🌙' };
         let currentMenuData = null;
@@ -348,7 +348,7 @@
             if (!menuText || menuText.trim().length < 2) return null;
             if (NO_MEAL_KEYWORDS.some(key => menuText.includes(key))) return null;
 
-            const foodKeywords = [
+            const foodKeywords =[
                 "밥", "면", "죽", "빵", "떡", "볶음", "구이", "조림", "찜",
                 "튀김", "전", "카츠", "가스", "국", "찌개", "탕", "soup",
                 "고기", "닭", "돈육", "생선", "오리", "소고기", "돼지", "새우",
@@ -486,17 +486,21 @@
         function renderDayMenu(targetDate, direction = 1) {
             if (!currentMenuData) return;
 
+            const targetDateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD
             const dayNameKR = week[targetDate.getDay()];
-            const displayDateStr = targetDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+            
+            // ✅ 수정됨: 요일 대신 날짜(date) 속성을 기준으로 데이터 매칭
+            const mealData = currentMenuData.meals ? Object.values(currentMenuData.meals).find(m => m.date === targetDateStr) : null;
+            
             const isWeekend = targetDate.getDay() === 6 || targetDate.getDay() === 0;
             const isHoliday = getHolidayName(targetDate) !== null;
             const isRest = isWeekend || isHoliday;
 
-            document.getElementById('display-date-tag').innerText = displayDateStr;
+            document.getElementById('display-date-tag').innerText = targetDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
             updateArrowButtons(targetDate);
             applySlideAnimation(direction);
             
-            if (isRest) {
+            if (isRest || !mealData) {
                 document.getElementById('meal-content').classList.add('hidden');
                 document.getElementById('weekend-message').classList.remove('hidden');
                 document.getElementById('main-card').classList.add('rest-bg');
@@ -511,7 +515,6 @@
                 document.getElementById('display-day-tag').innerText = dayNameKR + "요일 식단";
                 document.getElementById('meal-disclaimer').classList.remove('hidden');
 
-                const mealData = currentMenuData.meals ? currentMenuData.meals[dayNameKR] : null;
                 const container = document.getElementById('meals-container');
                 container.innerHTML = '';
 
@@ -618,10 +621,10 @@
         function renderRatingSection(status) {
             if (!currentMenuData) return;
 
-            const todayKeyKR = week[now.getDay()];
-            const todayData = currentMenuData.meals ? currentMenuData.meals[todayKeyKR] : null;
+            const dateStr = viewDate.toISOString().split('T')[0];
+            const todayData = currentMenuData.meals ? Object.values(currentMenuData.meals).find(m => m.date === dateStr) : null;
             const rateMenuRaw = (status.rateKey && todayData) ? todayData[status.rateKey] : null;
-            const isRestToday = (now.getDay() === 6 || now.getDay() === 0 || getHolidayName(now) !== null);
+            const isRestToday = (viewDate.getDay() === 6 || viewDate.getDay() === 0 || getHolidayName(viewDate) !== null);
             
             const isInvalidRateMenu = !rateMenuRaw || NO_MEAL_KEYWORDS.some(keyword => rateMenuRaw.includes(keyword));
 
@@ -630,8 +633,8 @@
                 document.getElementById('rating-meal-name').innerText = mealNameKR[status.rateKey];
                 document.getElementById('rating-menu-preview').innerText = rateMenuRaw.replace(/\s+/g, ' ').replace(/ ,/g, ',').trim();
                 
-                const dateStr = now.toISOString().split('T')[0];
-                if (localStorage.getItem(`rated_${dateStr}_${status.rateKey}`)) {
+                const dateStrForRating = now.toISOString().split('T')[0];
+                if (localStorage.getItem(`rated_${dateStrForRating}_${status.rateKey}`)) {
                     lockHeartUI();
                 } else {
                     resetHeartUI();
