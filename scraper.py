@@ -13,16 +13,15 @@ from datetime import datetime, timedelta
 
 def get_target_date():
     now = get_kst_now()
-    
     weekday = now.weekday()  # 0=월 ~ 6=일
 
-    # ✅ 일요일이면 "다음 주 월요일" 기준으로 이동 (중요 핵심 수정)
+    # 👉 일요일이면 "다음 주 월요일"
     if weekday == 6:
-        target = now + timedelta(days=1)  # 일요일 → 다음날 월요일(다음 주)
+        monday = now + timedelta(days=1)
     else:
-        target = now - timedelta(days=weekday)  # 이번 주 월요일
+        monday = now - timedelta(days=weekday)
 
-    return target.strftime("%Y-%m-%d")
+    return monday.strftime("%Y-%m-%d")
 
 def parse_date_text_to_isodate(date_text, reference_year):
     """
@@ -205,7 +204,11 @@ def main():
     now = get_kst_now()
     if now.hour == 6 or now.hour == 18:
         target_date = get_target_date()
-        url = f"https://www.kopo.ac.kr/chungju/content.do?menu=2830&search_day={target_date}"
+
+    # 👉 안전하게 항상 월요일 기준 주간 고정
+    base_monday = datetime.strptime(target_date, "%Y-%m-%d")
+
+    url = f"https://www.kopo.ac.kr/chungju/content.do?menu=2830&search_day={base_monday.strftime('%Y-%m-%d')}"
         print(f"📡 식단 크롤링 수행 (현재 {now.hour}시): {url}")
 
         try:
