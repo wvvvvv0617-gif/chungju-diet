@@ -94,7 +94,6 @@ async function askAI() {
                 }]
             })
         });
-
         const data = await response.json();
         if (data.candidates && data.candidates[0].content.parts[0].text) {
             outputDiv.innerHTML = data.candidates[0].content.parts[0].text;
