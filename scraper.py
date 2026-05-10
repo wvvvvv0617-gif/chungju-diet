@@ -16,11 +16,14 @@ def get_kst_now():
 
 def get_target_date():
     now = get_kst_now()
-    weekday = now.weekday()
+    weekday = now.weekday()  # 월=0, 화=1, ..., 토=5, 일=6
     hm = now.hour * 100 + now.minute
     
+    # 금요일 18:30 이후, 토요일, 일요일 → 다음주 월요일로
     if (weekday == 4 and hm >= 1830) or weekday >= 5:
-        days_to_monday = (7 - weekday) % 7 or 7
+        days_to_monday = (7 - weekday) % 7
+        if days_to_monday == 0:
+            days_to_monday = 7
         target = now + timedelta(days=days_to_monday)
     else:
         target = now
@@ -32,15 +35,23 @@ def parse_date_text_to_isodate(date_text, reference_year):
     예시 입력: "05.11(월)", "5.11(월요일)", "05.11(월)"
     예시 출력: "2025-05-11"
     파싱 실패 시 None 반환
+    연도 경계(12월→1월) 처리 포함
     """
     match = re.search(r'(\d{1,2})\.(\d{1,2})', date_text)
     if match:
         month = int(match.group(1))
         day = int(match.group(2))
+        # 12월에 크롤링했는데 month=1이 나오면 다음 연도
         try:
-            return datetime(reference_year, month, day).strftime("%Y-%m-%d")
+            candidate = datetime(reference_year, month, day)
+            return candidate.strftime("%Y-%m-%d")
         except ValueError:
-            return None
+            # 연도 경계 처리: 12월에 1월 식단이 나올 경우
+            try:
+                candidate = datetime(reference_year + 1, month, day)
+                return candidate.strftime("%Y-%m-%d")
+            except ValueError:
+                return None
     return None
 
 # =========================
