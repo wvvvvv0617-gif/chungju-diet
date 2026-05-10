@@ -16,15 +16,12 @@ def get_kst_now():
 
 def get_target_date():
     now = get_kst_now()
-    weekday = now.weekday()
-    hm = now.hour * 100 + now.minute
     
-    if (weekday == 4 and hm >= 1830) or weekday >= 5:
-        days_to_monday = (7 - weekday) % 7 or 7
-        target = now + timedelta(days=days_to_monday)
-    else:
-        target = now
-    return target.strftime("%Y-%m-%d")
+    # ✅ 항상 "이번 주 월요일 기준 고정"
+    weekday = now.weekday()  # 0=월 ~ 6=일
+    monday = now - timedelta(days=weekday)
+    
+    return monday.strftime("%Y-%m-%d")
 
 def parse_date_text_to_isodate(date_text, reference_year):
     """
