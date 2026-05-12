@@ -23,16 +23,28 @@ async function askAI() {
         const res = await fetch('data.json?v=' + Date.now());
         const menuData = await res.json();
 
-        const now = new Date();
-        const todayDay = now.getDay();
-        const days = ["일", "월", "화", "수", "목", "금", "토"];
+        // [핵심 수정] 현재 화면에 표시된 요일을 텍스트에서 찾아냅니다.
+        // 화면 상단의 "수요일 식단" 등의 글자를 읽어 해당 요일의 데이터를 가져옵니다.
+        const pageText = document.body.innerText;
+        let targetDay = "";
+        
+        if (pageText.includes("월요일")) targetDay = "월";
+        else if (pageText.includes("화요일")) targetDay = "화";
+        else if (pageText.includes("수요일")) targetDay = "수";
+        else if (pageText.includes("목요일")) targetDay = "목";
+        else if (pageText.includes("금요일")) targetDay = "금";
 
-        // 주말이면 월요일, 평일이면 오늘 요일 기준
-        let targetDay;
-        if (todayDay === 0 || todayDay === 6) {
-            targetDay = "월";
-        } else {
-            targetDay = days[todayDay];
+        // 화면에서 요일을 찾지 못한 경우에만 기존처럼 '오늘' 날짜를 기준으로 합니다.
+        if (!targetDay) {
+            const now = new Date();
+            const todayDay = now.getDay();
+            const days = ["일", "월", "화", "수", "목", "금", "토"];
+
+            if (todayDay === 0 || todayDay === 6) {
+                targetDay = "월";
+            } else {
+                targetDay = days[todayDay];
+            }
         }
 
         const meals = menuData.meals ? menuData.meals[targetDay] : null;
@@ -68,7 +80,7 @@ async function askAI() {
                         text: `식단: ${currentMeal}. 이 식단을 영양학적으로 분석해서 100자 이내로 친절하고 짧게 조언해줘.`
                     }]
                 }]
-            })
+            } )
         });
 
         const data = await response.json();
