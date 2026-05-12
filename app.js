@@ -82,6 +82,7 @@ async function askAI() {
             let aiText = data.candidates[0].content.parts[0].text;
             aiText = aiText.replace(/\*\*/g, "").replace(/\*/g, "").trim();
             outputDiv.innerHTML = aiText.replace(/\n/g, '<br>');
+            outputDiv.style.textAlign = 'left';
         } else if (data.error) {
             outputDiv.innerHTML = `❌ 오류: ${data.error.message}`;
         } else {
