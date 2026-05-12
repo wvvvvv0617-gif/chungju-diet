@@ -815,9 +815,10 @@
             icon.classList.remove('heart-active', 'animate-heart');
             label.innerText = "눌러서 좋아요 표시하기";
             label.classList.remove('text-rose-500');
-            document.getElementById('rating-title').innerHTML = `오늘 드신 <span class="text-rose-600">${mealNameKR[getMealStatus().rateKey] || '식사'}</span>는 어떠셨나요?`;
-        }
-
+            const ratingTitleEl = document.getElementById('rating-title');
+            if (ratingTitleEl) {
+                ratingTitleEl.innerHTML = `오늘 드신 <span class="text-rose-600">${mealNameKR[getMealStatus().rateKey] || '식사'}</span>는 어떠셨나요?`;
+            }
         if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             // 파일명을 service-worker.js로 정확히 수정했습니다.
