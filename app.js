@@ -1,4 +1,4 @@
-// [1] 서비스 워커 등록 로직 (PWA 설치 버튼 활성화 필수 조건)
+// [1] 서비스 워커 등록 로직
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
@@ -69,12 +69,12 @@ async function askAI() {
                 contents: [{
                     role: "user",
                     parts: [{
-                        text: `충주캠 학생 전용 AI 영양사로서 다음 식단을 150자 내외로 핵심만 요약 조언하세요. 
+                        text: `충주캠 학생들을 위한 AI 영양사로서 다음 식단을 딱 3문장으로 조언해 주세요.
 
 [규칙]
-1. [식단 요약], [밸런스], [꿀팁] 3문단으로 짧게 작성.
-2. 친절하되 불필요한 미사여구는 생략(토큰 절약).
-3. 실천 팁은 매점 제품(물, 아메리카노, 우유 등) 위주로 짧게 1개만 추천.
+1. [식단 요약], [영양 평가], [간단 팁]으로 나누어 한 문장씩 작성하세요.
+2. 반드시 "~해요", "~보세요"와 같은 친절한 존댓말을 사용하세요.
+3. 총 150자 내외로 아주 짧게 핵심만 전달하고 문장을 반드시 끝맺음하세요.
 
 식단: ${currentMeal}`
                     }]
@@ -88,17 +88,18 @@ async function askAI() {
             let aiText = data.candidates[0].content.parts[0].text;
             
             // 가독성을 해치는 마크다운 별표 제거
-            aiText = aiText.replace(/\*\*/g, "");
+            aiText = aiText.replace(/\*\*/g, "").trim();
 
-            // [수정] innerHTML 대신 innerText 사용 (줄바꿈 보존 및 짤림 방지)
+            // innerText 사용으로 줄바꿈 보존 및 텍스트 짤림 현상 방지
             outputDiv.innerText = aiText;
 
-            // [스크린샷 에러 해결] renderRatingSection 호출 전 요소 확인
+            // 스크린샷 null 에러 방지: 요소 존재 여부 확인 후 별점 렌더링
             if (typeof renderRatingSection === 'function') {
                 try {
-                    renderRatingSection(aiText);
+                    const ratingTarget = document.getElementById('ai-rating'); // 실제 별점 요소 ID 확인 필요
+                    if (ratingTarget) renderRatingSection(aiText);
                 } catch (e) {
-                    console.warn("별점 렌더링 건너뜀 (요소 없음)");
+                    console.warn("별점 표시 실패:", e);
                 }
             }
 
