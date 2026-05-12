@@ -22,10 +22,9 @@ async function askAI() {
         const res = await fetch('data.json?v=' + Date.now());
         const menuData = await res.json();
 
-        // 요일 인식 로직
         const pageText = document.body.innerText;
         let targetDay = "";
-        
+
         if (pageText.includes("월요일")) targetDay = "월";
         else if (pageText.includes("화요일")) targetDay = "화";
         else if (pageText.includes("수요일")) targetDay = "수";
@@ -69,12 +68,26 @@ async function askAI() {
                 contents: [{
                     role: "user",
                     parts: [{
-                        text: `충주캠 학생들을 위한 AI 영양사로서 다음 식단을 딱 3문장으로 조언해 주세요.
+                        text: `당신은 기숙사 대학교 학생들을 위한 AI 영양사입니다.
+학생들은 학교 식당 식사만 제공되며, 외부 음식 구매가 어렵고 매점에는 과자, 라면, 냉동식품 등 기본적인 것만 있습니다.
+따라서 과일 섭취, 외식 등의 조언은 절대 하지 마세요.
+
+대신 아래와 같은 학교 생활 내에서 실천 가능한 조언을 해주세요:
+- 나트륨이 많은 식단 → 물을 더 마시세요
+- 탄수화물, 튀김이 많은 식단 → 식후 가벼운 산책이나 스트레칭
+- 기름진 식단 → 저녁에 유산소 운동 추천
+- 졸음 유발 식단 → 커피 한 잔, 짧은 낮잠 추천
+- 단백질 부족 → 매점 단백질 간식(계란, 두유 등) 추천
 
 [규칙]
-1. [식단 요약], [영양 평가], [간단 팁]으로 나누어 한 문장씩 작성하세요.
-2. 반드시 "~해요", "~보세요"와 같은 친절한 존댓말을 사용하세요.
-3. 총 150자 내외로 아주 짧게 핵심만 전달하고 문장을 반드시 끝맺음하세요.
+1. 반드시 3문장으로만 작성하세요.
+2. 첫 문장: 오늘 식단의 특징 요약
+3. 둘째 문장: 영양 측면에서 주의할 점
+4. 셋째 문장: 학교 생활에서 실천 가능한 팁
+5. 친절한 존댓말(~해요, ~보세요)을 사용하세요.
+6. 각 문장은 줄바꿈으로 구분하세요.
+7. 마크다운 기호(*, #)는 절대 사용하지 마세요.
+8. 반드시 문장을 완전히 끝맺음하세요.
 
 식단: ${currentMeal}`
                     }]
@@ -86,23 +99,8 @@ async function askAI() {
 
         if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
             let aiText = data.candidates[0].content.parts[0].text;
-            
-            // 가독성을 해치는 마크다운 별표 제거
-            aiText = aiText.replace(/\*\*/g, "").trim();
-
-            // innerText 사용으로 줄바꿈 보존 및 텍스트 짤림 현상 방지
+            aiText = aiText.replace(/\*\*/g, "").replace(/\*/g, "").trim();
             outputDiv.innerText = aiText;
-
-            // 스크린샷 null 에러 방지: 요소 존재 여부 확인 후 별점 렌더링
-            if (typeof renderRatingSection === 'function') {
-                try {
-                    const ratingTarget = document.getElementById('ai-rating'); // 실제 별점 요소 ID 확인 필요
-                    if (ratingTarget) renderRatingSection(aiText);
-                } catch (e) {
-                    console.warn("별점 표시 실패:", e);
-                }
-            }
-
         } else if (data.error) {
             outputDiv.innerHTML = `❌ 오류: ${data.error.message}`;
         } else {
