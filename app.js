@@ -61,12 +61,12 @@ async function askAI() {
     outputDiv.innerHTML = "✨ AI 영양사가 식단을 분석 중입니다...";
 
     try {
+        // [수정 포인트] Workers 서버의 KV 캐싱 성능을 위해 body 구조를 최적화하여 보냅니다.
         const response = await fetch('https://gemini-proxy.wvvvvv0617.workers.dev', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{
-                    role: "user",
                     parts: [{
                         text: `기숙사 대학생을 위한 AI 영양사로서 오늘 식단을 분석해줘. 외부 음식 구매가 어려우니 과일, 외식 추천은 하지 마. 나트륨이 많으면 물 많이 마시기, 튀김이 많으면 산책, 졸음 유발 식단이면 커피 추천처럼 학교 생활에서 실천 가능한 팁을 줘. 반드시 3문장으로 끝내고 각 문장은 줄바꿈으로 구분해. 마크다운 기호는 사용하지 마. 반드시 문장을 완전히 끝맺음해.
 
@@ -78,8 +78,12 @@ async function askAI() {
 
         const data = await response.json();
 
-        if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-            let aiText = data.candidates[0].content.parts[0].text;
+        // [수정 포인트] 응답 처리 시 안전한 옵셔널 체이닝(?.)을 사용하여 오류를 방지합니다.
+        const aiPart = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (aiPart) {
+            let aiText = aiPart;
+            // 특수문자 제거 및 줄바꿈 처리
             aiText = aiText.replace(/\*\*/g, "").replace(/\*/g, "").trim();
             outputDiv.innerHTML = aiText.replace(/\n/g, '<br>');
             outputDiv.style.textAlign = 'left';
@@ -89,6 +93,7 @@ async function askAI() {
             outputDiv.innerHTML = "❌ 답변 생성 실패. 다시 시도해주세요.";
         }
     } catch (error) {
+        console.error("연결 오류:", error);
         outputDiv.innerHTML = "❌ 연결 오류가 발생했습니다.";
     }
 }
