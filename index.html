@@ -292,22 +292,23 @@
                 <p id="feedback-msg" class="text-rose-600 dark:text-rose-400 text-[12px] font-black mt-6 h-4 opacity-0 transition-opacity"> </p>
             </div>
         </section>
-        <section id="ai-advice-section" class="mt-8 bg-white rounded-[40px] p-8 border-2 border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
-            <div class="text-center">
-                <div class="inline-block p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl mb-4">
-                    <span class="text-2xl">✨</span>
-                </div>
-                <h4 class="text-base font-black text-slate-950 dark:text-yellow-300 mb-4">AI 영양사 식단 분석</h4>
-                
-               <div id="ai-output" class="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-[24px] text-[15px] text-slate-800 dark:text-slate-100 font-medium leading-7 border border-dashed border-slate-300 dark:border-slate-600 mb-6 whitespace-pre-wrap break-words">오늘의 영양 섭취는 어떨까요?
+        <!-- index.html의 ai-advice-section 부분 수정 -->
+<section id="ai-advice-section" class="mt-8 bg-white rounded-[40px] p-8 border-2 border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+    <div class="text-center">
+        <!-- 07번 조합 적용: 🧐 Avocado & Inspection -->
+        <div class="inline-block p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-[28px] mb-4 shadow-inner">
+            <span class="text-3xl filter drop-shadow-sm">🧐🥑</span>
+        </div>
+        <h4 class="text-base font-black text-slate-950 dark:text-yellow-300 mb-4">AI 영양사 식단 분석</h4>
+        
+        <div id="ai-output" class="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-[24px] text-[15px] text-slate-800 dark:text-slate-100 font-medium leading-7 border border-dashed border-slate-300 dark:border-slate-600 mb-6 whitespace-pre-wrap break-words">오늘의 영양 섭취는 어떨까요?
 아래 버튼을 눌러 조언을 받아보세요!</div>
 
-
-                <button onclick="askAI()" class="w-full bg-indigo-700 dark:bg-indigo-600 text-white px-6 py-4 rounded-2xl text-sm font-black shadow-lg hover:bg-indigo-800 active:scale-95 transition-all">
-                    💡 AI에게 식단 조언 듣기
-                </button>
-            </div>
-        </section>
+        <button onclick="askAI()" class="w-full bg-indigo-700 dark:bg-indigo-600 text-white px-6 py-4 rounded-2xl text-sm font-black shadow-lg hover:bg-indigo-800 active:scale-95 transition-all">
+            💡 AI에게 식단 조언 듣기
+        </button>
+    </div>
+</section>
 
         <section id="dev-contact-section" class="mt-12 mb-10 px-2 text-center">
             <div id="dev-contact-box" class="p-8 rounded-[40px] border border-dashed">
