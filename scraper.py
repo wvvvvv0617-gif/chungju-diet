@@ -1,3 +1,6 @@
+아래 코드로 `scraper.py` 전체를 교체하면 돼.
+
+```python
 import json
 import requests
 import random
@@ -29,27 +32,14 @@ def get_target_date():
         target = now
     return target.strftime("%Y-%m-%d")
 
+def get_week_monday_date_str(date_obj):
+    monday = date_obj - timedelta(days=date_obj.weekday())
+    return monday.strftime("%Y-%m-%d")
+
 def get_monday_date_str(date_str):
     target = datetime.strptime(date_str, "%Y-%m-%d")
     monday = target - timedelta(days=target.weekday())
     return monday.strftime("%Y-%m-%d")
-
-def is_same_meal_content(old_meals, new_meals):
-    if not old_meals or not new_meals:
-        return False
-
-    for day in ["월", "화", "수", "목", "금"]:
-        old_day = old_meals.get(day, {})
-        new_day = new_meals.get(day, {})
-
-        for meal in ["breakfast", "lunch", "dinner"]:
-            old_text = old_day.get(meal, "").strip()
-            new_text = new_day.get(meal, "").strip()
-
-            if old_text != new_text:
-                return False
-
-    return True
 
 def parse_date_text_to_isodate(date_text, reference_year):
     """
@@ -103,6 +93,26 @@ def parse_weekday_from_header(header):
         return match.group(1)
 
     return None
+
+def normalize_menu_text(text):
+    return re.sub(r'\s+', ' ', text or '').strip()
+
+def is_same_meal_content(first_meals, second_meals):
+    if not first_meals or not second_meals:
+        return False
+
+    for day in ["월", "화", "수", "목", "금"]:
+        first_day = first_meals.get(day, {})
+        second_day = second_meals.get(day, {})
+
+        for meal in ["breakfast", "lunch", "dinner"]:
+            first_text = normalize_menu_text(first_day.get(meal, ""))
+            second_text = normalize_menu_text(second_day.get(meal, ""))
+
+            if first_text != second_text:
+                return False
+
+    return True
 
 # =========================
 # 🌦️ 기상청 단기예보
@@ -250,6 +260,58 @@ def estimate_nutrition(menu_text):
     random.seed(None)
     return base
 
+def parse_meals_from_soup(soup, now):
+    meal_result = {}
+    meals_by_date = {}
+    found_any = False
+    first_monday_date = None
+    weekday_offsets = {"월": 0, "화": 1, "수": 2, "목": 3, "금": 4}
+
+    for row in soup.find_all("tr"):
+        cols = row.find_all(["td", "th"])
+        if len(cols) < 4:
+            continue
+
+        header = cols[0].get_text(" ", strip=True)
+        weekday_kr = parse_weekday_from_header(header)
+
+        if weekday_kr not in ["월", "화", "수", "목", "금"]:
+            continue
+
+        parsed_date = parse_date_text_to_isodate(header, now.year)
+
+        b = cols[1].get_text(" ", strip=True)
+        l = cols[2].get_text(" ", strip=True)
+        dnr = cols[3].get_text(" ", strip=True)
+
+        day_data = {
+            "date_text": header,
+            "date": parsed_date,
+            "breakfast": b if len(b) > 3 else "식단 없음",
+            "lunch": l if len(l) > 3 else "식단 없음",
+            "dinner": dnr if len(dnr) > 3 else "식단 없음",
+            "nutrition": {
+                "breakfast": estimate_nutrition(b),
+                "lunch": estimate_nutrition(l),
+                "dinner": estimate_nutrition(dnr)
+            }
+        }
+
+        meal_result[weekday_kr] = day_data
+
+        if parsed_date:
+            meals_by_date[parsed_date] = day_data
+
+            if first_monday_date is None:
+                parsed_datetime = datetime.strptime(parsed_date, "%Y-%m-%d")
+                monday_datetime = parsed_datetime - timedelta(days=weekday_offsets[weekday_kr])
+                first_monday_date = monday_datetime.strftime("%Y-%m-%d")
+                print(f"📅 크롤링된 실제 주 월요일 날짜: {first_monday_date} (헤더: {header})")
+
+        found_any = True
+
+    return meal_result, meals_by_date, found_any, first_monday_date
+
 # =========================
 # 🚀 메인 실행부
 # =========================
@@ -277,79 +339,34 @@ def main():
             res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
             soup = BeautifulSoup(res.text, "html.parser")
 
-            meal_result = {}
-            meals_by_date = {}
-            found_any = False
-            first_monday_date = None  # ✅ 크롤링된 월요일 행의 실제 날짜
-            weekday_offsets = {"월": 0, "화": 1, "수": 2, "목": 3, "금": 4}
+            meal_result, meals_by_date, found_any, first_monday_date = parse_meals_from_soup(soup, now)
 
-            for row in soup.find_all("tr"):
-                cols = row.find_all(["td", "th"])
-                if len(cols) < 4:
-                    continue
-
-                header = cols[0].get_text(" ", strip=True)
-                weekday_kr = parse_weekday_from_header(header)
-
-                if weekday_kr not in ["월", "화", "수", "목", "금"]:
-                    continue
-
-                parsed_date = parse_date_text_to_isodate(header, now.year)
-
-                b = cols[1].get_text(" ", strip=True)
-                l = cols[2].get_text(" ", strip=True)
-                dnr = cols[3].get_text(" ", strip=True)
-
-                day_data = {
-                    "date_text": header,
-                    "date": parsed_date,
-                    "breakfast": b if len(b) > 3 else "식단 없음",
-                    "lunch": l if len(l) > 3 else "식단 없음",
-                    "dinner": dnr if len(dnr) > 3 else "식단 없음",
-                    "nutrition": {
-                        "breakfast": estimate_nutrition(b),
-                        "lunch": estimate_nutrition(l),
-                        "dinner": estimate_nutrition(dnr)
-                    }
-                }
-
-                # 기존 index.html과의 호환을 위해 요일별 데이터는 그대로 저장
-                meal_result[weekday_kr] = day_data
-
-                # 날짜별 데이터도 추가 저장
-                if parsed_date:
-                    meals_by_date[parsed_date] = day_data
-
-                    # 월요일 행이 없거나 월요일 날짜를 직접 못 잡아도,
-                    # 화~금 날짜에서 해당 주 월요일을 역산해서 target_date로 사용
-                    if first_monday_date is None:
-                        parsed_datetime = datetime.strptime(parsed_date, "%Y-%m-%d")
-                        monday_datetime = parsed_datetime - timedelta(days=weekday_offsets[weekday_kr])
-                        first_monday_date = monday_datetime.strftime("%Y-%m-%d")
-                        print(f"📅 크롤링된 실제 주 월요일 날짜: {first_monday_date} (헤더: {header})")
-
-                found_any = True
-            
             if found_any:
-                old_meals = final_data.get("meals", {})
-                old_target_date = final_data.get("target_date")
+                current_week_monday_str = get_week_monday_date_str(now)
+                requested_week_monday_str = get_monday_date_str(target_date)
+
+                if first_monday_date:
+                    final_target_date = first_monday_date
+                elif requested_week_monday_str != current_week_monday_str:
+                    current_url = f"https://www.kopo.ac.kr/chungju/content.do?menu=2830&search_day={current_week_monday_str}"
+                    print(f"🔎 현재 주 식단 비교 요청: {current_url}")
+
+                    current_res = requests.get(current_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+                    current_soup = BeautifulSoup(current_res.text, "html.parser")
+                    current_meals, _, current_found_any, _ = parse_meals_from_soup(current_soup, now)
+
+                    if current_found_any and is_same_meal_content(current_meals, meal_result):
+                        final_target_date = current_week_monday_str
+                        print(f"⚠️ 다음 주 요청 결과가 현재 주 식단과 같아 현재 주로 설정: {final_target_date}")
+                    else:
+                        final_target_date = requested_week_monday_str
+                        print(f"📅 다음 주 식단이 갱신된 것으로 판단: {final_target_date}")
+                else:
+                    final_target_date = current_week_monday_str
 
                 final_data["meals"] = meal_result
                 final_data["mealsByDate"] = meals_by_date
-
-                # 1순위: 학교 식단표에서 실제 날짜를 읽었으면 그 주 월요일 사용
-                if first_monday_date:
-                    final_data["target_date"] = first_monday_date
-
-                # 2순위: 날짜가 없고, 기존 식단과 새 식단이 같으면 기존 날짜 유지
-                elif old_target_date and is_same_meal_content(old_meals, meal_result):
-                    final_data["target_date"] = old_target_date
-                    print(f"⚠️ 식단 날짜가 없어 기존 target_date 유지: {final_data['target_date']}")
-
-                # 3순위: 날짜가 없지만 식단 내용이 바뀌었으면 요청한 주의 월요일로 갱신
-                else:
-                    final_data["target_date"] = get_monday_date_str(target_date)
-                    print(f"⚠️ 식단 날짜가 없어 요청 주 월요일로 설정: {final_data['target_date']}")
+                final_data["target_date"] = final_target_date
 
                 print(f"🍱 식단 데이터 갱신 성공 / target_date = {final_data['target_date']}")
 
@@ -369,3 +386,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+```
