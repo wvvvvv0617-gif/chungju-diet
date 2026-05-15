@@ -32,54 +32,26 @@ def get_target_date():
 def parse_date_text_to_isodate(date_text, reference_year):
     """
     학교 식단 페이지 헤더의 날짜 텍스트를 ISO 날짜 문자열로 변환합니다.
-    예시 입력: "05.11(월)", "5.11(월요일)", "05월 11일(월)"
-    예시 출력: "2026-05-11"
+    예시 입력: "05.11(월)", "5.11(월요일)", "05.11(월)"
+    예시 출력: "2025-05-11"
     파싱 실패 시 None 반환
     연도 경계(12월→1월) 처리 포함
     """
-    match = re.search(r'(\d{1,2})\s*(?:\.|월)\s*(\d{1,2})', date_text)
+    match = re.search(r'(\d{1,2})\.(\d{1,2})', date_text)
     if match:
         month = int(match.group(1))
         day = int(match.group(2))
-
-        now = get_kst_now()
-        year = reference_year
-
-        # 12월에 다음 해 1월 식단이 표시되는 경우
-        if now.month == 12 and month == 1:
-            year = reference_year + 1
-
-        # 1월에 직전 12월 식단이 표시되는 경우
-        if now.month == 1 and month == 12:
-            year = reference_year - 1
-
+        # 12월에 크롤링했는데 month=1이 나오면 다음 연도
         try:
-            candidate = datetime(year, month, day)
+            candidate = datetime(reference_year, month, day)
             return candidate.strftime("%Y-%m-%d")
         except ValueError:
-            return None
-
-    return None
-
-def parse_weekday_from_header(header):
-    """
-    학교 식단표의 날짜 헤더에서 실제 요일만 추출합니다.
-    예시:
-    "05.11(월)" → "월"
-    "05.11(월요일)" → "월"
-    "05월 11일 월요일" → "월"
-
-    기존처럼 if "월" in header 방식으로 검사하면
-    "05월"의 월 때문에 월요일로 잘못 인식될 수 있어 따로 분리했습니다.
-    """
-    match = re.search(r'[\(（]\s*([월화수목금])(?:요일)?\s*[\)）]', header)
-    if match:
-        return match.group(1)
-
-    match = re.search(r'([월화수목금])요일', header)
-    if match:
-        return match.group(1)
-
+            # 연도 경계 처리: 12월에 1월 식단이 나올 경우
+            try:
+                candidate = datetime(reference_year + 1, month, day)
+                return candidate.strftime("%Y-%m-%d")
+            except ValueError:
+                return None
     return None
 
 # =========================
@@ -157,10 +129,8 @@ def get_weather(existing_weather):
             if temp is not None and pop is not None:
                 break
 
-        if temp:
-            final_weather["temp"] = temp
-        if pop:
-            final_weather["rain"] = pop
+        if temp: final_weather["temp"] = temp
+        if pop: final_weather["rain"] = pop
         final_weather["last_update"] = now.strftime("%Y-%m-%d %H:%M")
 
         print(f"✅ 날씨 갱신 완료: {final_weather['temp']}°C / {final_weather['rain']}%")
@@ -240,9 +210,9 @@ def main():
             try:
                 final_data = json.load(f)
             except:
-                final_data = {"weather": {}, "meals": {}, "mealsByDate": {}}
+                final_data = {"weather": {}, "meals": {}}
     else:
-        final_data = {"weather": {}, "meals": {}, "mealsByDate": {}}
+        final_data = {"weather": {}, "meals": {}}
 
     # 2. 식단 크롤링 (특정 시간에만 실행)
     now = get_kst_now()
@@ -254,64 +224,48 @@ def main():
         try:
             res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
             soup = BeautifulSoup(res.text, "html.parser")
-
             meal_result = {}
-            meals_by_date = {}
+            days_list = ["월", "화", "수", "목", "금"]
             found_any = False
             first_monday_date = None  # ✅ 크롤링된 월요일 행의 실제 날짜
 
             for row in soup.find_all("tr"):
                 cols = row.find_all(["td", "th"])
-                if len(cols) < 4:
-                    continue
-
-                header = cols[0].get_text(" ", strip=True)
-                weekday_kr = parse_weekday_from_header(header)
-
-                if weekday_kr not in ["월", "화", "수", "목", "금"]:
-                    continue
-
-                parsed_date = parse_date_text_to_isodate(header, now.year)
-
-                b = cols[1].get_text(" ", strip=True)
-                l = cols[2].get_text(" ", strip=True)
-                dnr = cols[3].get_text(" ", strip=True)
-
-                day_data = {
-                    "date_text": header,
-                    "date": parsed_date,
-                    "breakfast": b if len(b) > 3 else "식단 없음",
-                    "lunch": l if len(l) > 3 else "식단 없음",
-                    "dinner": dnr if len(dnr) > 3 else "식단 없음",
-                    "nutrition": {
-                        "breakfast": estimate_nutrition(b),
-                        "lunch": estimate_nutrition(l),
-                        "dinner": estimate_nutrition(dnr)
-                    }
-                }
-
-                # 기존 index.html과의 호환을 위해 요일별 데이터는 그대로 저장
-                meal_result[weekday_kr] = day_data
-
-                # 날짜별 데이터도 추가 저장
-                if parsed_date:
-                    meals_by_date[parsed_date] = day_data
-
-                # 월요일 행에서 실제 날짜를 파싱해 target_date로 사용
-                if weekday_kr == "월" and first_monday_date is None and parsed_date:
-                    first_monday_date = parsed_date
-                    print(f"📅 크롤링된 실제 월요일 날짜: {first_monday_date} (헤더: {header})")
-
-                found_any = True
+                if len(cols) < 4: continue
+                header = cols[0].get_text(strip=True)
+                
+                for d in days_list:
+                    if d in header:
+                        b = cols[1].get_text(" ", strip=True)
+                        l = cols[2].get_text(" ", strip=True)
+                        dnr = cols[3].get_text(" ", strip=True)
+                        meal_result[d] = {
+                            "date_text": header,
+                            "breakfast": b if len(b)>3 else "식단 없음",
+                            "lunch": l if len(l)>3 else "식단 없음",
+                            "dinner": dnr if len(dnr)>3 else "식단 없음",
+                            "nutrition": {
+                                "breakfast": estimate_nutrition(b),
+                                "lunch": estimate_nutrition(l),
+                                "dinner": estimate_nutrition(dnr)
+                            }
+                        }
+                        # ✅ 월요일 행에서 실제 날짜를 파싱해 target_date로 사용
+                        # get_target_date()가 반환한 날짜 대신, 실제 식단 페이지에 표시된
+                        # 날짜(예: "05.11(월)" → "2025-05-11")를 저장함으로써
+                        # 일요일 크롤링 시 발생하는 날짜 불일치 문제를 해결
+                        if d == "월" and first_monday_date is None:
+                            parsed = parse_date_text_to_isodate(header, now.year)
+                            if parsed:
+                                first_monday_date = parsed
+                                print(f"📅 크롤링된 실제 월요일 날짜: {first_monday_date} (헤더: {header})")
+                        found_any = True
             
             if found_any:
                 final_data["meals"] = meal_result
-                final_data["mealsByDate"] = meals_by_date
-
-                # 실제 파싱된 날짜로 target_date 저장 (파싱 실패 시 get_target_date() 결과로 폴백)
+                # ✅ 실제 파싱된 날짜로 target_date 저장 (파싱 실패 시 get_target_date() 결과로 폴백)
                 final_data["target_date"] = first_monday_date if first_monday_date else target_date
                 print(f"🍱 식단 데이터 갱신 성공 / target_date = {final_data['target_date']}")
-
         except Exception as e:
             print(f"❌ 식단 크롤링 실패 (기존 데이터 보존): {e}")
     else:
@@ -323,7 +277,6 @@ def main():
     # 4. 최종 데이터 저장
     with open(data_path, "w", encoding="utf-8") as f:
         json.dump(final_data, f, ensure_ascii=False, indent=2)
-
     print("🚀 모든 작업이 완료되었습니다!")
 
 if __name__ == "__main__":
