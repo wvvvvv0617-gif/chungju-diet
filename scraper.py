@@ -1,6 +1,3 @@
-아래 코드로 `scraper.py` 전체를 교체하면 돼.
-
-```python
 import json
 import requests
 import random
@@ -386,4 +383,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-```
