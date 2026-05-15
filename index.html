@@ -218,7 +218,7 @@
                 <div>
                     <p id="current-date" class="text-white text-sm font-black mb-1"></p>
                     <h1 id="greeting" class="text-2xl font-black tracking-tight leading-tight">맛있는 식사 하세요! 🍱</h1>
-                     </div>
+                </div>
                 <div class="flex flex-col gap-3 items-end">
                     <div class="bg-white/20 backdrop-blur-md p-3 rounded-2xl text-center min-w-[85px] border border-white/20 flex flex-col gap-2 shadow-sm relative">
                         <span class="absolute -top-2 -left-1 text-[7px] bg-indigo-900 text-white px-1.5 py-0.5 rounded font-bold">KMA</span>
@@ -349,17 +349,31 @@
         const mealLabels = { 'breakfast': 'BREAKFAST 🍳', 'lunch': 'LUNCH 🍱', 'dinner': 'DINNER 🌙' };
         let currentMenuData = null;
 
-        // ─────────────────────────────────────────────────────────────────
-        // 💡 [핵심 헬퍼] 현재 시각 기준으로 "일요일 REST 상태"인지 판별
-        //    일요일 18:30 이전 → true (REST, 다음 주 식단 아직 없음)
-        //    일요일 18:30 이후 → false (다음 주 식단 표시)
-        //    토요일 포함 나머지 요일 → false
-        // ─────────────────────────────────────────────────────────────────
+        // ═══════════════════════════════════════════════════════════════
+        // 💡 핵심 헬퍼: 현재 시각이 "일요일 18:30 이전" 인지 판별
+        //    true  → 일요일 REST 모드 (화살표 잠금, REST 화면)
+        //    false → 정상 탐색 가능 (토요일 포함 모든 평일)
+        // ═══════════════════════════════════════════════════════════════
         function isSundayRestMode() {
-            const d = new Date();
-            const dow = d.getDay();          // 0 = 일요일
+            const d   = new Date();
+            const dow = d.getDay();                          // 0 = 일요일
             const hm  = d.getHours() * 100 + d.getMinutes();
             return dow === 0 && hm < 1830;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // 💡 이번 주 월요일 Date 객체 반환
+        //    weekMondayDate(크롤러 제공)가 있으면 그것을 우선 사용,
+        //    없으면 targetDate 기준으로 직접 계산
+        // ═══════════════════════════════════════════════════════════════
+        function getThisWeekMonday(referenceDate) {
+            if (weekMondayDate) return new Date(weekMondayDate);
+            const d   = new Date(referenceDate);
+            const dow = d.getDay();                          // 0=일, 1=월 … 6=토
+            const diffToMon = dow === 0 ? -6 : 1 - dow;     // 일요일이면 -6, 그 외 1-dow
+            d.setDate(d.getDate() + diffToMon);
+            d.setHours(0, 0, 0, 0);
+            return d;
         }
 
         function getFixedRandom(value, mealKey, menuText, range = 0.1) {
@@ -371,7 +385,7 @@
                 hash |= 0;
             }
             const fixedRandom = (Math.abs(hash) % 100) / 100 * 2 - 1;
-            const variation = value * range * fixedRandom;
+            const variation   = value * range * fixedRandom;
             return Math.round(value + variation);
         }
 
@@ -403,11 +417,11 @@
             cal = cal || 650; carb = carb || 95; prot = prot || 28; fat = fat || 16; sugar = sugar || 12;
 
             return {
-                calories: getFixedRandom(cal, mealKey, menuText),
-                carbs: getFixedRandom(carb, mealKey, menuText),
-                protein: getFixedRandom(prot, mealKey, menuText),
-                fat: getFixedRandom(fat, mealKey, menuText),
-                sugar: getFixedRandom(sugar, mealKey, menuText)
+                calories: getFixedRandom(cal,   mealKey, menuText),
+                carbs:    getFixedRandom(carb,  mealKey, menuText),
+                protein:  getFixedRandom(prot,  mealKey, menuText),
+                fat:      getFixedRandom(fat,   mealKey, menuText),
+                sugar:    getFixedRandom(sugar, mealKey, menuText)
             };
         }
 
@@ -433,7 +447,10 @@
         function getHolidayName(date) {
             const m = date.getMonth() + 1;
             const d = date.getDate();
-            const solarHolidays = { '1-1': '신정', '3-1': '삼일절', '5-5': '어린이날', '6-6': '현충일', '8-15': '광복절', '10-3': '개천절', '10-9': '한글날', '12-25': '성탄절' };
+            const solarHolidays = {
+                '1-1': '신정', '3-1': '삼일절', '5-5': '어린이날', '6-6': '현충일',
+                '8-15': '광복절', '10-3': '개천절', '10-9': '한글날', '12-25': '성탄절'
+            };
             return solarHolidays[`${m}-${d}`] || null;
         }
 
@@ -448,29 +465,25 @@
             const hm = realNow.getHours() * 100 + realNow.getMinutes();
             let mealKey, mealLabel, targetDayOffset = 0, rateKey = null;
 
-            if (hm < 830) { mealKey = 'breakfast'; mealLabel = 'BREAKFAST 🍳'; }
-            else if (hm < 1330) { mealKey = 'lunch'; mealLabel = 'LUNCH 🍱'; }
-            else if (hm < 1830) { mealKey = 'dinner'; mealLabel = 'DINNER 🌙'; }
-            else { 
-                mealKey = 'breakfast'; 
-                mealLabel = 'NEXT BREAKFAST ☀️'; 
-                targetDayOffset = 1; 
+            if (hm < 830)        { mealKey = 'breakfast'; mealLabel = 'BREAKFAST 🍳'; }
+            else if (hm < 1330)  { mealKey = 'lunch';     mealLabel = 'LUNCH 🍱'; }
+            else if (hm < 1830)  { mealKey = 'dinner';    mealLabel = 'DINNER 🌙'; }
+            else {
+                mealKey          = 'breakfast';
+                mealLabel        = 'NEXT BREAKFAST ☀️';
+                targetDayOffset  = 1;
             }
 
-            if (hm >= 830 && hm <= 1300) rateKey = 'breakfast';
-            else if (hm >= 1330 && hm <= 1830) rateKey = 'lunch'; 
+            if (hm >= 830  && hm <= 1300) rateKey = 'breakfast';
+            else if (hm >= 1330 && hm <= 1830) rateKey = 'lunch';
             else if (hm >= 1840 && hm <= 2350) rateKey = 'dinner';
 
-            // ─────────────────────────────────────────────────────────────
-            // 💡 [수정] 인사말 결정 기준
-            //    - 일요일 18:30 이전(REST 모드) → 편안한 휴식
-            //    - 공휴일 → 편안한 휴식
-            //    - 그 외(토요일 포함 평일) → 맛있는 식사
-            // ─────────────────────────────────────────────────────────────
+            // ───────────────────────────────────────────────────────────
+            // 인사말: 일요일 REST 모드 또는 공휴일 → 편안한 휴식
+            //         토요일(주말이지만 식단 탐색 가능) → 맛있는 식사
+            // ───────────────────────────────────────────────────────────
             let greetingText = "맛있는 식사 하세요! 🍱";
-            if (isSundayRestMode()) {
-                greetingText = "편안한 휴식 되세요! ✨";
-            } else if (getHolidayName(new Date()) !== null) {
+            if (isSundayRestMode() || getHolidayName(new Date()) !== null) {
                 greetingText = "편안한 휴식 되세요! ✨";
             }
 
@@ -481,49 +494,77 @@
             const dateStr = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
             const dayName = week[now.getDay()];
             document.getElementById('current-date').innerText = `${dateStr} (${dayName})`;
-            document.getElementById('greeting').innerText = status.greetingText;
+            document.getElementById('greeting').innerText     = status.greetingText;
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        // 💡 화살표 잠금 로직
+        //
+        //  [일요일 18:30 이전 - REST 모드]
+        //    → 양쪽 모두 잠금
+        //
+        //  [일요일 18:30 이후 - 다음 주 식단 모드]
+        //    → 다음 주 월~금 범위: 월요일에서 ← 잠금, 금요일에서 → 잠금
+        //
+        //  [월~토 - 이번 주 탐색 모드]
+        //    → 이번 주 월~일(7일) 범위
+        //    → 월요일 도달 시 ← 잠금
+        //    → 일요일 도달 시 → 잠금
+        //    (토요일·일요일 칸에 도달하면 REST 화면이 뜨지만 탐색은 허용)
+        // ═══════════════════════════════════════════════════════════════
         function updateArrowButtons(targetDate) {
             const btnPrev = document.getElementById('btn-prev');
             const btnNext = document.getElementById('btn-next');
 
-            // ─────────────────────────────────────────────────────────────
-            // 💡 [수정] 화살표 잠금 조건
-            //    - 일요일 18:30 이전(REST 모드)에만 양방향 잠금
-            //    - 토요일 포함 나머지 요일은 주간 범위 내에서 이동 허용
-            // ─────────────────────────────────────────────────────────────
+            // 일요일 REST 모드: 양쪽 잠금
             if (isSundayRestMode()) {
                 btnPrev.classList.add('arrow-disabled');
                 btnNext.classList.add('arrow-disabled');
                 return;
             }
 
-            if (weekMondayDate) {
-                const weekFridayDate = new Date(weekMondayDate);
-                weekFridayDate.setDate(weekMondayDate.getDate() + 4);
+            const todayDow = new Date().getDay();
+            const todayHM  = new Date().getHours() * 100 + new Date().getMinutes();
+            const isNextWeekMode = (todayDow === 0 && todayHM >= 1830); // 일요일 18:30 이후
 
-                const t   = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
-                const mon = new Date(weekMondayDate.getFullYear(), weekMondayDate.getMonth(), weekMondayDate.getDate());
-                const fri = new Date(weekFridayDate.getFullYear(), weekFridayDate.getMonth(), weekFridayDate.getDate());
+            const t = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+
+            if (isNextWeekMode) {
+                // 다음 주 모드: weekMondayDate 기준 월~금
+                if (weekMondayDate) {
+                    const mon = new Date(weekMondayDate.getFullYear(), weekMondayDate.getMonth(), weekMondayDate.getDate());
+                    const fri = new Date(weekMondayDate.getFullYear(), weekMondayDate.getMonth(), weekMondayDate.getDate() + 4);
+                    if (t <= mon) btnPrev.classList.add('arrow-disabled');
+                    else          btnPrev.classList.remove('arrow-disabled');
+                    if (t >= fri) btnNext.classList.add('arrow-disabled');
+                    else          btnNext.classList.remove('arrow-disabled');
+                } else {
+                    // weekMondayDate 없으면 요일 기준 fallback
+                    const dow = targetDate.getDay();
+                    if (dow === 1) btnPrev.classList.add('arrow-disabled');
+                    else           btnPrev.classList.remove('arrow-disabled');
+                    if (dow === 5) btnNext.classList.add('arrow-disabled');
+                    else           btnNext.classList.remove('arrow-disabled');
+                }
+            } else {
+                // 이번 주 모드(월~토): 이번 주 월요일 ~ 일요일(7일) 범위
+                const monday = getThisWeekMonday(targetDate);
+                const sunday = new Date(monday);
+                sunday.setDate(monday.getDate() + 6);  // 월요일 + 6 = 일요일
+
+                const mon = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate());
+                const sun = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate());
 
                 if (t <= mon) btnPrev.classList.add('arrow-disabled');
-                else btnPrev.classList.remove('arrow-disabled');
+                else          btnPrev.classList.remove('arrow-disabled');
 
-                if (t >= fri) btnNext.classList.add('arrow-disabled');
-                else btnNext.classList.remove('arrow-disabled');
-            } else {
-                // weekMondayDate 없을 때 fallback: 월요일이면 이전 잠금, 금요일이면 다음 잠금
-                const dayOfWeek = targetDate.getDay();
-                if (dayOfWeek === 1) btnPrev.classList.add('arrow-disabled');
-                else btnPrev.classList.remove('arrow-disabled');
-                if (dayOfWeek === 5) btnNext.classList.add('arrow-disabled');
-                else btnNext.classList.remove('arrow-disabled');
+                if (t >= sun) btnNext.classList.add('arrow-disabled');
+                else          btnNext.classList.remove('arrow-disabled');
             }
         }
 
         function applySlideAnimation(direction) {
-            const container = document.getElementById('meals-container');
+            const container  = document.getElementById('meals-container');
             const weekendMsg = document.getElementById('weekend-message');
 
             container.classList.remove('slide-in-right', 'slide-in-left');
@@ -537,29 +578,34 @@
             weekendMsg.classList.add(animClass);
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        // 💡 renderDayMenu: REST 화면 조건
+        //
+        //  REST 표시 → 토요일(6), 일요일(0), 공휴일
+        //  식단 표시 → 월~금 (공휴일 아닌 경우)
+        //
+        //  ※ 토요일에 화살표로 넘어온 경우에도 REST 화면 표시
+        //  ※ 일요일 18:30 이후는 viewDate가 이미 월요일로 설정되므로
+        //     일요일 칸에 도달하지 않음 (화살표 범위가 월~금)
+        // ═══════════════════════════════════════════════════════════════
         function renderDayMenu(targetDate, direction = 1) {
             if (!currentMenuData) return;
 
-            const dayNameKR = week[targetDate.getDay()];
-            const targetDow = targetDate.getDay();
+            const dayNameKR        = week[targetDate.getDay()];
+            const targetDow        = targetDate.getDay();
+            const isTargetSaturday = targetDow === 6;
+            const isTargetSunday   = targetDow === 0;
+            const isHoliday        = getHolidayName(targetDate) !== null;
 
-            // ─────────────────────────────────────────────────────────────
-            // 💡 [수정] REST 화면 표시 조건
-            //    - 표시 중인 날짜가 일요일(0)인 경우
-            //    - 또는 공휴일인 경우
-            //    ⚠️  토요일(6)은 이번 주 식단 탐색 가능하므로 REST 제외
-            //    ⚠️  is_weekend(파이썬 크롤러 플래그)는 일요일 REST 모드
-            //        판별에만 사용하고, 토요일에는 적용하지 않음
-            // ─────────────────────────────────────────────────────────────
-            const isTargetSunday  = targetDow === 0;
-            const isHoliday       = getHolidayName(targetDate) !== null;
-            // 크롤러 is_weekend 플래그는 현재 시각이 일요일 REST 상태일 때만 신뢰
-            const isRest = isTargetSunday || isHoliday || (isSundayRestMode() && currentMenuData.is_weekend);
+            // 토요일, 일요일, 공휴일 → REST 화면
+            const isRest = isTargetSaturday || isTargetSunday || isHoliday;
 
-            const dateKey = targetDate.toISOString().split('T')[0];
-            const mealData = currentMenuData.mealsByDate?.[dateKey] || currentMenuData.meals?.[dayNameKR] || null;
+            const dateKey  = targetDate.toISOString().split('T')[0];
+            const mealData = currentMenuData.mealsByDate?.[dateKey]
+                          || currentMenuData.meals?.[dayNameKR]
+                          || null;
 
-            // 크롤링된 실제 날짜 텍스트("05.11(화)")가 있다면 그걸 쪼개서 날짜로 표기
+            // 크롤링된 실제 날짜 텍스트("05.11(화)")가 있으면 파싱해서 표시
             let displayDateStr = targetDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
             if (mealData && mealData.date_text) {
                 const match = mealData.date_text.match(/(\d{1,2})\.(\d{1,2})/);
@@ -573,28 +619,29 @@
             document.getElementById('display-date-tag').innerText = displayDateStr;
             updateArrowButtons(targetDate);
             applySlideAnimation(direction);
-            
+
             if (isRest) {
-                // 식당 쉬는 화면 활성화
                 document.getElementById('meal-content').classList.add('hidden');
                 document.getElementById('weekend-message').classList.remove('hidden');
                 document.getElementById('main-card').classList.add('rest-bg');
                 document.getElementById('display-day-tag').innerText = "REST DAY";
-                
-                const subtitle = isHoliday && !isTargetSunday
-                    ? "공휴일에는 식당이 쉬어갑니다."
-                    : "일요일에는 식당이 쉬어갑니다.";
-                document.getElementById('rest-subtitle').innerText = subtitle;
-                
-                // 일요일 18:30 이전이면 "오늘 저녁에 다음 주 식단 업데이트" 안내
-                if (isSundayRestMode()) {
+
+                // 안내 문구 분기
+                if (isHoliday && !isTargetSaturday && !isTargetSunday) {
+                    document.getElementById('rest-subtitle').innerText = "공휴일에는 식당이 쉬어갑니다.";
+                } else {
+                    document.getElementById('rest-subtitle').innerText = "주말에는 식당이 쉬어갑니다.";
+                }
+
+                // return-msg: 일요일 REST 모드(18:30 이전)일 때만 업데이트 예고 표시
+                if (isTargetSunday && isSundayRestMode()) {
                     document.getElementById('return-msg').innerText = "오늘 저녁 6시 30분 이후 다음 주 식단이 업데이트됩니다!";
                 } else {
                     document.getElementById('return-msg').innerText = "평일에 다시 만나요!";
                 }
                 document.getElementById('meal-disclaimer').classList.add('hidden');
+
             } else {
-                // 식단 정보 화면 활성화
                 document.getElementById('meal-content').classList.remove('hidden');
                 document.getElementById('weekend-message').classList.add('hidden');
                 document.getElementById('main-card').classList.remove('rest-bg');
@@ -605,23 +652,21 @@
                 container.innerHTML = '';
 
                 const mealsToRender = ['breakfast', 'lunch', 'dinner'];
-
-                let totalNutrition = { calories: 0, carbs: 0, protein: 0, fat: 0, sugar: 0 };
+                let totalNutrition  = { calories: 0, carbs: 0, protein: 0, fat: 0, sugar: 0 };
                 let totalNutritionCount = 0;
 
                 mealsToRender.forEach(key => {
-                    const rawMenu = mealData ? mealData[key] : "식단 없음";
+                    const rawMenu  = mealData ? mealData[key] : "식단 없음";
                     const isNoMeal = !rawMenu || NO_MEAL_KEYWORDS.some(keyword => rawMenu.includes(keyword));
-                    
+
                     let html = `<div class="animate-fadeIn">`;
                     html += `<div class="flex items-center gap-2 mb-3">
                                 <span class="bg-indigo-200 text-indigo-900 px-3 py-1 rounded-full text-[11px] font-black tracking-widest uppercase dark:bg-indigo-600 dark:text-white border border-indigo-300 dark:border-indigo-400">${mealLabels[key]}</span>
                                 <h2 class="text-2xl font-black text-slate-950 dark:text-white">${mealNameKR[key]}</h2>
                              </div>`;
-                    
+
                     if (!isNoMeal) {
                         const items = rawMenu.split(/,\s*/).filter(i => i.trim());
-
                         html += `<ul class="grid grid-cols-1 gap-2 mb-4">
                                     ${items.map(m => `
                                         <li class="meal-item-card flex items-center gap-3 p-3.5 bg-white dark:bg-slate-700 rounded-2xl text-slate-950 dark:text-white font-black border border-slate-300 dark:border-slate-600 shadow-sm">
@@ -641,27 +686,29 @@
                             totalNutrition.sugar    += nut.sugar    || 0;
                             totalNutritionCount++;
 
-                            const calPercent  = Math.min((nut.calories / 1000) * 100, 100);
-                            const carbPercent = Math.min((nut.carbs    / 150)  * 100, 100);
-                            const protPercent = Math.min((nut.protein  / 60)   * 100, 100);
-                            const fatPercent  = Math.min((nut.fat      / 40)   * 100, 100);
-                            const sugarPercent= Math.min((nut.sugar    / 30)   * 100, 100);
+                            const calPercent   = Math.min((nut.calories / 1000) * 100, 100);
+                            const carbPercent  = Math.min((nut.carbs    / 150)  * 100, 100);
+                            const protPercent  = Math.min((nut.protein  / 60)   * 100, 100);
+                            const fatPercent   = Math.min((nut.fat      / 40)   * 100, 100);
+                            const sugarPercent = Math.min((nut.sugar    / 30)   * 100, 100);
 
                             html += `
                             <div class="nutrition-card bg-slate-100 dark:bg-slate-900 dark:to-slate-900 p-5 rounded-[24px] border border-slate-200 dark:border-slate-700 shadow-inner">
                                 <h3 class="text-[11px] font-black text-slate-800 mb-4 uppercase tracking-widest text-center dark:text-yellow-400">Nutrition Report</h3>
                                 <div class="space-y-4">
-                                    ${renderBar('총 열량(Calories)', calPercent, 'bg-indigo-700 dark:bg-indigo-500', nut.calories + ' kcal')}
+                                    ${renderBar('총 열량(Calories)', calPercent,  'bg-indigo-700 dark:bg-indigo-500',  nut.calories + ' kcal')}
                                     <div class="h-px bg-slate-300 dark:bg-slate-700 my-1"></div>
-                                    ${renderBar('탄수화물(Carbs)', carbPercent, 'bg-blue-600 dark:bg-blue-400', nut.carbs + 'g')}
-                                    ${renderBar('단백질(Protein)', protPercent, 'bg-emerald-700 dark:bg-emerald-500', nut.protein + 'g')}
-                                    ${renderBar('지방(Fat)', fatPercent, 'bg-amber-600 dark:bg-amber-400', nut.fat + 'g')}
-                                    ${renderBar('당류(Sugar)', sugarPercent, 'bg-rose-600 dark:bg-rose-400', nut.sugar + 'g')}
+                                    ${renderBar('탄수화물(Carbs)',   carbPercent, 'bg-blue-600 dark:bg-blue-400',      nut.carbs    + 'g')}
+                                    ${renderBar('단백질(Protein)',   protPercent, 'bg-emerald-700 dark:bg-emerald-500', nut.protein  + 'g')}
+                                    ${renderBar('지방(Fat)',         fatPercent,  'bg-amber-600 dark:bg-amber-400',     nut.fat      + 'g')}
+                                    ${renderBar('당류(Sugar)',       sugarPercent,'bg-rose-600 dark:bg-rose-400',       nut.sugar    + 'g')}
                                 </div>
                             </div>`;
                         }
                     } else {
-                        const isSpecialDay = NO_MEAL_KEYWORDS.some(keyword => rawMenu && rawMenu.includes(keyword) && keyword !== "식단 없음" && keyword !== "식단없음");
+                        const isSpecialDay = NO_MEAL_KEYWORDS.some(keyword =>
+                            rawMenu && rawMenu.includes(keyword) && keyword !== "식단 없음" && keyword !== "식단없음"
+                        );
                         const emptyMsg = isSpecialDay ? rawMenu : "등록된 식단 정보가 없습니다.";
                         html += `<div class="meal-item-card p-6 text-center font-black text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-700 rounded-2xl border border-slate-300 dark:border-slate-600 shadow-sm">${emptyMsg}</div>`;
                     }
@@ -670,11 +717,11 @@
                 });
 
                 if (totalNutritionCount > 0) {
-                    const totalCalPercent  = Math.min((totalNutrition.calories / 2000) * 100, 100);
-                    const totalCarbPercent = Math.min((totalNutrition.carbs    / 324)  * 100, 100);
-                    const totalProtPercent = Math.min((totalNutrition.protein  / 55)   * 100, 100);
-                    const totalFatPercent  = Math.min((totalNutrition.fat      / 54)   * 100, 100);
-                    const totalSugarPercent= Math.min((totalNutrition.sugar    / 100)  * 100, 100);
+                    const totalCalPercent   = Math.min((totalNutrition.calories / 2000) * 100, 100);
+                    const totalCarbPercent  = Math.min((totalNutrition.carbs    / 324)  * 100, 100);
+                    const totalProtPercent  = Math.min((totalNutrition.protein  / 55)   * 100, 100);
+                    const totalFatPercent   = Math.min((totalNutrition.fat      / 54)   * 100, 100);
+                    const totalSugarPercent = Math.min((totalNutrition.sugar    / 100)  * 100, 100);
 
                     container.innerHTML += `
                     <div class="animate-fadeIn">
@@ -686,12 +733,12 @@
                             <h3 class="text-[11px] font-black text-slate-800 mb-1 uppercase tracking-widest text-center dark:text-yellow-400">Daily Nutrition Total</h3>
                             <p class="text-[10px] text-slate-800 dark:text-slate-200 text-center mb-4 font-bold">오늘 식단 기준 추정치 · 권장 섭취량 대비</p>
                             <div class="space-y-4">
-                                ${renderBarTotal('총 열량(Calories)', totalCalPercent, 'bg-indigo-500 dark:bg-indigo-400', totalNutrition.calories + ' kcal', '권장 2,000kcal')}
+                                ${renderBarTotal('총 열량(Calories)', totalCalPercent,  'bg-indigo-500 dark:bg-indigo-400', totalNutrition.calories + ' kcal', '권장 2,000kcal')}
                                 <div class="h-px bg-slate-300 dark:bg-slate-700 my-1"></div>
-                                ${renderBarTotal('탄수화물(Carbs)', totalCarbPercent, 'bg-sky-500 dark:bg-sky-400', totalNutrition.carbs + 'g', '권장 324g')}
-                                ${renderBarTotal('단백질(Protein)', totalProtPercent, 'bg-emerald-500 dark:bg-emerald-400', totalNutrition.protein + 'g', '권장 55g')}
-                                ${renderBarTotal('지방(Fat)', totalFatPercent, 'bg-amber-500 dark:bg-amber-400', totalNutrition.fat + 'g', '권장 54g')}
-                                ${renderBarTotal('당류(Sugar)', totalSugarPercent, 'bg-rose-500 dark:bg-rose-400', totalNutrition.sugar + 'g', '권장 100g')}
+                                ${renderBarTotal('탄수화물(Carbs)',   totalCarbPercent, 'bg-sky-500 dark:bg-sky-400',       totalNutrition.carbs    + 'g',    '권장 324g')}
+                                ${renderBarTotal('단백질(Protein)',   totalProtPercent, 'bg-emerald-500 dark:bg-emerald-400',totalNutrition.protein  + 'g',    '권장 55g')}
+                                ${renderBarTotal('지방(Fat)',         totalFatPercent,  'bg-amber-500 dark:bg-amber-400',   totalNutrition.fat      + 'g',    '권장 54g')}
+                                ${renderBarTotal('당류(Sugar)',       totalSugarPercent,'bg-rose-500 dark:bg-rose-400',     totalNutrition.sugar    + 'g',    '권장 100g')}
                             </div>
                         </div>
                     </div>`;
@@ -699,11 +746,11 @@
             }
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        // 💡 changeDay: 일요일 REST 모드일 때만 이동 금지
+        //    그 외(토요일 포함)는 화살표 버튼이 범위 잠금을 담당
+        // ═══════════════════════════════════════════════════════════════
         function changeDay(offset) {
-            // ─────────────────────────────────────────────────────────────
-            // 💡 [수정] 날짜 이동 제한: 일요일 REST 모드일 때만 이동 금지
-            //    토요일은 이동 허용
-            // ─────────────────────────────────────────────────────────────
             if (isSundayRestMode()) return;
             viewDate.setDate(viewDate.getDate() + offset);
             renderDayMenu(viewDate, offset);
@@ -712,24 +759,19 @@
         function renderRatingSection(status) {
             if (!currentMenuData) return;
 
-            const todayKeyKR = week[now.getDay()];
-            const todayData = currentMenuData.meals ? currentMenuData.meals[todayKeyKR] : null;
-            const rateMenuRaw = (status.rateKey && todayData) ? todayData[status.rateKey] : null;
-            // ─────────────────────────────────────────────────────────────
-            // 💡 [수정] 평가 섹션 숨김 조건
-            //    - 일요일 REST 모드이거나 공휴일일 때만 숨김
-            //    - 토요일은 숨기지 않음 (식당 운영하지 않지만 평가 섹션은 
-            //      어차피 rateMenuRaw 없으면 자동 숨김 처리됨)
-            // ─────────────────────────────────────────────────────────────
-            const isRestToday = isSundayRestMode() || getHolidayName(now) !== null;
-            
+            const todayKeyKR   = week[now.getDay()];
+            const todayData    = currentMenuData.meals ? currentMenuData.meals[todayKeyKR] : null;
+            const rateMenuRaw  = (status.rateKey && todayData) ? todayData[status.rateKey] : null;
+            // 일요일 REST 모드 또는 공휴일: 평가 섹션 숨김
+            // 토요일은 rateMenuRaw가 없으므로 자동으로 숨겨짐
+            const isRestToday      = isSundayRestMode() || getHolidayName(now) !== null;
             const isInvalidRateMenu = !rateMenuRaw || NO_MEAL_KEYWORDS.some(keyword => rateMenuRaw.includes(keyword));
 
             if (status.rateKey && todayData && !isInvalidRateMenu && !isRestToday) {
                 document.getElementById('rating-section').classList.remove('hidden');
-                document.getElementById('rating-meal-name').innerText = mealNameKR[status.rateKey];
+                document.getElementById('rating-meal-name').innerText    = mealNameKR[status.rateKey];
                 document.getElementById('rating-menu-preview').innerText = rateMenuRaw.replace(/\s+/g, ' ').replace(/ ,/g, ',').trim();
-                
+
                 const dateStr = now.toISOString().split('T')[0];
                 if (localStorage.getItem(`rated_${dateStr}_${status.rateKey}`)) {
                     lockHeartUI();
@@ -741,14 +783,30 @@
             }
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        // 💡 loadData: viewDate 초기값 설정
+        //
+        //  ┌──────────────────────────┬────────────────────────────────┐
+        //  │ 상황                     │ viewDate 초기값                │
+        //  ├──────────────────────────┼────────────────────────────────┤
+        //  │ 일요일 18:30 이전        │ 오늘(일요일) → REST 화면      │
+        //  │ 일요일 18:30 이후        │ 내일(월요일) → 다음 주 식단   │
+        //  │ 토요일                   │ 오늘(토요일) → 토요일 REST    │
+        //  │ 평일(월~금) 18:29 이전   │ 오늘                          │
+        //  │ 평일(월~금) 18:30 이후   │ 내일(targetDayOffset=1)       │
+        //  └──────────────────────────┴────────────────────────────────┘
+        //
+        //  weekMondayDate 클램핑은 일요일 18:30 이후(다음 주 진입)에만 적용
+        //  → 토요일에 금요일로 끌려가는 버그 방지
+        // ═══════════════════════════════════════════════════════════════
         async function loadData() {
             now = new Date();
-            
+
             try {
                 const response = await fetch('data.json?v=' + Date.now());
                 currentMenuData = await response.json();
 
-                const status = getMealStatus();
+                const status   = getMealStatus();
                 updateHeaderUI(status);
 
                 if (currentMenuData.target_date) {
@@ -759,50 +817,54 @@
 
                 if (currentMenuData.weather) {
                     document.getElementById('realtime-temp').innerText = currentMenuData.weather.temp + "°";
-                    const rainText = typeof getRainStatusText === 'function' ? getRainStatusText(currentMenuData.weather.rain) : currentMenuData.weather.rain + "%";
+                    const rainText = typeof getRainStatusText === 'function'
+                        ? getRainStatusText(currentMenuData.weather.rain)
+                        : currentMenuData.weather.rain + "%";
                     document.getElementById('precipitation').innerText = rainText;
                 }
 
-                // ─────────────────────────────────────────────────────────
-                // 💡 [수정] viewDate 초기 설정
-                //
-                //  ┌─────────────────────────────────────────────────────┐
-                //  │  상황              │ viewDate 초기값                 │
-                //  ├────────────────────┼─────────────────────────────────┤
-                //  │ 일요일 18:30 이전  │ 오늘(일요일) → REST 화면       │
-                //  │ 일요일 18:30 이후  │ 내일(월요일) → 다음주 식단     │
-                //  │ 토요일             │ 오늘(토요일) → 이번주 식단     │
-                //  │ 평일(월~금)        │ 오늘 + targetDayOffset          │
-                //  └────────────────────┴─────────────────────────────────┘
-                // ─────────────────────────────────────────────────────────
-                if (isSundayRestMode()) {
-                    // 일요일 REST: viewDate를 오늘(일요일)로 고정 → REST 화면 표시
-                    viewDate = new Date(now);
-                } else {
-                    // 평일 / 토요일 / 일요일 18:30 이후
-                    viewDate = new Date(now);
-                    viewDate.setDate(now.getDate() + status.targetDayOffset);
+                const todayDow = now.getDay();
+                const todayHM  = now.getHours() * 100 + now.getMinutes();
 
-                    // 주간 캘린더 바운더리 클램핑 (weekMondayDate 있을 때만)
+                if (isSundayRestMode()) {
+                    // 일요일 18:30 이전: 오늘(일요일) 고정 → REST 화면
+                    viewDate = new Date(now);
+
+                } else if (todayDow === 6) {
+                    // 토요일: 오늘 고정 → 토요일 REST 화면, 화살표로 이번 주 월~일 탐색 가능
+                    viewDate = new Date(now);
+
+                } else if (todayDow === 0 && todayHM >= 1830) {
+                    // 일요일 18:30 이후: 다음 주 모드 → 내일(월요일)로 이동
+                    viewDate = new Date(now);
+                    viewDate.setDate(now.getDate() + 1); // +1 = 월요일
+
+                    // weekMondayDate 클램핑: 다음 주 월~금 범위 내로 제한
                     if (weekMondayDate) {
                         const weekFridayDate = new Date(weekMondayDate);
                         weekFridayDate.setDate(weekMondayDate.getDate() + 4);
 
-                        const vd = new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
-                        const monMidnight = new Date(weekMondayDate.getFullYear(), weekMondayDate.getMonth(), weekMondayDate.getDate());
-                        const friMidnight = new Date(weekFridayDate.getFullYear(), weekFridayDate.getMonth(), weekFridayDate.getDate());
-                        
-                        if (vd < monMidnight) viewDate = new Date(weekMondayDate);
-                        if (vd > friMidnight) viewDate = new Date(weekFridayDate);
+                        const vd  = new Date(viewDate.getFullYear(),      viewDate.getMonth(),      viewDate.getDate());
+                        const mon = new Date(weekMondayDate.getFullYear(), weekMondayDate.getMonth(), weekMondayDate.getDate());
+                        const fri = new Date(weekFridayDate.getFullYear(), weekFridayDate.getMonth(), weekFridayDate.getDate());
+
+                        if (vd < mon) viewDate = new Date(weekMondayDate);
+                        if (vd > fri) viewDate = new Date(weekFridayDate);
                     }
+
+                } else {
+                    // 평일(월~금): 오늘 + targetDayOffset (18:30 이후면 내일)
+                    viewDate = new Date(now);
+                    viewDate.setDate(now.getDate() + status.targetDayOffset);
+                    // ⚠️ 평일에는 weekMondayDate 클램핑 적용하지 않음
+                    //    → 토요일로 끌려가는 문제 없음, 이번 주 탐색 정상 동작
                 }
 
                 renderDayMenu(viewDate, 1);
-                const currentStatus = getMealStatus();
-                renderRatingSection(currentStatus);
+                renderRatingSection(getMealStatus());
 
-            } catch (e) { 
-                console.error("Data Load Error:", e); 
+            } catch (e) {
+                console.error("Data Load Error:", e);
             }
         }
 
@@ -834,20 +896,20 @@
         }
 
         async function submitHeart() {
-            const status = getMealStatus();
-            const dateStr = now.toISOString().split('T')[0];
+            const status    = getMealStatus();
+            const dateStr   = now.toISOString().split('T')[0];
             const ratingKey = `rated_${dateStr}_${status.rateKey}`;
-            const menuText = document.getElementById('rating-menu-preview').innerText;
+            const menuText  = document.getElementById('rating-menu-preview').innerText;
 
             if (localStorage.getItem(ratingKey)) return;
 
             if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
 
             const formData = new FormData();
-            formData.append(ENTRY_IDS.date, dateStr);
-            formData.append(ENTRY_IDS.meal, mealNameKR[status.rateKey]);
-            formData.append(ENTRY_IDS.menu, menuText);
-            formData.append(ENTRY_IDS.score, "좋아요❤️");
+            formData.append(ENTRY_IDS.date,     dateStr);
+            formData.append(ENTRY_IDS.meal,     mealNameKR[status.rateKey]);
+            formData.append(ENTRY_IDS.menu,     menuText);
+            formData.append(ENTRY_IDS.score,    "좋아요❤️");
             formData.append(ENTRY_IDS.feedback, "(하트 피드백)");
 
             fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData });
@@ -859,10 +921,10 @@
         }
 
         function lockHeartUI() {
-            const btn = document.getElementById('heart-btn');
-            const icon = document.getElementById('heart-icon');
+            const btn   = document.getElementById('heart-btn');
+            const icon  = document.getElementById('heart-icon');
             const label = document.getElementById('heart-label');
-            
+
             btn.classList.add('disabled-heart');
             icon.classList.remove('grayscale', 'opacity-30');
             icon.classList.add('heart-active', 'animate-heart');
@@ -872,10 +934,10 @@
         }
 
         function resetHeartUI() {
-            const btn = document.getElementById('heart-btn');
-            const icon = document.getElementById('heart-icon');
+            const btn   = document.getElementById('heart-btn');
+            const icon  = document.getElementById('heart-icon');
             const label = document.getElementById('heart-label');
-            
+
             btn.classList.remove('disabled-heart');
             icon.classList.add('grayscale', 'opacity-30');
             icon.classList.remove('heart-active', 'animate-heart');
