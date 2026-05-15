@@ -292,23 +292,22 @@
                 <p id="feedback-msg" class="text-rose-600 dark:text-rose-400 text-[12px] font-black mt-6 h-4 opacity-0 transition-opacity"> </p>
             </div>
         </section>
-        <!-- index.html의 ai-advice-section 부분 수정 -->
-<section id="ai-advice-section" class="mt-8 bg-white rounded-[40px] p-8 border-2 border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
-    <div class="text-center">
-        <!-- 07번 조합 적용: 🧐 Avocado & Inspection -->
-        <div class="inline-block p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-[28px] mb-4 shadow-inner">
-            <span class="text-3xl filter drop-shadow-sm">🧐🥑</span>
-        </div>
-        <h4 class="text-base font-black text-slate-950 dark:text-yellow-300 mb-4">AI 영양사 식단 분석</h4>
-        
-        <div id="ai-output" class="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-[24px] text-[15px] text-slate-800 dark:text-slate-100 font-medium leading-7 border border-dashed border-slate-300 dark:border-slate-600 mb-6 whitespace-pre-wrap break-words">오늘의 영양 섭취는 어떨까요?
+
+        <section id="ai-advice-section" class="mt-8 bg-white rounded-[40px] p-8 border-2 border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+            <div class="text-center">
+                <div class="inline-block p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-[28px] mb-4 shadow-inner">
+                    <span class="text-3xl filter drop-shadow-sm">🧐🥑</span>
+                </div>
+                <h4 class="text-base font-black text-slate-950 dark:text-yellow-300 mb-4">AI 영양사 식단 분석</h4>
+                
+                <div id="ai-output" class="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-[24px] text-[15px] text-slate-800 dark:text-slate-100 font-medium leading-7 border border-dashed border-slate-300 dark:border-slate-600 mb-6 whitespace-pre-wrap break-words">오늘의 영양 섭취는 어떨까요?
 아래 버튼을 눌러 조언을 받아보세요!</div>
 
-        <button onclick="askAI()" class="w-full bg-indigo-700 dark:bg-indigo-600 text-white px-6 py-4 rounded-2xl text-sm font-black shadow-lg hover:bg-indigo-800 active:scale-95 transition-all">
-            💡 AI에게 식단 조언 듣기
-        </button>
-    </div>
-</section>
+                <button onclick="askAI()" class="w-full bg-indigo-700 dark:bg-indigo-600 text-white px-6 py-4 rounded-2xl text-sm font-black shadow-lg hover:bg-indigo-800 active:scale-95 transition-all">
+                    💡 AI에게 식단 조언 듣기
+                </button>
+            </div>
+        </section>
 
         <section id="dev-contact-section" class="mt-12 mb-10 px-2 text-center">
             <div id="dev-contact-box" class="p-8 rounded-[40px] border border-dashed">
@@ -449,23 +448,16 @@
             else if (hm >= 1330 && hm <= 1830) rateKey = 'lunch'; 
             else if (hm >= 1840 && hm <= 2350) rateKey = 'dinner';
 
-            const targetDate = new Date(now);
-            targetDate.setDate(now.getDate() + targetDayOffset);
-            
-            const day = targetDate.getDay();
-            const isWeekend = day === 6 || day === 0;
-            const isHoliday = getHolidayName(targetDate) !== null;
-            const isRest = isWeekend || isHoliday;
-
-            let returnText = targetDayOffset === 1 ? "내일 다시 만나요!" : "잠시만 기다려주세요!";
             let greetingText = "맛있는 식사 하세요! 🍱";
             
-            if (isRest) {
-                returnText = (day === 6 || day === 0) ? "평일에 다시 만나요!" : "휴일이 끝나면 다시 만나요!";
+            // 파이썬 크롤러가 is_weekend=true를 줬다면 편안한 휴식 문구 노출
+            if (currentMenuData && currentMenuData.is_weekend) {
+                greetingText = "편안한 휴식 되세요! ✨";
+            } else if (getHolidayName(new Date()) !== null) {
                 greetingText = "편안한 휴식 되세요! ✨";
             }
 
-            return { mealKey, mealLabel, rateKey, isRest, isHolidayMsg: isHoliday, returnText, greetingText, targetDayOffset };
+            return { mealKey, mealLabel, rateKey, greetingText, targetDayOffset };
         }
 
         function updateHeaderUI(status) {
@@ -478,6 +470,13 @@
         function updateArrowButtons(targetDate) {
             const btnPrev = document.getElementById('btn-prev');
             const btnNext = document.getElementById('btn-next');
+
+            // 💡 주말이거나 식당이 쉬는 중일 때는 아예 날짜 이동 화살표를 잠금!
+            if (currentMenuData && currentMenuData.is_weekend) {
+                btnPrev.classList.add('arrow-disabled');
+                btnNext.classList.add('arrow-disabled');
+                return;
+            }
 
             if (weekMondayDate) {
                 const weekFridayDate = new Date(weekMondayDate);
@@ -496,7 +495,8 @@
                 const dayOfWeek = targetDate.getDay();
                 if (dayOfWeek === 1) btnPrev.classList.add('arrow-disabled');
                 else btnPrev.classList.remove('arrow-disabled');
-                if (dayOfWeek === 0) btnNext.classList.add('arrow-disabled');
+                // 기존 코드는 0(일요일)로 되어있었으나 프론트는 금요일(5)까지만 봐야하므로 수정됨
+                if (dayOfWeek === 5) btnNext.classList.add('arrow-disabled');
                 else btnNext.classList.remove('arrow-disabled');
             }
         }
@@ -520,32 +520,57 @@
             if (!currentMenuData) return;
 
             const dayNameKR = week[targetDate.getDay()];
-            const displayDateStr = targetDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
             const isWeekend = targetDate.getDay() === 6 || targetDate.getDay() === 0;
             const isHoliday = getHolidayName(targetDate) !== null;
-            const isRest = isWeekend || isHoliday;
+            
+            // 💡 [핵심] JSON 파일에서 알려주는 주말 여부(is_weekend)를 가장 강력한 기준으로 적용!
+            const isRest = currentMenuData.is_weekend || isWeekend || isHoliday;
+
+            const dateKey = targetDate.toISOString().split('T')[0];
+            const mealData = currentMenuData.mealsByDate?.[dateKey] || currentMenuData.meals?.[dayNameKR] || null;
+
+            // 💡 [핵심] "날짜는 다음 주인데, 식단은 이번 주" 문제 해결!
+            // 크롤링된 실제 날짜 텍스트("05.11(화)")가 있다면 그걸 쪼개서 날짜로 표기
+            let displayDateStr = targetDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+            if (mealData && mealData.date_text) {
+                const match = mealData.date_text.match(/(\d{1,2})\.(\d{1,2})/);
+                if (match) {
+                    displayDateStr = `${parseInt(match[1])}월 ${parseInt(match[2])}일`;
+                } else {
+                    displayDateStr = mealData.date_text; // 실패 시 텍스트 원본 노출
+                }
+            }
 
             document.getElementById('display-date-tag').innerText = displayDateStr;
             updateArrowButtons(targetDate);
             applySlideAnimation(direction);
             
             if (isRest) {
+                // 식당 쉬는 화면 활성화
                 document.getElementById('meal-content').classList.add('hidden');
                 document.getElementById('weekend-message').classList.remove('hidden');
                 document.getElementById('main-card').classList.add('rest-bg');
                 document.getElementById('display-day-tag').innerText = "REST DAY";
-                document.getElementById('rest-subtitle').innerText = isHoliday ? "공휴일에는 식당이 쉬어갑니다." : "주말에는 식당이 쉬어갑니다.";
-                document.getElementById('return-msg').innerText = (targetDate.getDay() === 6 || targetDate.getDay() === 0) ? "평일에 다시 만나요!" : "휴일이 끝나면 다시 만나요!";
+                
+                const subtitle = isHoliday && !isWeekend ? "공휴일에는 식당이 쉬어갑니다." : "주말에는 식당이 쉬어갑니다.";
+                document.getElementById('rest-subtitle').innerText = subtitle;
+                
+                // 일요일 저녁 18시 30분 직전 상황인지 체크해서 안내문 센스있게 변경
+                const isSundayEarly = now.getDay() === 0 && (now.getHours() * 100 + now.getMinutes()) < 1830;
+                if (isSundayEarly) {
+                    document.getElementById('return-msg').innerText = "오늘 저녁에 다음 주 식단이 업데이트됩니다!";
+                } else {
+                    document.getElementById('return-msg').innerText = "평일에 다시 만나요!";
+                }
                 document.getElementById('meal-disclaimer').classList.add('hidden');
             } else {
+                // 식단 정보 화면 활성화
                 document.getElementById('meal-content').classList.remove('hidden');
                 document.getElementById('weekend-message').classList.add('hidden');
                 document.getElementById('main-card').classList.remove('rest-bg');
                 document.getElementById('display-day-tag').innerText = dayNameKR + "요일 식단";
                 document.getElementById('meal-disclaimer').classList.remove('hidden');
 
-                const dateKey = targetDate.toISOString().split('T')[0];
-                const mealData = currentMenuData.mealsByDate?.[dateKey] || currentMenuData.meals?.[dayNameKR] || null;
                 const container = document.getElementById('meals-container');
                 container.innerHTML = '';
 
@@ -645,6 +670,8 @@
         }
 
         function changeDay(offset) {
+            // 주말엔 이동 금지
+            if (currentMenuData && currentMenuData.is_weekend) return;
             viewDate.setDate(viewDate.getDate() + offset);
             renderDayMenu(viewDate, offset);
         }
@@ -677,12 +704,14 @@
 
         async function loadData() {
             now = new Date();
-            const status = getMealStatus();
-            updateHeaderUI(status);
-
+            
             try {
                 const response = await fetch('data.json?v=' + Date.now());
                 currentMenuData = await response.json();
+
+                // 💡 [수정] 상단 인사말 및 시간별 상황 세팅
+                const status = getMealStatus();
+                updateHeaderUI(status);
 
                 if (currentMenuData.target_date) {
                     weekMondayDate = new Date(currentMenuData.target_date + 'T00:00:00');
@@ -696,39 +725,30 @@
                     document.getElementById('precipitation').innerText = rainText;
                 }
 
-                if (weekMondayDate) {
-                    const weekFridayDate = new Date(weekMondayDate);
-                    weekFridayDate.setDate(weekMondayDate.getDate() + 4);
-
-                    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                    const monMidnight   = new Date(weekMondayDate.getFullYear(), weekMondayDate.getMonth(), weekMondayDate.getDate());
-                    const friMidnight   = new Date(weekFridayDate.getFullYear(), weekFridayDate.getMonth(), weekFridayDate.getDate());
-                    const todayDayOfWeek = now.getDay();
-                    const isWeekendToday = todayDayOfWeek === 0 || todayDayOfWeek === 6;
-                    // target_date(월요일)가 오늘보다 미래면 다음주 데이터가 실제로 갱신된 것
-                    const isNextWeekDataReady = monMidnight > todayMidnight;
-
-                    if (isWeekendToday && !isNextWeekDataReady) {
-                        // 주말이고 아직 다음주 데이터 미갱신 → 오늘(주말)로 유지 → 휴식 화면
-                        viewDate = new Date(now);
-                    } else if (isWeekendToday && isNextWeekDataReady) {
-                        // 주말이고 다음주 데이터 갱신 완료 → 다음주 월요일 식단 표시
-                        viewDate = new Date(weekMondayDate);
-                    } else if (todayMidnight >= monMidnight && todayMidnight <= friMidnight) {
-                        // 평일이고 이번주 범위 안 → 오늘 기준 + targetDayOffset
-                        viewDate = new Date(now);
-                        viewDate.setDate(now.getDate() + status.targetDayOffset);
-                        const vd = new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
-                        if (vd < monMidnight) viewDate = new Date(weekMondayDate);
-                        if (vd > friMidnight) viewDate = new Date(weekFridayDate);
-                    } else {
-                        // 범위 밖 폴백
-                        viewDate = new Date(weekMondayDate);
+                // 💡 [수정] 파이썬이 알려준 주말 여부 최우선 적용
+                if (currentMenuData.is_weekend) {
+                    // 주말 모드라면 강제로 viewDate를 토요일 위치로 둬서 주말 화면 활성화
+                    viewDate = new Date(now);
+                    if (viewDate.getDay() !== 0 && viewDate.getDay() !== 6) {
+                        viewDate.setDate(viewDate.getDate() + (6 - viewDate.getDay())); 
                     }
                 } else {
-                    // target_date 없으면 기존 방식 폴백
+                    // 평일 또는 일요일 18:30 이후(다음 주)
                     viewDate = new Date(now);
                     viewDate.setDate(now.getDate() + status.targetDayOffset);
+
+                    // 평일 캘린더 바운더리 계산
+                    if (weekMondayDate) {
+                        const weekFridayDate = new Date(weekMondayDate);
+                        weekFridayDate.setDate(weekMondayDate.getDate() + 4);
+
+                        const vd = new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
+                        const monMidnight   = new Date(weekMondayDate.getFullYear(), weekMondayDate.getMonth(), weekMondayDate.getDate());
+                        const friMidnight   = new Date(weekFridayDate.getFullYear(), weekFridayDate.getMonth(), weekFridayDate.getDate());
+                        
+                        if (vd < monMidnight) viewDate = new Date(weekMondayDate);
+                        if (vd > friMidnight) viewDate = new Date(weekFridayDate);
+                    }
                 }
 
                 renderDayMenu(viewDate, 1);
@@ -822,7 +842,6 @@
         }
         if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            // 파일명을 service-worker.js로 정확히 수정했습니다.
             navigator.serviceWorker.register('./service-worker.js').then(reg => {
                 console.log('Service Worker registered.');
             }).catch(err => {
