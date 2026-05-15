@@ -17,16 +17,15 @@ def get_kst_now():
 def get_target_date():
     now = get_kst_now()
     weekday = now.weekday()  # 월=0, 화=1, ..., 토=5, 일=6
-    hm = now.hour * 100 + now.minute
-    
-    # 금요일 18:30 이후, 토요일, 일요일 → 다음주 월요일로
-    if (weekday == 4 and hm >= 1830) or weekday >= 5:
-        days_to_monday = (7 - weekday) % 7
-        if days_to_monday == 0:
-            days_to_monday = 7
-        target = now + timedelta(days=days_to_monday)
+
+    # 일요일에만 다음 주 월요일 식단을 요청
+    # 금요일 저녁에 다음 주로 넘기면 학교 페이지가 아직 이번 주 식단을 반환할 때
+    # "이번 주 식단 + 다음 주 날짜" 문제가 생김
+    if weekday == 6:
+        target = now + timedelta(days=1)
     else:
         target = now
+
     return target.strftime("%Y-%m-%d")
 
 def get_week_monday_date_str(date_obj):
@@ -54,11 +53,9 @@ def parse_date_text_to_isodate(date_text, reference_year):
         now = get_kst_now()
         year = reference_year
 
-        # 12월에 다음 해 1월 식단이 표시되는 경우
         if now.month == 12 and month == 1:
             year = reference_year + 1
 
-        # 1월에 직전 12월 식단이 표시되는 경우
         if now.month == 1 and month == 12:
             year = reference_year - 1
 
@@ -73,13 +70,6 @@ def parse_date_text_to_isodate(date_text, reference_year):
 def parse_weekday_from_header(header):
     """
     학교 식단표의 날짜 헤더에서 실제 요일만 추출합니다.
-    예시:
-    "05.11(월)" → "월"
-    "05.11(월요일)" → "월"
-    "05월 11일 월요일" → "월"
-
-    기존처럼 if "월" in header 방식으로 검사하면
-    "05월"의 월 때문에 월요일로 잘못 인식될 수 있어 따로 분리했습니다.
     """
     match = re.search(r'[\(（]\s*([월화수목금])(?:요일)?\s*[\)）]', header)
     if match:
@@ -88,6 +78,9 @@ def parse_weekday_from_header(header):
     match = re.search(r'([월화수목금])요일', header)
     if match:
         return match.group(1)
+
+    if header in ["월요일", "화요일", "수요일", "목요일", "금요일"]:
+        return header[0]
 
     return None
 
@@ -116,7 +109,6 @@ def is_same_meal_content(first_meals, second_meals):
 # =========================
 
 def get_weather(existing_weather):
-    # 기본적으로 기존 데이터를 유지하도록 설정
     final_weather = existing_weather.copy()
 
     try:
@@ -128,7 +120,6 @@ def get_weather(existing_weather):
         base_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
         now = get_kst_now()
 
-        # ✅ 안정적인 base_time 계산
         base_times = [2, 5, 8, 11, 14, 17, 20, 23]
         base_time_hour = None
 
@@ -166,8 +157,6 @@ def get_weather(existing_weather):
             return final_weather
 
         items = data['response']['body']['items']['item']
-        
-        # 현재 시간과 가장 가까운 예보 찾기
         target_date = now.strftime("%Y%m%d")
         target_time = f"{now.hour:02d}00"
 
@@ -176,7 +165,6 @@ def get_weather(existing_weather):
             item_date = item.get('fcstDate')
             item_time = item.get('fcstTime')
 
-            # 현재 시간 이후의 데이터 중 첫 번째 TMP와 POP를 가져옴
             if item_date > target_date or (item_date == target_date and item_time >= target_time):
                 if item.get('category') == 'TMP' and temp is None:
                     temp = item.get('fcstValue')
@@ -207,11 +195,9 @@ def estimate_nutrition(menu_text):
     if not menu_text or "식단 없음" in menu_text:
         return {"carbs": 0, "protein": 0, "fat": 0, "sugar": 0, "calories": 0}
 
-    # 메뉴 텍스트를 기반으로 고정된 랜덤 시드 생성 (메뉴가 같으면 결과도 같음)
     seed_value = int(hashlib.md5(menu_text.encode()).hexdigest(), 16) % 10000
     random.seed(seed_value)
 
-    # 1. 기초 수치 설정 (채소류 및 밑반찬 기본 베이스)
     base = {
         "carbs": 45 + random.randint(-5, 5),
         "protein": 15 + random.randint(-3, 3),
@@ -219,39 +205,32 @@ def estimate_nutrition(menu_text):
         "sugar": 3 + random.randint(-1, 2)
     }
 
-    # 2. 주식 (탄수화물) 감지
     if any(k in menu_text for k in ["밥", "죽", "국수", "라면", "우동", "스파게티", "파스타", "떡", "빵"]):
         base["carbs"] += random.randint(30, 45)
         if any(k in menu_text for k in ["볶음밥", "비빔밥"]): 
             base["fat"] += 5
             base["sugar"] += 3
 
-    # 3. 메인 요리 (단백질/지방) 감지
     if any(k in menu_text for k in ["고기", "닭", "돈육", "우육", "제육", "생선", "계란", "카츠", "가스", "함박", "스테이크"]):
         base["protein"] += random.randint(18, 28)
         base["fat"] += random.randint(10, 18)
 
-    # 4. 튀김류 (지방/탄수화물 폭증)
     if any(k in menu_text for k in ["튀김", "가스", "전", "부침", "치킨", "너겟", "탕수"]):
         base["fat"] += random.randint(12, 20)
         base["carbs"] += random.randint(5, 12)
 
-    # 5. 소스 및 양념류 (숨겨진 당류 캐치)
     if any(k in menu_text for k in ["양념", "탕수", "강정", "데리야끼", "소스", "조림", "볶음", "무침"]):
         base["sugar"] += random.randint(6, 12)
         base["carbs"] += random.randint(2, 5)
 
-    # 6. 당류 특화 키워드 (후식/음료)
     if any(k in menu_text for k in ["요거트", "요구르트", "주스", "음료", "푸딩", "에이드", "쿨피스", "식혜", "수정과"]):
         base["sugar"] += random.randint(15, 25)
         base["carbs"] += random.randint(8, 15)
 
-    # 7. 과일류 감지
     if any(k in menu_text for k in ["과일", "바나나", "사과", "포도", "오렌지", "수박", "참외", "멜론", "방울토마토"]):
         base["sugar"] += random.randint(10, 18)
         base["carbs"] += random.randint(5, 10)
 
-    # 8. 최종 칼로리 계산 (탄4, 단4, 지9 공식 적용 + 국물/나트륨 오차 보정값)
     base["calories"] = int((base["carbs"] * 4) + (base["protein"] * 4) + (base["fat"] * 9) + random.randint(80, 120))
     
     random.seed(None)
@@ -314,7 +293,6 @@ def parse_meals_from_soup(soup, now):
 # =========================
 
 def main():
-    # 1. 기존 데이터 읽기 (파일이 없으면 기본값 생성)
     data_path = "data.json"
     if os.path.exists(data_path):
         with open(data_path, "r", encoding="utf-8") as f:
@@ -325,7 +303,6 @@ def main():
     else:
         final_data = {"weather": {}, "meals": {}, "mealsByDate": {}}
 
-    # 2. 식단 크롤링 (특정 시간에만 실행)
     now = get_kst_now()
     if now.hour == 6 or now.hour == 18:
         target_date = get_target_date()
@@ -354,10 +331,10 @@ def main():
 
                     if current_found_any and is_same_meal_content(current_meals, meal_result):
                         final_target_date = current_week_monday_str
-                        print(f"⚠️ 다음 주 요청 결과가 현재 주 식단과 같아 현재 주로 설정: {final_target_date}")
+                        print(f"⚠️ 요청 결과가 현재 주 식단과 같아 현재 주로 설정: {final_target_date}")
                     else:
                         final_target_date = requested_week_monday_str
-                        print(f"📅 다음 주 식단이 갱신된 것으로 판단: {final_target_date}")
+                        print(f"📅 요청 주 식단이 갱신된 것으로 판단: {final_target_date}")
                 else:
                     final_target_date = current_week_monday_str
 
@@ -372,10 +349,8 @@ def main():
     else:
         print(f"⏭️ 식단 크롤링 건너뜀 (현재 {now.hour}시는 크롤링 시간이 아닙니다. 기존 식단 유지)")
 
-    # 3. 날씨 업데이트 (실패해도 기존 날씨 유지)
     final_data["weather"] = get_weather(final_data.get("weather", {"temp": "N/A", "rain": "N/A"}))
 
-    # 4. 최종 데이터 저장
     with open(data_path, "w", encoding="utf-8") as f:
         json.dump(final_data, f, ensure_ascii=False, indent=2)
 
