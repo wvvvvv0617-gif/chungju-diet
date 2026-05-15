@@ -259,6 +259,7 @@ def main():
             meals_by_date = {}
             found_any = False
             first_monday_date = None  # ✅ 크롤링된 월요일 행의 실제 날짜
+            weekday_offsets = {"월": 0, "화": 1, "수": 2, "목": 3, "금": 4}
 
             for row in soup.find_all("tr"):
                 cols = row.find_all(["td", "th"])
@@ -297,10 +298,13 @@ def main():
                 if parsed_date:
                     meals_by_date[parsed_date] = day_data
 
-                # 월요일 행에서 실제 날짜를 파싱해 target_date로 사용
-                if weekday_kr == "월" and first_monday_date is None and parsed_date:
-                    first_monday_date = parsed_date
-                    print(f"📅 크롤링된 실제 월요일 날짜: {first_monday_date} (헤더: {header})")
+                    # 월요일 행이 없거나 월요일 날짜를 직접 못 잡아도,
+                    # 화~금 날짜에서 해당 주 월요일을 역산해서 target_date로 사용
+                    if first_monday_date is None:
+                        parsed_datetime = datetime.strptime(parsed_date, "%Y-%m-%d")
+                        monday_datetime = parsed_datetime - timedelta(days=weekday_offsets[weekday_kr])
+                        first_monday_date = monday_datetime.strftime("%Y-%m-%d")
+                        print(f"📅 크롤링된 실제 주 월요일 날짜: {first_monday_date} (헤더: {header})")
 
                 found_any = True
             
@@ -308,9 +312,14 @@ def main():
                 final_data["meals"] = meal_result
                 final_data["mealsByDate"] = meals_by_date
 
-                # 실제 파싱된 날짜로 target_date 저장 (파싱 실패 시 get_target_date() 결과로 폴백)
-                final_data["target_date"] = first_monday_date if first_monday_date else target_date
-                print(f"🍱 식단 데이터 갱신 성공 / target_date = {final_data['target_date']}")
+                # 실제 식단표에서 날짜를 읽은 경우에만 target_date를 변경
+                # 날짜를 못 읽었는데 get_target_date()를 저장하면,
+                # 이번 주 식단에 다음 주 날짜가 붙는 문제가 생길 수 있음
+                if first_monday_date:
+                    final_data["target_date"] = first_monday_date
+                    print(f"🍱 식단 데이터 갱신 성공 / target_date = {final_data['target_date']}")
+                else:
+                    print("⚠️ 식단 날짜를 찾지 못해 target_date는 기존 값을 유지합니다.")
 
         except Exception as e:
             print(f"❌ 식단 크롤링 실패 (기존 데이터 보존): {e}")
