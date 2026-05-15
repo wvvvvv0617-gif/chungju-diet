@@ -29,6 +29,28 @@ def get_target_date():
         target = now
     return target.strftime("%Y-%m-%d")
 
+def get_monday_date_str(date_str):
+    target = datetime.strptime(date_str, "%Y-%m-%d")
+    monday = target - timedelta(days=target.weekday())
+    return monday.strftime("%Y-%m-%d")
+
+def is_same_meal_content(old_meals, new_meals):
+    if not old_meals or not new_meals:
+        return False
+
+    for day in ["월", "화", "수", "목", "금"]:
+        old_day = old_meals.get(day, {})
+        new_day = new_meals.get(day, {})
+
+        for meal in ["breakfast", "lunch", "dinner"]:
+            old_text = old_day.get(meal, "").strip()
+            new_text = new_day.get(meal, "").strip()
+
+            if old_text != new_text:
+                return False
+
+    return True
+
 def parse_date_text_to_isodate(date_text, reference_year):
     """
     학교 식단 페이지 헤더의 날짜 텍스트를 ISO 날짜 문자열로 변환합니다.
@@ -309,17 +331,27 @@ def main():
                 found_any = True
             
             if found_any:
+                old_meals = final_data.get("meals", {})
+                old_target_date = final_data.get("target_date")
+
                 final_data["meals"] = meal_result
                 final_data["mealsByDate"] = meals_by_date
 
-                # 실제 식단표에서 날짜를 읽은 경우에만 target_date를 변경
-                # 날짜를 못 읽었는데 get_target_date()를 저장하면,
-                # 이번 주 식단에 다음 주 날짜가 붙는 문제가 생길 수 있음
+                # 1순위: 학교 식단표에서 실제 날짜를 읽었으면 그 주 월요일 사용
                 if first_monday_date:
                     final_data["target_date"] = first_monday_date
-                    print(f"🍱 식단 데이터 갱신 성공 / target_date = {final_data['target_date']}")
+
+                # 2순위: 날짜가 없고, 기존 식단과 새 식단이 같으면 기존 날짜 유지
+                elif old_target_date and is_same_meal_content(old_meals, meal_result):
+                    final_data["target_date"] = old_target_date
+                    print(f"⚠️ 식단 날짜가 없어 기존 target_date 유지: {final_data['target_date']}")
+
+                # 3순위: 날짜가 없지만 식단 내용이 바뀌었으면 요청한 주의 월요일로 갱신
                 else:
-                    print("⚠️ 식단 날짜를 찾지 못해 target_date는 기존 값을 유지합니다.")
+                    final_data["target_date"] = get_monday_date_str(target_date)
+                    print(f"⚠️ 식단 날짜가 없어 요청 주 월요일로 설정: {final_data['target_date']}")
+
+                print(f"🍱 식단 데이터 갱신 성공 / target_date = {final_data['target_date']}")
 
         except Exception as e:
             print(f"❌ 식단 크롤링 실패 (기존 데이터 보존): {e}")
