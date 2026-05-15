@@ -349,6 +349,19 @@
         const mealLabels = { 'breakfast': 'BREAKFAST 🍳', 'lunch': 'LUNCH 🍱', 'dinner': 'DINNER 🌙' };
         let currentMenuData = null;
 
+        // ─────────────────────────────────────────────────────────────────
+        // 💡 [핵심 헬퍼] 현재 시각 기준으로 "일요일 REST 상태"인지 판별
+        //    일요일 18:30 이전 → true (REST, 다음 주 식단 아직 없음)
+        //    일요일 18:30 이후 → false (다음 주 식단 표시)
+        //    토요일 포함 나머지 요일 → false
+        // ─────────────────────────────────────────────────────────────────
+        function isSundayRestMode() {
+            const d = new Date();
+            const dow = d.getDay();          // 0 = 일요일
+            const hm  = d.getHours() * 100 + d.getMinutes();
+            return dow === 0 && hm < 1830;
+        }
+
         function getFixedRandom(value, mealKey, menuText, range = 0.1) {
             const dateStr = now.toISOString().split('T')[0];
             const seedStr = dateStr + mealKey + menuText + value;
@@ -448,10 +461,14 @@
             else if (hm >= 1330 && hm <= 1830) rateKey = 'lunch'; 
             else if (hm >= 1840 && hm <= 2350) rateKey = 'dinner';
 
+            // ─────────────────────────────────────────────────────────────
+            // 💡 [수정] 인사말 결정 기준
+            //    - 일요일 18:30 이전(REST 모드) → 편안한 휴식
+            //    - 공휴일 → 편안한 휴식
+            //    - 그 외(토요일 포함 평일) → 맛있는 식사
+            // ─────────────────────────────────────────────────────────────
             let greetingText = "맛있는 식사 하세요! 🍱";
-            
-            // 파이썬 크롤러가 is_weekend=true를 줬다면 편안한 휴식 문구 노출
-            if (currentMenuData && currentMenuData.is_weekend) {
+            if (isSundayRestMode()) {
                 greetingText = "편안한 휴식 되세요! ✨";
             } else if (getHolidayName(new Date()) !== null) {
                 greetingText = "편안한 휴식 되세요! ✨";
@@ -471,8 +488,12 @@
             const btnPrev = document.getElementById('btn-prev');
             const btnNext = document.getElementById('btn-next');
 
-            // 💡 주말이거나 식당이 쉬는 중일 때는 아예 날짜 이동 화살표를 잠금!
-            if (currentMenuData && currentMenuData.is_weekend) {
+            // ─────────────────────────────────────────────────────────────
+            // 💡 [수정] 화살표 잠금 조건
+            //    - 일요일 18:30 이전(REST 모드)에만 양방향 잠금
+            //    - 토요일 포함 나머지 요일은 주간 범위 내에서 이동 허용
+            // ─────────────────────────────────────────────────────────────
+            if (isSundayRestMode()) {
                 btnPrev.classList.add('arrow-disabled');
                 btnNext.classList.add('arrow-disabled');
                 return;
@@ -492,10 +513,10 @@
                 if (t >= fri) btnNext.classList.add('arrow-disabled');
                 else btnNext.classList.remove('arrow-disabled');
             } else {
+                // weekMondayDate 없을 때 fallback: 월요일이면 이전 잠금, 금요일이면 다음 잠금
                 const dayOfWeek = targetDate.getDay();
                 if (dayOfWeek === 1) btnPrev.classList.add('arrow-disabled');
                 else btnPrev.classList.remove('arrow-disabled');
-                // 기존 코드는 0(일요일)로 되어있었으나 프론트는 금요일(5)까지만 봐야하므로 수정됨
                 if (dayOfWeek === 5) btnNext.classList.add('arrow-disabled');
                 else btnNext.classList.remove('arrow-disabled');
             }
@@ -520,16 +541,24 @@
             if (!currentMenuData) return;
 
             const dayNameKR = week[targetDate.getDay()];
-            const isWeekend = targetDate.getDay() === 6 || targetDate.getDay() === 0;
-            const isHoliday = getHolidayName(targetDate) !== null;
-            
-            // 💡 [핵심] JSON 파일에서 알려주는 주말 여부(is_weekend)를 가장 강력한 기준으로 적용!
-            const isRest = currentMenuData.is_weekend || isWeekend || isHoliday;
+            const targetDow = targetDate.getDay();
+
+            // ─────────────────────────────────────────────────────────────
+            // 💡 [수정] REST 화면 표시 조건
+            //    - 표시 중인 날짜가 일요일(0)인 경우
+            //    - 또는 공휴일인 경우
+            //    ⚠️  토요일(6)은 이번 주 식단 탐색 가능하므로 REST 제외
+            //    ⚠️  is_weekend(파이썬 크롤러 플래그)는 일요일 REST 모드
+            //        판별에만 사용하고, 토요일에는 적용하지 않음
+            // ─────────────────────────────────────────────────────────────
+            const isTargetSunday  = targetDow === 0;
+            const isHoliday       = getHolidayName(targetDate) !== null;
+            // 크롤러 is_weekend 플래그는 현재 시각이 일요일 REST 상태일 때만 신뢰
+            const isRest = isTargetSunday || isHoliday || (isSundayRestMode() && currentMenuData.is_weekend);
 
             const dateKey = targetDate.toISOString().split('T')[0];
             const mealData = currentMenuData.mealsByDate?.[dateKey] || currentMenuData.meals?.[dayNameKR] || null;
 
-            // 💡 [핵심] "날짜는 다음 주인데, 식단은 이번 주" 문제 해결!
             // 크롤링된 실제 날짜 텍스트("05.11(화)")가 있다면 그걸 쪼개서 날짜로 표기
             let displayDateStr = targetDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
             if (mealData && mealData.date_text) {
@@ -537,7 +566,7 @@
                 if (match) {
                     displayDateStr = `${parseInt(match[1])}월 ${parseInt(match[2])}일`;
                 } else {
-                    displayDateStr = mealData.date_text; // 실패 시 텍스트 원본 노출
+                    displayDateStr = mealData.date_text;
                 }
             }
 
@@ -552,13 +581,14 @@
                 document.getElementById('main-card').classList.add('rest-bg');
                 document.getElementById('display-day-tag').innerText = "REST DAY";
                 
-                const subtitle = isHoliday && !isWeekend ? "공휴일에는 식당이 쉬어갑니다." : "주말에는 식당이 쉬어갑니다.";
+                const subtitle = isHoliday && !isTargetSunday
+                    ? "공휴일에는 식당이 쉬어갑니다."
+                    : "일요일에는 식당이 쉬어갑니다.";
                 document.getElementById('rest-subtitle').innerText = subtitle;
                 
-                // 일요일 저녁 18시 30분 직전 상황인지 체크해서 안내문 센스있게 변경
-                const isSundayEarly = now.getDay() === 0 && (now.getHours() * 100 + now.getMinutes()) < 1830;
-                if (isSundayEarly) {
-                    document.getElementById('return-msg').innerText = "오늘 저녁에 다음 주 식단이 업데이트됩니다!";
+                // 일요일 18:30 이전이면 "오늘 저녁에 다음 주 식단 업데이트" 안내
+                if (isSundayRestMode()) {
+                    document.getElementById('return-msg').innerText = "오늘 저녁 6시 30분 이후 다음 주 식단이 업데이트됩니다!";
                 } else {
                     document.getElementById('return-msg').innerText = "평일에 다시 만나요!";
                 }
@@ -670,8 +700,11 @@
         }
 
         function changeDay(offset) {
-            // 주말엔 이동 금지
-            if (currentMenuData && currentMenuData.is_weekend) return;
+            // ─────────────────────────────────────────────────────────────
+            // 💡 [수정] 날짜 이동 제한: 일요일 REST 모드일 때만 이동 금지
+            //    토요일은 이동 허용
+            // ─────────────────────────────────────────────────────────────
+            if (isSundayRestMode()) return;
             viewDate.setDate(viewDate.getDate() + offset);
             renderDayMenu(viewDate, offset);
         }
@@ -682,7 +715,13 @@
             const todayKeyKR = week[now.getDay()];
             const todayData = currentMenuData.meals ? currentMenuData.meals[todayKeyKR] : null;
             const rateMenuRaw = (status.rateKey && todayData) ? todayData[status.rateKey] : null;
-            const isRestToday = (now.getDay() === 6 || now.getDay() === 0 || getHolidayName(now) !== null);
+            // ─────────────────────────────────────────────────────────────
+            // 💡 [수정] 평가 섹션 숨김 조건
+            //    - 일요일 REST 모드이거나 공휴일일 때만 숨김
+            //    - 토요일은 숨기지 않음 (식당 운영하지 않지만 평가 섹션은 
+            //      어차피 rateMenuRaw 없으면 자동 숨김 처리됨)
+            // ─────────────────────────────────────────────────────────────
+            const isRestToday = isSundayRestMode() || getHolidayName(now) !== null;
             
             const isInvalidRateMenu = !rateMenuRaw || NO_MEAL_KEYWORDS.some(keyword => rateMenuRaw.includes(keyword));
 
@@ -709,7 +748,6 @@
                 const response = await fetch('data.json?v=' + Date.now());
                 currentMenuData = await response.json();
 
-                // 💡 [수정] 상단 인사말 및 시간별 상황 세팅
                 const status = getMealStatus();
                 updateHeaderUI(status);
 
@@ -725,26 +763,34 @@
                     document.getElementById('precipitation').innerText = rainText;
                 }
 
-                // 💡 [수정] 파이썬이 알려준 주말 여부 최우선 적용
-                if (currentMenuData.is_weekend) {
-                    // 주말 모드라면 강제로 viewDate를 토요일 위치로 둬서 주말 화면 활성화
+                // ─────────────────────────────────────────────────────────
+                // 💡 [수정] viewDate 초기 설정
+                //
+                //  ┌─────────────────────────────────────────────────────┐
+                //  │  상황              │ viewDate 초기값                 │
+                //  ├────────────────────┼─────────────────────────────────┤
+                //  │ 일요일 18:30 이전  │ 오늘(일요일) → REST 화면       │
+                //  │ 일요일 18:30 이후  │ 내일(월요일) → 다음주 식단     │
+                //  │ 토요일             │ 오늘(토요일) → 이번주 식단     │
+                //  │ 평일(월~금)        │ 오늘 + targetDayOffset          │
+                //  └────────────────────┴─────────────────────────────────┘
+                // ─────────────────────────────────────────────────────────
+                if (isSundayRestMode()) {
+                    // 일요일 REST: viewDate를 오늘(일요일)로 고정 → REST 화면 표시
                     viewDate = new Date(now);
-                    if (viewDate.getDay() !== 0 && viewDate.getDay() !== 6) {
-                        viewDate.setDate(viewDate.getDate() + (6 - viewDate.getDay())); 
-                    }
                 } else {
-                    // 평일 또는 일요일 18:30 이후(다음 주)
+                    // 평일 / 토요일 / 일요일 18:30 이후
                     viewDate = new Date(now);
                     viewDate.setDate(now.getDate() + status.targetDayOffset);
 
-                    // 평일 캘린더 바운더리 계산
+                    // 주간 캘린더 바운더리 클램핑 (weekMondayDate 있을 때만)
                     if (weekMondayDate) {
                         const weekFridayDate = new Date(weekMondayDate);
                         weekFridayDate.setDate(weekMondayDate.getDate() + 4);
 
                         const vd = new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
-                        const monMidnight   = new Date(weekMondayDate.getFullYear(), weekMondayDate.getMonth(), weekMondayDate.getDate());
-                        const friMidnight   = new Date(weekFridayDate.getFullYear(), weekFridayDate.getMonth(), weekFridayDate.getDate());
+                        const monMidnight = new Date(weekMondayDate.getFullYear(), weekMondayDate.getMonth(), weekMondayDate.getDate());
+                        const friMidnight = new Date(weekFridayDate.getFullYear(), weekFridayDate.getMonth(), weekFridayDate.getDate());
                         
                         if (vd < monMidnight) viewDate = new Date(weekMondayDate);
                         if (vd > friMidnight) viewDate = new Date(weekFridayDate);
@@ -840,23 +886,24 @@
                 ratingTitleEl.innerHTML = `오늘 드신 <span class="text-rose-600">${mealNameKR[getMealStatus().rateKey] || '식사'}</span>는 어떠셨나요?`;
             }
         }
+
         if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./service-worker.js').then(reg => {
-                console.log('Service Worker registered.');
-            }).catch(err => {
-                console.log('Service Worker registration failed: ', err);
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js').then(reg => {
+                    console.log('Service Worker registered.');
+                }).catch(err => {
+                    console.log('Service Worker registration failed: ', err);
+                });
             });
-        });
-    }
-
-    document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") {
-            loadData();
         }
-    });
 
-    loadData();
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                loadData();
+            }
+        });
+
+        loadData();
     </script>
 
     <script src="app.js"></script>
