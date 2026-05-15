@@ -544,7 +544,8 @@
                 document.getElementById('display-day-tag').innerText = dayNameKR + "요일 식단";
                 document.getElementById('meal-disclaimer').classList.remove('hidden');
 
-                const mealData = currentMenuData.meals ? currentMenuData.meals[dayNameKR] : null;
+                const dateKey = targetDate.toISOString().split('T')[0];
+                const mealData = currentMenuData.mealsByDate?.[dateKey] || currentMenuData.meals?.[dayNameKR] || null;
                 const container = document.getElementById('meals-container');
                 container.innerHTML = '';
 
