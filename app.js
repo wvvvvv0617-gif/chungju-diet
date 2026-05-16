@@ -64,13 +64,12 @@ async function askAI() {
     if (!outputDiv) return;
 
     let currentMeal = "";
-    let allMenusArray = []; // 이모지 표시를 위해 메뉴들을 배열로 저장
-
+    
+    // [수정] 식단 데이터 수집 로직 개선
     try {
         const res = await fetch('data.json?v=' + Date.now());
         const menuData = await res.json();
 
-        // 1. 현재 화면에 표시된 요일 추출 (UI 텍스트 기반)
         const pageText = document.body.innerText;
         let targetDay = "";
         if (pageText.includes("월요일")) targetDay = "월";
@@ -79,77 +78,73 @@ async function askAI() {
         else if (pageText.includes("목요일")) targetDay = "목";
         else if (pageText.includes("금요일")) targetDay = "금";
 
-        // 2. [수정] 현재 선택된 요일의 데이터를 우선적으로 가져오도록 변경
-        // 기존 코드는 오늘 날짜(Date)를 먼저 찾아버려서 다른 날 분석이 안 될 수 있음
+        // 화면에 날짜 텍스트가 있다면 (예: 2026-05-11) 해당 날짜 데이터를 먼저 찾음
+        // 여기서는 요일 기반으로 가져오는 로직을 유지하되, 데이터가 있는지 엄격히 체크
         const mealData = menuData.meals ? menuData.meals[targetDay] : null;
 
         if (mealData) {
-            allMenusArray = [
-                ...(mealData.breakfast || "").split(','),
-                ...(mealData.lunch || "").split(','),
-                ...(mealData.dinner || "").split(',')
-            ].map(m => m.trim()).filter(m => m.length > 0 && !m.includes("식단 없음"));
-
-            currentMeal = allMenusArray.join(', ');
+            const menus = [mealData.breakfast, mealData.lunch, mealData.dinner]
+                .filter(m => m && m.length > 2 && !m.includes("식단 없음"));
+            currentMeal = menus.join(', ');
         }
     } catch (e) {
         console.error("식단 데이터 로드 실패:", e);
     }
 
-    // 3. 식단 정보 체크
     if (!currentMeal || currentMeal.length < 3) {
-        outputDiv.innerHTML = "❌ 분석할 식단 정보가 없습니다. (요일을 확인해주세요)";
+        outputDiv.innerHTML = "❌ 분석할 식단 정보가 없습니다. 요일을 확인해주세요.";
         return;
     }
 
-    outputDiv.innerHTML = "✨ AI 영양사가 식단을 분석하고 알레르기 정보를 확인 중입니다...";
+    outputDiv.innerHTML = "✨ AI 영양사가 식단을 분석 중입니다...";
 
     try {
-        const response = await fetch('https://gemini-proxy.wvvvvv0617.workers.dev', {
+        // [주의] URL 끝에 /를 붙여보거나 대시보드 주소와 대조하세요
+        const response = await fetch('https://gemini-proxy.wvvvvv0617.workers.dev/', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{
-                    parts: [{
-                        text: `오늘의 전체 식단 리스트야: ${currentMeal}. 
-                        각 메뉴별 알레르기 성분을 이모지로 분류하고, 전체적인 영양 조언을 해줘.`
-                    }]
+                    parts: [{ text: `식단: ${currentMeal}` }]
                 }]
             })
         });
 
+        if (!response.ok) throw new Error(`서버 응답 오류 (${response.status})`);
+
         const data = await response.json();
-        // Worker에서 설정한 JSON 응답 파싱
-        const aiResponse = JSON.parse(data.candidates[0].content.parts[0].text);
 
-        // 4. [추가] 메뉴 옆에 알레르기 이모지 표시 로직
-        if (aiResponse.allergy_map) {
-            // 화면에 있는 모든 메뉴 텍스트 요소들을 찾음 (보라색 점 옆의 글자들)
-            // HTML 구조에 따라 'li' 또는 'span' 등 적절한 선택자로 수정이 필요할 수 있습니다.
-            const menuElements = document.querySelectorAll('.menu-item span, li'); 
-            
-            menuElements.forEach(el => {
-                const menuName = el.innerText.trim();
-                // Gemini가 준 allergy_map에 해당 메뉴명이 있으면 이모지 추가
-                if (aiResponse.allergy_map[menuName]) {
-                    const emojiSpan = document.createElement('span');
-                    emojiSpan.style.marginLeft = "8px";
-                    emojiSpan.innerText = aiResponse.allergy_map[menuName];
-                    el.appendChild(emojiSpan);
-                }
-            });
-        }
+        // [방어 코드] 데이터 구조가 있는지 확인 후 파싱
+        if (data && data.candidates && data.candidates[0]) {
+            const rawText = data.candidates[0].content.parts[0].text;
+            // AI가 간혹 ```json ... ``` 형태로 줄 때를 대비해 정규식으로 순수 JSON만 추출
+            const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+            const aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
 
-        // 5. 영양 조언 출력
-        if (aiResponse.summary) {
+            // 1. 알레르기 이모지 표시 (선택자 정밀화)
+            if (aiResponse.allergy_map) {
+                // 메뉴 리스트 내의 글자들만 타겟팅 (HTML 구조에 맞춰 .menu-item-text 등으로 수정 필요)
+                const menuItems = document.querySelectorAll('.menu-item span, .menu-list li'); 
+                menuItems.forEach(el => {
+                    const menuName = el.innerText.trim();
+                    if (aiResponse.allergy_map[menuName]) {
+                        // 중복 방지
+                        if (!el.innerHTML.includes('allergy-icon')) {
+                            el.innerHTML += ` <span class="allergy-icon" style="margin-left:5px;">${aiResponse.allergy_map[menuName]}</span>`;
+                        }
+                    }
+                });
+            }
+
+            // 2. 조언 출력
             outputDiv.innerHTML = aiResponse.summary.replace(/\n/g, '<br>');
             outputDiv.style.textAlign = 'left';
         } else {
-            outputDiv.innerHTML = "❌ 분석 결과를 가져오지 못했습니다.";
+            throw new Error("잘못된 AI 응답 구조");
         }
 
     } catch (error) {
-        console.error("연결 오류:", error);
-        outputDiv.innerHTML = "❌ 분석 중 오류가 발생했습니다. (Worker 설정을 확인하세요)";
+        console.error("분석 에러:", error);
+        outputDiv.innerHTML = `❌ 오류 발생: ${error.message}<br>Worker 주소와 설정을 확인하세요.`;
     }
 }
