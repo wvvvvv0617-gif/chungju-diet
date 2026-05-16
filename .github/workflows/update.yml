@@ -37,5 +37,5 @@ jobs:
         git config user.email "github-actions@github.com"
         git add data.json app.js
         # 변경 사항이 없을 경우 에러 없이 통과
-        git commit -m "auto update: $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "no changes"
+        git diff --cached --quiet || git commit -m "auto update: $(date -u +'%Y-%m-%d %H:%M:%S')"
         git push
