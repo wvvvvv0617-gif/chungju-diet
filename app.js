@@ -7,7 +7,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// [2] 기상청 실시간 날씨 (기존 로직 유지)
+// [2] 기상청 실시간 날씨 (기존 유지)
 const WEATHER_API_KEY = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae";
 const NX = 76; 
 const NY = 114;
@@ -76,13 +76,11 @@ async function askAI() {
             const jsonMatch = rawText.match(/\{[\s\S]*\}/);
             const aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
 
-            // 알레르기 표시 로직 수정
             visibleCards.forEach(card => {
                 const oldIconGroup = card.querySelector('.allergy-icon-group');
                 if (oldIconGroup) oldIconGroup.remove();
 
                 const nameText = card.querySelector('.menu-name-text').innerText.trim();
-                
                 const matchingKey = Object.keys(aiResponse.allergy_map).find(key => 
                     nameText.includes(key) || key.includes(nameText)
                 );
@@ -95,16 +93,20 @@ async function askAI() {
                         const group = document.createElement('div');
                         group.className = 'allergy-icon-group flex gap-1';
 
+                        // 해당 메뉴의 모든 알레르기 정보를 팝업용 텍스트로 미리 만듦
+                        const fullAllergyInfo = allergyDataList
+                            .map(item => `${item.emoji}:${item.name} (${item.code}번)`)
+                            .join('\n');
+
                         allergyDataList.forEach(item => {
                             const icon = document.createElement('span');
-                            // 커서 모양을 포인터로 변경하고 클릭 이벤트 추가
-                            icon.className = 'allergy-icon cursor-pointer bg-gray-100 rounded px-1 transition-transform active:scale-90';
+                            icon.className = 'allergy-icon cursor-pointer bg-gray-100 rounded px-1 transition-transform active:scale-95';
                             icon.innerText = item.emoji;
                             
-                            // 클릭 시 한국어 성분명과 번호 표시
+                            // 어떤 이모지를 눌러도 해당 메뉴의 전체 정보를 보여줌
                             icon.onclick = (e) => {
                                 e.stopPropagation();
-                                alert(`알레르기 성분: ${item.name} (${item.code}번)`);
+                                alert(fullAllergyInfo);
                             };
 
                             group.appendChild(icon);
