@@ -19,26 +19,33 @@ async function fetchRealtimeWeather() {
         const hours = now.getHours();
         const apiTimes = [2, 5, 8, 11, 14, 17, 20, 23];
         let lastTime = apiTimes.filter(t => t <= hours).pop();
+
         if (lastTime === undefined) {
             const yesterday = new Date(now.setDate(now.getDate() - 1));
             baseDate = yesterday.getFullYear() + String(yesterday.getMonth() + 1).padStart(2, '0') + String(yesterday.getDate()).padStart(2, '0');
             lastTime = 23;
         }
+
         const baseTime = String(lastTime).padStart(2, '0') + "00";
         const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${WEATHER_API_KEY}&numOfRows=100&pageNo=1&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${NX}&ny=${NY}`;
 
         const response = await fetch(url);
         if (!response.ok) throw new Error('Weather API Error');
+
         const data = await response.json();
+
         if (data.response && data.response.header.resultCode === "00") {
             const items = data.response.body.items.item;
             const currentHourStr = String(now.getHours()).padStart(2, '0') + "00";
             const tmpItem = items.find(i => i.category === "TMP" && i.fcstTime >= currentHourStr);
             const popItem = items.find(i => i.category === "POP" && i.fcstTime >= currentHourStr);
+
             if (tmpItem) document.getElementById('realtime-temp').innerText = tmpItem.fcstValue + "°";
             if (popItem) document.getElementById('precipitation').innerText = popItem.fcstValue + "%";
         }
-    } catch (error) { console.error("날씨 호출 오류:", error); }
+    } catch (error) {
+        console.error("날씨 호출 오류:", error);
+    }
 }
 
 // [3] AI 영양사 분석
@@ -69,15 +76,33 @@ async function askAI() {
             body: JSON.stringify({ mealData: currentMeal })
         });
 
-        const data = await response.json();
+        let data = null;
 
-        // [추가] 할당량 초과 및 서버 에러 상세 처리
+        try {
+            data = await response.json();
+        } catch (jsonError) {
+            data = null;
+        }
+
+        // 상태 코드별 오류 메시지 처리
         if (!response.ok) {
             if (response.status === 429) {
-                throw new Error("오늘 AI 사용 할당량이 초과되었습니다. 내일 다시 시도해주세요.");
+                throw new Error("오늘 AI 영양사 호출 횟수를 모두 소진하였습니다.");
             }
-            // 구글 API에서 보내준 상세 에러 메시지가 있다면 사용
-            const errorDetail = data.error?.message || data.error || `서버 오류 ${response.status}`;
+
+            if (response.status === 400) {
+                throw new Error("식단 정보를 분석할 수 없습니다. 식단 내용을 확인한 뒤 다시 시도해주세요.");
+            }
+
+            if (response.status === 404) {
+                throw new Error("AI 분석 서버를 찾을 수 없습니다. 관리자에게 문의해주세요.");
+            }
+
+            if (response.status >= 500) {
+                throw new Error("AI 분석 서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            }
+
+            const errorDetail = data?.error?.message || data?.error || `알 수 없는 오류가 발생했습니다. 오류 코드: ${response.status}`;
             throw new Error(errorDetail);
         }
 
@@ -102,6 +127,7 @@ async function askAI() {
 
                 if (allergyDataList.length > 0) {
                     const iconContainer = card.querySelector('.allergy-icon-container');
+
                     if (iconContainer) {
                         const group = document.createElement('div');
                         group.className = 'allergy-icon-group flex gap-1';
@@ -122,6 +148,7 @@ async function askAI() {
 
                             group.appendChild(icon);
                         });
+
                         iconContainer.appendChild(group);
                     }
                 }
@@ -134,16 +161,17 @@ async function askAI() {
         }
     } catch (error) {
         console.error("AI 호출 오류 상세:", error);
-        // 사용자에게 에러 원인을 구체적으로 노출
-        outputDiv.innerHTML = `❌ 오류: ${error.message}<br>잠시 후 다시 시도해주세요.`;
+        outputDiv.innerHTML = error.message;
     }
 }
 
 function clearAIResults() {
     const outputDiv = document.getElementById('ai-output');
+
     if (outputDiv) {
         outputDiv.innerHTML = "✨ 분석 버튼을 누르면 AI 영양사가 분석을 시작합니다.";
     }
+
     document.querySelectorAll('.allergy-icon-group').forEach(group => group.remove());
 }
 
