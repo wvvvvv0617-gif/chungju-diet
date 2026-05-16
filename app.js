@@ -8,7 +8,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // [2] 기상청 실시간 날씨 가져오기 기능
-const WEATHER_API_KEY = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae"; // 기상청에서 발급받은 서비스키(Decoding/Encoding 중 맞는 것 사용)
+const WEATHER_API_KEY = "__KMA_API_KEY__";
 const NX = 76; // 충주 격자 X
 const NY = 114; // 충주 격자 Y
 
