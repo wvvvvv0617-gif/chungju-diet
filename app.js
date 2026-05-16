@@ -58,61 +58,51 @@ async function fetchRealtimeWeather() {
 // [3] index.html의 loadData에서 호출할 수 있도록 전역으로 노출하거나 자동 실행
 // 이 함수는 index.html의 loadData() 안에서 fetchRealtimeWeather(); 로 호출하시면 됩니다.
 
-// [4] AI 영양사 조언 기능
+// [4] AI 영양사 분석 및 알레르기 이모지 표시 기능
 async function askAI() {
     const outputDiv = document.getElementById('ai-output');
-
-    if (!outputDiv) {
-        console.error("ai-output 요소를 찾을 수 없습니다.");
-        return;
-    }
+    if (!outputDiv) return;
 
     let currentMeal = "";
+    let allMenusArray = []; // 이모지 표시를 위해 메뉴들을 배열로 저장
 
     try {
         const res = await fetch('data.json?v=' + Date.now());
         const menuData = await res.json();
 
+        // 1. 현재 화면에 표시된 요일 추출 (UI 텍스트 기반)
         const pageText = document.body.innerText;
         let targetDay = "";
-
-        // 현재 화면에 표시된 요일을 텍스트에서 추출
         if (pageText.includes("월요일")) targetDay = "월";
         else if (pageText.includes("화요일")) targetDay = "화";
         else if (pageText.includes("수요일")) targetDay = "수";
         else if (pageText.includes("목요일")) targetDay = "목";
         else if (pageText.includes("금요일")) targetDay = "금";
 
-        if (!targetDay) {
-            const now = new Date();
-            const todayDay = now.getDay();
-            const days = ["일", "월", "화", "수", "목", "금", "토"];
-            targetDay = (todayDay === 0 || todayDay === 6) ? "월" : days[todayDay];
-        }
-
-        const mealData = menuData.mealsByDate ? 
-            menuData.mealsByDate[new Date().toISOString().split('T')[0]] : 
-            (menuData.meals ? menuData.meals[targetDay] : null);
+        // 2. [수정] 현재 선택된 요일의 데이터를 우선적으로 가져오도록 변경
+        // 기존 코드는 오늘 날짜(Date)를 먼저 찾아버려서 다른 날 분석이 안 될 수 있음
+        const mealData = menuData.meals ? menuData.meals[targetDay] : null;
 
         if (mealData) {
-            const allMenus = [
-                mealData.breakfast || "",
-                mealData.lunch || "",
-                mealData.dinner || ""
-            ].filter(m => m && m.length > 3 && !m.includes("식단 없음"));
+            allMenusArray = [
+                ...(mealData.breakfast || "").split(','),
+                ...(mealData.lunch || "").split(','),
+                ...(mealData.dinner || "").split(',')
+            ].map(m => m.trim()).filter(m => m.length > 0 && !m.includes("식단 없음"));
 
-            currentMeal = allMenus.join(', ');
+            currentMeal = allMenusArray.join(', ');
         }
     } catch (e) {
         console.error("식단 데이터 로드 실패:", e);
     }
 
-    if (!currentMeal || currentMeal.length < 5) {
-        outputDiv.innerHTML = "❌ 분석할 식단 정보가 없습니다.";
+    // 3. 식단 정보 체크
+    if (!currentMeal || currentMeal.length < 3) {
+        outputDiv.innerHTML = "❌ 분석할 식단 정보가 없습니다. (요일을 확인해주세요)";
         return;
     }
 
-    outputDiv.innerHTML = "✨ AI 영양사가 식단을 분석 중입니다...";
+    outputDiv.innerHTML = "✨ AI 영양사가 식단을 분석하고 알레르기 정보를 확인 중입니다...";
 
     try {
         const response = await fetch('https://gemini-proxy.wvvvvv0617.workers.dev', {
@@ -121,24 +111,45 @@ async function askAI() {
             body: JSON.stringify({
                 contents: [{
                     parts: [{
-                        text: `기숙사 대학생을 위한 AI 영양사로서 오늘 식단을 분석해줘. 외부 음식 구매가 어려우니 과일, 외식 추천은 하지 마. 나트륨이 많으면 물 많이 마시기, 튀김이 많으면 산책, 졸음 유발 식단이면 커피 추천처럼 학교 생활에서 실천 가능한 팁을 줘. 반드시 3문장으로 끝내고 각 문장은 줄바꿈으로 구분해. 마크다운 기호는 사용하지 마. 반드시 문장을 완전히 끝맺음해.\n\n식단: ${currentMeal}`
+                        text: `오늘의 전체 식단 리스트야: ${currentMeal}. 
+                        각 메뉴별 알레르기 성분을 이모지로 분류하고, 전체적인 영양 조언을 해줘.`
                     }]
                 }]
             })
         });
 
         const data = await response.json();
-        const aiPart = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        // Worker에서 설정한 JSON 응답 파싱
+        const aiResponse = JSON.parse(data.candidates[0].content.parts[0].text);
 
-        if (aiPart) {
-            let aiText = aiPart.replace(/\*\*/g, "").replace(/\*/g, "").trim();
-            outputDiv.innerHTML = aiText.replace(/\n/g, '<br>');
+        // 4. [추가] 메뉴 옆에 알레르기 이모지 표시 로직
+        if (aiResponse.allergy_map) {
+            // 화면에 있는 모든 메뉴 텍스트 요소들을 찾음 (보라색 점 옆의 글자들)
+            // HTML 구조에 따라 'li' 또는 'span' 등 적절한 선택자로 수정이 필요할 수 있습니다.
+            const menuElements = document.querySelectorAll('.menu-item span, li'); 
+            
+            menuElements.forEach(el => {
+                const menuName = el.innerText.trim();
+                // Gemini가 준 allergy_map에 해당 메뉴명이 있으면 이모지 추가
+                if (aiResponse.allergy_map[menuName]) {
+                    const emojiSpan = document.createElement('span');
+                    emojiSpan.style.marginLeft = "8px";
+                    emojiSpan.innerText = aiResponse.allergy_map[menuName];
+                    el.appendChild(emojiSpan);
+                }
+            });
+        }
+
+        // 5. 영양 조언 출력
+        if (aiResponse.summary) {
+            outputDiv.innerHTML = aiResponse.summary.replace(/\n/g, '<br>');
             outputDiv.style.textAlign = 'left';
         } else {
-            outputDiv.innerHTML = "❌ 답변 생성 실패. 다시 시도해주세요.";
+            outputDiv.innerHTML = "❌ 분석 결과를 가져오지 못했습니다.";
         }
+
     } catch (error) {
         console.error("연결 오류:", error);
-        outputDiv.innerHTML = "❌ 연결 오류가 발생했습니다.";
+        outputDiv.innerHTML = "❌ 분석 중 오류가 발생했습니다. (Worker 설정을 확인하세요)";
     }
 }
