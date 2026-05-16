@@ -49,22 +49,11 @@ async function askAI() {
     let currentMeal = "";
     
     try {
-        const res = await fetch('data.json?v=' + Date.now());
-        const menuData = await res.json();
-        const pageText = document.body.innerText;
-        let targetDay = "";
-        if (pageText.includes("월요일")) targetDay = "월";
-        else if (pageText.includes("화요일")) targetDay = "화";
-        else if (pageText.includes("수요일")) targetDay = "수";
-        else if (pageText.includes("목요일")) targetDay = "목";
-        else if (pageText.includes("금요일")) targetDay = "금";
-
-        const mealData = menuData.meals ? menuData.meals[targetDay] : null;
-        if (mealData) {
-            currentMeal = [mealData.breakfast, mealData.lunch, mealData.dinner]
-                .filter(m => m && m.length > 2 && !m.includes("식단 없음")).join(', ');
+        const menuItems = document.querySelectorAll('.menu-name-text');
+        if (menuItems.length > 0) {
+            currentMeal = Array.from(menuItems).map(el => el.innerText).join(', ');
         }
-    } catch (e) { console.error("데이터 로드 실패:", e); }
+    } catch (e) { console.error("데이터 수집 실패:", e); }
 
     if (!currentMeal || currentMeal.length < 3) {
         outputDiv.innerHTML = "❌ 분석할 식단 정보가 없습니다.";
@@ -74,21 +63,32 @@ async function askAI() {
     outputDiv.innerHTML = "✨ AI 영양사가 분석 중입니다...";
 
     try {
-        // [수정] 주소 끝에 슬래시가 붙지 않도록 변수로 확실히 고정
         const workerUrl = 'https://gemini-proxy.wvvvvv0617.workers.dev';
         
+        // 사용자의 요청 사항을 프롬프트에 엄격히 반영
+        const systemInstruction = `
+            당신은 학교 영양사입니다. 다음 식단을 분석하고 조언을 제공하세요.
+            [분석할 식단]: ${currentMeal}
+
+            [작성 지침]:
+            1. 학교 안에는 '매점'만 있으며 스낵류, 음료, 냉동식품 위주라는 점을 고려하세요. 과일 등 신선식품 구매는 어렵다는 것을 조언에 반영하세요.
+            2. 학생들을 위해 걷기, 러닝, 근력 운동 중 식후에 하면 좋은 운동을 구체적으로 추천하세요.
+            3. 답변의 마지막 문장은 반드시 "알레르기에 대한 내용은 식단에 알레르기 정보를 표기해놓았으니 확인 바랍니다."라고 작성하세요.
+            4. 출력은 반드시 아래와 같은 JSON 형식만 허용합니다:
+               {"allergy_map": {"메뉴명": "알레르기이모지"}, "summary": "영양분석 및 조언내용(운동 추천 포함)"}
+        `;
+
         const response = await fetch(workerUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: `식단: ${currentMeal}` }] }]
+                contents: [{ parts: [{ text: systemInstruction }] }]
             })
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            // 에러 발생 시 서버가 준 상세 메시지 출력
             throw new Error(data.error || `서버 오류 ${response.status}`);
         }
 
@@ -97,17 +97,21 @@ async function askAI() {
             const jsonMatch = rawText.match(/\{[\s\S]*\}/);
             const aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
 
+            // 기존 이모지 초기화
             document.querySelectorAll('.allergy-icon').forEach(icon => icon.remove());
+            
             if (aiResponse.allergy_map) {
-                const menuItems = document.querySelectorAll('.bg-white.rounded-2xl span, li'); 
-                menuItems.forEach(el => {
-                    const name = el.innerText.trim();
-                    if (aiResponse.allergy_map[name]) {
-                        const icon = document.createElement('span');
-                        icon.className = 'allergy-icon';
-                        icon.style.marginLeft = '6px';
-                        icon.innerText = aiResponse.allergy_map[name];
-                        el.appendChild(icon);
+                const mealCards = document.querySelectorAll('.meal-item-card'); 
+                mealCards.forEach(card => {
+                    const nameText = card.querySelector('.menu-name-text').innerText.trim();
+                    if (aiResponse.allergy_map[nameText]) {
+                        const iconContainer = card.querySelector('.allergy-icon-container');
+                        if (iconContainer) {
+                            const icon = document.createElement('span');
+                            icon.className = 'allergy-icon ml-2 text-base';
+                            icon.innerText = aiResponse.allergy_map[nameText];
+                            iconContainer.appendChild(icon);
+                        }
                     }
                 });
             }
