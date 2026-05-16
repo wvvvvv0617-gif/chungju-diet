@@ -41,7 +41,7 @@ async function fetchRealtimeWeather() {
     } catch (error) { console.error("날씨 호출 오류:", error); }
 }
 
-// [3] AI 영양사 및 알레르기 분석
+// [3] AI 영양사 및 알레르기 분석 (알레르기 이모지 상세화 버전)
 async function askAI() {
     const outputDiv = document.getElementById('ai-output');
     if (!outputDiv) return;
@@ -65,22 +65,22 @@ async function askAI() {
     try {
         const workerUrl = 'https://gemini-proxy.wvvvvv0617.workers.dev';
         
-        // 사용자의 요청 사항을 프롬프트에 엄격히 반영
+        // 22종 알레르기 유발 물질 및 대응 이모지 가이드라인 포함
         const systemInstruction = `
-            당신은 학교 영양사입니다. 다음 식단을 분석하고 조언을 제공하세요.
+            당신은 학교 영양사입니다. 다음 식단을 분석하고 영양 조언과 알레르기 정보를 제공하세요.
             [분석할 식단]: ${currentMeal}
 
             [작성 지침]:
-            1. 학교 안에는 '매점'만 있으며 스낵류, 음료, 냉동식품 위주라는 점을 고려하세요. 과일 등 신선식품 구매는 어렵다는 것을 조언에 반영하세요.
-            2. 학생들을 위해 걷기, 러닝, 근력 운동 등 식후에 하면 좋은 운동을 간단하게 추천하세요.
-            3. 답변의 마지막 문장은 반드시 "알레르기에 대한 내용은 식단에 알레르기 정보를 표기해놓았으니 확인 바랍니다."라고 작성하세요.
+            1. 학교 안에는 '매점'만 있으며 스낵류, 음료, 냉동식품 위주입니다. 과일 등 신선식품 구매는 어렵다는 점을 반영해 매점 제품으로 영양을 보충할 방법을 조언하세요.
+            2. 식후 활동으로 '걷기, 러닝, 근력 운동' 중 하나를 상황에 맞춰 추천하세요.
+            3. 답변 마지막은 "알레르기에 대한 내용은 식단에 알레르기 정보를 표기해놓았으니 확인 바랍니다."로 끝내세요.
 
             [알레르기 이모지 매핑 가이드]:
             메뉴에 아래 성분이 포함된 경우 반드시 해당 이모지를 사용하세요 (⚠️ 대신 사용):
             - 난류: 🥚, 우유: 🥛, 메밀: 🌾, 땅콩: 🥜, 대두(콩): 🫘, 밀: 🌾, 고등어: 🐟, 게: 🦀, 새우: 🦐, 돼지고기: 🐷, 복숭아: 🍑, 토마토: 🍅, 아황산류: 🧪, 호두: 🥜, 닭고기: 🍗, 쇠고기: 🐮, 오징어: 🦑, 조개류(굴, 전복, 홍합 포함): 🐚, 잣: 🌲
 
-            4. 출력은 반드시 아래와 같은 JSON 형식만 허용합니다:
-               {"allergy_map": {"메뉴명": "알레르기이모지"}, "summary": "영양분석 및 조언내용(운동 추천 포함)"}
+            [출력 형식]: 반드시 아래 JSON 형식으로만 답변하세요.
+            {"allergy_map": {"메뉴명": "해당이모지"}, "summary": "영양분석 및 조언(운동 포함)"}
         `;
 
         const response = await fetch(workerUrl, {
@@ -92,10 +92,7 @@ async function askAI() {
         });
 
         const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || `서버 오류 ${response.status}`);
-        }
+        if (!response.ok) throw new Error(data.error || `서버 오류 ${response.status}`);
 
         if (data && data.candidates && data.candidates[0]) {
             let rawText = data.candidates[0].content.parts[0].text;
@@ -109,6 +106,7 @@ async function askAI() {
                 const mealCards = document.querySelectorAll('.meal-item-card'); 
                 mealCards.forEach(card => {
                     const nameText = card.querySelector('.menu-name-text').innerText.trim();
+                    // AI가 준 이모지가 있을 경우에만 표시
                     if (aiResponse.allergy_map[nameText]) {
                         const iconContainer = card.querySelector('.allergy-icon-container');
                         if (iconContainer) {
