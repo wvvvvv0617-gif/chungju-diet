@@ -100,7 +100,7 @@ async function askAI() {
 
     try {
         // [주의] URL 끝에 /를 붙여보거나 대시보드 주소와 대조하세요
-        const response = await fetch('https://gemini-proxy.wvvvvv0617.workers.dev/', { 
+        const response = await fetch('https://gemini-proxy.wvvvvv0617.workers.dev', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
