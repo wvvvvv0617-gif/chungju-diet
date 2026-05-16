@@ -16,14 +16,12 @@ def get_kst_now():
 
 def get_target_date():
     now = get_kst_now()
-    weekday = now.weekday()  # 월=0, 화=1, ..., 토=5, 일=6
+    weekday = now.weekday()
     hm = now.hour * 100 + now.minute
     
-    # 💡 [핵심 수정] 일요일 18:30 이후에만 '다음 주 월요일'로 식단 타겟을 변경합니다.
     if weekday == 6 and hm >= 1830:
         target = now + timedelta(days=1)
     else:
-        # 월~토, 그리고 일요일 18:29 까지는 현재 주(week)를 타겟으로 함
         target = now
         
     return target.strftime("%Y-%m-%d")
@@ -50,6 +48,7 @@ def parse_date_text_to_isodate(date_text, reference_year):
 
 def get_weather(existing_weather):
     final_weather = existing_weather.copy()
+
     try:
         service_key = os.getenv("KMA_API_KEY")
         if not service_key:
@@ -77,44 +76,49 @@ def get_weather(existing_weather):
         base_time = f"{base_time_hour:02d}00"
 
         params = {
-            'serviceKey': service_key,
-            'base_date': base_date,
-            'base_time': base_time,
-            'nx': '77',
-            'ny': '115',
-            'dataType': 'JSON',
-            'numOfRows': '200'
+            "serviceKey": service_key,
+            "base_date": base_date,
+            "base_time": base_time,
+            "nx": "77",
+            "ny": "115",
+            "dataType": "JSON",
+            "numOfRows": "200"
         }
 
         res = requests.get(base_url, params=params, timeout=10)
         data = res.json()
 
-        if not data.get('response') or data['response']['header'].get('resultCode') != '00':
+        if not data.get("response") or data["response"]["header"].get("resultCode") != "00":
             return final_weather
 
-        items = data['response']['body']['items']['item']
+        items = data["response"]["body"]["items"]["item"]
         target_date = now.strftime("%Y%m%d")
         target_time = f"{now.hour:02d}00"
 
         temp, pop = None, None
+
         for item in items:
-            item_date = item.get('fcstDate')
-            item_time = item.get('fcstTime')
+            item_date = item.get("fcstDate")
+            item_time = item.get("fcstTime")
 
             if item_date > target_date or (item_date == target_date and item_time >= target_time):
-                if item.get('category') == 'TMP' and temp is None:
-                    temp = item.get('fcstValue')
-                elif item.get('category') == 'POP' and pop is None:
-                    pop = item.get('fcstValue')
+                if item.get("category") == "TMP" and temp is None:
+                    temp = item.get("fcstValue")
+                elif item.get("category") == "POP" and pop is None:
+                    pop = item.get("fcstValue")
 
             if temp is not None and pop is not None:
                 break
 
-        if temp: final_weather["temp"] = temp
-        if pop: final_weather["rain"] = pop
+        if temp:
+            final_weather["temp"] = temp
+        if pop:
+            final_weather["rain"] = pop
+
         final_weather["last_update"] = now.strftime("%Y-%m-%d %H:%M")
 
         return final_weather
+
     except Exception as e:
         print(f"❌ 날씨 오류: {e}")
         return final_weather
@@ -139,27 +143,33 @@ def estimate_nutrition(menu_text):
 
     if any(k in menu_text for k in ["밥", "죽", "국수", "라면", "우동", "스파게티", "파스타", "떡", "빵"]):
         base["carbs"] += random.randint(30, 45)
-        if any(k in menu_text for k in ["볶음밥", "비빔밥"]): 
+        if any(k in menu_text for k in ["볶음밥", "비빔밥"]):
             base["fat"] += 5
             base["sugar"] += 3
+
     if any(k in menu_text for k in ["고기", "닭", "돈육", "우육", "제육", "생선", "계란", "카츠", "가스", "함박", "스테이크"]):
         base["protein"] += random.randint(18, 28)
         base["fat"] += random.randint(10, 18)
+
     if any(k in menu_text for k in ["튀김", "가스", "전", "부침", "치킨", "너겟", "탕수"]):
         base["fat"] += random.randint(12, 20)
         base["carbs"] += random.randint(5, 12)
+
     if any(k in menu_text for k in ["양념", "탕수", "강정", "데리야끼", "소스", "조림", "볶음", "무침"]):
         base["sugar"] += random.randint(6, 12)
         base["carbs"] += random.randint(2, 5)
+
     if any(k in menu_text for k in ["요거트", "요구르트", "주스", "음료", "푸딩", "에이드", "쿨피스", "식혜", "수정과"]):
         base["sugar"] += random.randint(15, 25)
         base["carbs"] += random.randint(8, 15)
+
     if any(k in menu_text for k in ["과일", "바나나", "사과", "포도", "오렌지", "수박", "참외", "멜론", "방울토마토"]):
         base["sugar"] += random.randint(10, 18)
         base["carbs"] += random.randint(5, 10)
 
     base["calories"] = int((base["carbs"] * 4) + (base["protein"] * 4) + (base["fat"] * 9) + random.randint(80, 120))
     random.seed(None)
+
     return base
 
 # =========================
@@ -168,11 +178,12 @@ def estimate_nutrition(menu_text):
 
 def main():
     data_path = "data.json"
+
     if os.path.exists(data_path):
         with open(data_path, "r", encoding="utf-8") as f:
             try:
                 final_data = json.load(f)
-            except:
+            except Exception:
                 final_data = {"weather": {}, "meals": {}}
     else:
         final_data = {"weather": {}, "meals": {}}
@@ -181,14 +192,12 @@ def main():
     weekday = now.weekday()
     hm = now.hour * 100 + now.minute
 
-    # 💡 프론트엔드(index.html)에서 쉽게 처리할 수 있도록 '주말 여부'를 JSON에 박아줍니다.
-    # 금요일 18:30 ~ 일요일 18:29 까지는 is_weekend = True
     is_weekend = False
     if (weekday == 4 and hm >= 1830) or (weekday == 5) or (weekday == 6 and hm < 1830):
         is_weekend = True
+
     final_data["is_weekend"] = is_weekend
 
-    # 💡 특정 시간 제한(6시, 18시)을 해제하여 언제 스크립트가 돌아도 데이터가 최신화되게 수정
     target_date = get_target_date()
     url = f"https://www.kopo.ac.kr/chungju/content.do?menu=2830&search_day={target_date}"
     print(f"📡 식단 크롤링 수행 (기준 날짜: {target_date}): {url}")
@@ -196,6 +205,7 @@ def main():
     try:
         res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
+
         meal_result = {}
         days_list = ["월", "화", "수", "목", "금"]
         found_any = False
@@ -203,39 +213,45 @@ def main():
 
         for row in soup.find_all("tr"):
             cols = row.find_all(["td", "th"])
-            if len(cols) < 4: continue
+            if len(cols) < 4:
+                continue
+
             header = cols[0].get_text(strip=True)
-            
+
             for d in days_list:
                 if d in header:
                     b = cols[1].get_text(" ", strip=True)
                     l = cols[2].get_text(" ", strip=True)
                     dnr = cols[3].get_text(" ", strip=True)
+
                     meal_result[d] = {
                         "date_text": header,
-                        "breakfast": b if len(b)>3 else "식단 없음",
-                        "lunch": l if len(l)>3 else "식단 없음",
-                        "dinner": dnr if len(dnr)>3 else "식단 없음",
+                        "breakfast": b if len(b) > 3 else "식단 없음",
+                        "lunch": l if len(l) > 3 else "식단 없음",
+                        "dinner": dnr if len(dnr) > 3 else "식단 없음",
                         "nutrition": {
                             "breakfast": estimate_nutrition(b),
                             "lunch": estimate_nutrition(l),
                             "dinner": estimate_nutrition(dnr)
                         }
                     }
+
                     if d == "월" and first_monday_date is None:
                         parsed = parse_date_text_to_isodate(header, now.year)
                         if parsed:
                             first_monday_date = parsed
+
                     found_any = True
-        
+
         if found_any:
             final_data["meals"] = meal_result
             final_data["target_date"] = first_monday_date if first_monday_date else target_date
             print(f"🍱 식단 갱신 성공 / target_date = {final_data['target_date']}")
-        except Exception as e:
-            print(f"❌ 식단 크롤링 실패: {e}")
 
-        existing_weather = final_data.get("weather", {"temp": "N/A", "rain": "N/A"})
+    except Exception as e:
+        print(f"❌ 식단 크롤링 실패: {e}")
+
+    existing_weather = final_data.get("weather", {"temp": "N/A", "rain": "N/A"})
     last_update_text = existing_weather.get("last_update")
 
     should_update_weather = True
@@ -245,7 +261,6 @@ def main():
             last_update = datetime.strptime(last_update_text, "%Y-%m-%d %H:%M")
             now_kst = get_kst_now()
 
-            # 마지막 날씨 갱신 후 3시간이 지나지 않았으면 기존 날씨 유지
             if now_kst - last_update < timedelta(hours=3):
                 should_update_weather = False
         except Exception:
@@ -261,3 +276,6 @@ def main():
         json.dump(final_data, f, ensure_ascii=False, indent=2)
 
     print("🚀 모든 작업이 완료되었습니다!")
+
+if __name__ == "__main__":
+    main()
