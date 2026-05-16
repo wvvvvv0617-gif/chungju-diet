@@ -7,7 +7,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// [2] 기상청 실시간 날씨 가져오기
+// [2] 기상청 실시간 날씨 기능
 const WEATHER_API_KEY = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae";
 const NX = 76; 
 const NY = 114;
@@ -28,7 +28,7 @@ async function fetchRealtimeWeather() {
         const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${WEATHER_API_KEY}&numOfRows=100&pageNo=1&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${NX}&ny=${NY}`;
 
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
+        if (!response.ok) throw new Error('Weather API Error');
         const data = await response.json();
         if (data.response && data.response.header.resultCode === "00") {
             const items = data.response.body.items.item;
@@ -38,18 +38,17 @@ async function fetchRealtimeWeather() {
             if (tmpItem) document.getElementById('realtime-temp').innerText = tmpItem.fcstValue + "°";
             if (popItem) document.getElementById('precipitation').innerText = popItem.fcstValue + "%";
         }
-    } catch (error) {
-        console.error("날씨 호출 오류:", error);
-    }
+    } catch (error) { console.error("날씨 오류:", error); }
 }
 
-// [4] AI 영양사 분석 및 알레르기 표시 (최종 완성본)
+// [3] AI 영양사 및 알레르기 분석 (최종 완성본)
 async function askAI() {
     const outputDiv = document.getElementById('ai-output');
     if (!outputDiv) return;
 
     let currentMeal = "";
     
+    // 1. 식단 데이터 수집 (화면 요일 기준)
     try {
         const res = await fetch('data.json?v=' + Date.now());
         const menuData = await res.json();
@@ -63,24 +62,21 @@ async function askAI() {
 
         const mealData = menuData.meals ? menuData.meals[targetDay] : null;
         if (mealData) {
-            const menus = [mealData.breakfast, mealData.lunch, mealData.dinner]
-                .filter(m => m && m.length > 2 && !m.includes("식단 없음"));
-            currentMeal = menus.join(', ');
+            currentMeal = [mealData.breakfast, mealData.lunch, mealData.dinner]
+                .filter(m => m && m.length > 2 && !m.includes("식단 없음")).join(', ');
         }
-    } catch (e) {
-        console.error("식단 로드 실패:", e);
-    }
+    } catch (e) { console.error("데이터 로드 실패:", e); }
 
     if (!currentMeal || currentMeal.length < 3) {
-        outputDiv.innerHTML = "❌ 분석할 식단 정보가 없습니다. 요일을 확인해주세요.";
+        outputDiv.innerHTML = "❌ 분석할 식단 정보가 없습니다.";
         return;
     }
 
     outputDiv.innerHTML = "✨ AI 영양사가 분석 중입니다...";
 
     try {
-        // [수정] 주소 끝에 슬래시를 제거하고 캐시 방지용 쿼리 추가
-        const response = await fetch('https://gemini-proxy.wvvvvv0617.workers.dev?v=' + Date.now(), {
+        // [중요] 주소 끝에 슬래시를 절대 넣지 마세요.
+        const response = await fetch('https://gemini-proxy.wvvvvv0617.workers.dev', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -89,44 +85,36 @@ async function askAI() {
         });
 
         if (!response.ok) throw new Error(`서버 오류 (${response.status})`);
-
         const data = await response.json();
 
         if (data && data.candidates && data.candidates[0]) {
             let rawText = data.candidates[0].content.parts[0].text;
             
-            // AI가 응답에 마크다운을 섞어줄 경우 대비 (JSON만 추출)
+            // 마크다운 제거 및 순수 JSON 추출
             const jsonMatch = rawText.match(/\{[\s\S]*\}/);
             const aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
 
-            // 기존 이모지 제거
-            document.querySelectorAll('.allergy-icon').forEach(icon => icon.remove());
-
             // 알레르기 이모지 표시
+            document.querySelectorAll('.allergy-icon').forEach(icon => icon.remove());
             if (aiResponse.allergy_map) {
-                // UI 구조에 맞춰 span 또는 li 선택
-                const menuElements = document.querySelectorAll('.bg-white.rounded-2xl span, li'); 
-                menuElements.forEach(el => {
-                    const menuName = el.innerText.trim();
-                    if (aiResponse.allergy_map[menuName]) {
-                        const emojiSpan = document.createElement('span');
-                        emojiSpan.className = 'allergy-icon';
-                        emojiSpan.style.marginLeft = '6px';
-                        emojiSpan.innerText = aiResponse.allergy_map[menuName];
-                        el.appendChild(emojiSpan);
+                const menuItems = document.querySelectorAll('.bg-white.rounded-2xl span, li'); 
+                menuItems.forEach(el => {
+                    const name = el.innerText.trim();
+                    if (aiResponse.allergy_map[name]) {
+                        const icon = document.createElement('span');
+                        icon.className = 'allergy-icon';
+                        icon.style.marginLeft = '6px';
+                        icon.innerText = aiResponse.allergy_map[name];
+                        el.appendChild(icon);
                     }
                 });
             }
 
-            // 조언 출력
+            // 영양 조언 표시
             outputDiv.innerHTML = aiResponse.summary ? aiResponse.summary.replace(/\n/g, '<br>') : "분석 완료";
             outputDiv.style.textAlign = 'left';
-
-        } else {
-            throw new Error("AI 응답 형식이 올바르지 않습니다.");
         }
     } catch (error) {
-        console.error("분석 에러:", error);
         outputDiv.innerHTML = `❌ 오류: ${error.message}`;
     }
 }
