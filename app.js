@@ -15,15 +15,12 @@ const NY = 114; // 충주 격자 Y
 async function fetchRealtimeWeather() {
     try {
         const now = new Date();
-        // 기상청 API는 정해진 시간에만 데이터를 생성하므로, 현재 시간 기준 가장 최근 발표 시간을 계산
         let baseDate = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
         const hours = now.getHours();
-        const apiTimes = [2, 5, 8, 11, 14, 17, 20, 23]; // 단기예보 발표 시각
+        const apiTimes = [2, 5, 8, 11, 14, 17, 20, 23];
         
-        // 현재 시각보다 작거나 같은 발표 시각 중 가장 최근 것 찾기
         let lastTime = apiTimes.filter(t => t <= hours).pop();
         
-        // 새벽 2시 이전인 경우 어제 날짜 23시 데이터를 참조
         if (lastTime === undefined) {
             const yesterday = new Date(now.setDate(now.getDate() - 1));
             baseDate = yesterday.getFullYear() + String(yesterday.getMonth() + 1).padStart(2, '0') + String(yesterday.getDate()).padStart(2, '0');
@@ -42,7 +39,6 @@ async function fetchRealtimeWeather() {
             const items = data.response.body.items.item;
             const currentHourStr = String(now.getHours()).padStart(2, '0') + "00";
             
-            // 현재 시간 이후의 가장 가까운 TMP(기온), POP(강수확률) 찾기
             const tmpItem = items.find(i => i.category === "TMP" && i.fcstTime >= currentHourStr);
             const popItem = items.find(i => i.category === "POP" && i.fcstTime >= currentHourStr);
 
@@ -55,17 +51,14 @@ async function fetchRealtimeWeather() {
     }
 }
 
-// [3] index.html의 loadData에서 호출할 수 있도록 전역으로 노출하거나 자동 실행
-// 이 함수는 index.html의 loadData() 안에서 fetchRealtimeWeather(); 로 호출하시면 됩니다.
-
-// [4] AI 영양사 분석 및 알레르기 이모지 표시 기능
+// [4] AI 영양사 분석 및 알레르기 이모지 표시 기능 (최종 수정본)
 async function askAI() {
     const outputDiv = document.getElementById('ai-output');
     if (!outputDiv) return;
 
     let currentMeal = "";
     
-    // [수정] 식단 데이터 수집 로직 개선
+    // 1. 식단 데이터 수집
     try {
         const res = await fetch('data.json?v=' + Date.now());
         const menuData = await res.json();
@@ -78,8 +71,6 @@ async function askAI() {
         else if (pageText.includes("목요일")) targetDay = "목";
         else if (pageText.includes("금요일")) targetDay = "금";
 
-        // 화면에 날짜 텍스트가 있다면 (예: 2026-05-11) 해당 날짜 데이터를 먼저 찾음
-        // 여기서는 요일 기반으로 가져오는 로직을 유지하되, 데이터가 있는지 엄격히 체크
         const mealData = menuData.meals ? menuData.meals[targetDay] : null;
 
         if (mealData) {
@@ -96,10 +87,10 @@ async function askAI() {
         return;
     }
 
-    outputDiv.innerHTML = "✨ AI 영양사가 식단을 분석 중입니다...";
+    outputDiv.innerHTML = "✨ AI 영양사가 식단을 분석하고 알레르기 정보를 확인 중입니다...";
 
     try {
-        // [주의] URL 끝에 /를 붙여보거나 대시보드 주소와 대조하세요
+        // [중요] Worker URL 확인
         const response = await fetch('https://gemini-proxy.wvvvvv0617.workers.dev', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -114,37 +105,50 @@ async function askAI() {
 
         const data = await response.json();
 
-        // [방어 코드] 데이터 구조가 있는지 확인 후 파싱
+        // 2. 데이터 구조 안전하게 파싱
         if (data && data.candidates && data.candidates[0]) {
-            const rawText = data.candidates[0].content.parts[0].text;
-            // AI가 간혹 ```json ... ``` 형태로 줄 때를 대비해 정규식으로 순수 JSON만 추출
+            let rawText = data.candidates[0].content.parts[0].text;
+            
+            // AI가 마크다운 형식을 섞어줄 경우를 대비해 JSON만 추출
             const jsonMatch = rawText.match(/\{[\s\S]*\}/);
             const aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
 
-            // 1. 알레르기 이모지 표시 (선택자 정밀화)
+            // 3. 기존에 표시된 이모지 아이콘 제거 (새로고침 효과)
+            document.querySelectorAll('.allergy-icon').forEach(icon => icon.remove());
+
+            // 4. 알레르기 이모지 표시 (선택자 정밀화)
             if (aiResponse.allergy_map) {
-                // 메뉴 리스트 내의 글자들만 타겟팅 (HTML 구조에 맞춰 .menu-item-text 등으로 수정 필요)
-                const menuItems = document.querySelectorAll('.menu-item span, .menu-list li'); 
+                // 스크린샷의 UI 구조를 바탕으로 li 또는 span 내부 텍스트 매칭
+                const menuItems = document.querySelectorAll('.bg-white.rounded-2xl span, li'); 
+                
                 menuItems.forEach(el => {
                     const menuName = el.innerText.trim();
+                    // 메뉴명이 결과 맵에 존재한다면 이모지 추가
                     if (aiResponse.allergy_map[menuName]) {
-                        // 중복 방지
-                        if (!el.innerHTML.includes('allergy-icon')) {
-                            el.innerHTML += ` <span class="allergy-icon" style="margin-left:5px;">${aiResponse.allergy_map[menuName]}</span>`;
-                        }
+                        const emojiSpan = document.createElement('span');
+                        emojiSpan.className = 'allergy-icon';
+                        emojiSpan.style.marginLeft = '6px';
+                        emojiSpan.style.fontSize = '0.9em';
+                        emojiSpan.innerText = aiResponse.allergy_map[menuName];
+                        el.appendChild(emojiSpan);
                     }
                 });
             }
 
-            // 2. 조언 출력
-            outputDiv.innerHTML = aiResponse.summary.replace(/\n/g, '<br>');
-            outputDiv.style.textAlign = 'left';
+            // 5. 영양 조언 출력
+            if (aiResponse.summary) {
+                outputDiv.innerHTML = aiResponse.summary.replace(/\n/g, '<br>');
+                outputDiv.style.textAlign = 'left';
+            } else {
+                outputDiv.innerHTML = "❌ 분석 결과 텍스트가 없습니다.";
+            }
+
         } else {
-            throw new Error("잘못된 AI 응답 구조");
+            throw new Error("AI 응답 형식이 올바르지 않습니다.");
         }
 
     } catch (error) {
         console.error("분석 에러:", error);
-        outputDiv.innerHTML = `❌ 오류 발생: ${error.message}<br>Worker 주소와 설정을 확인하세요.`;
+        outputDiv.innerHTML = `❌ 오류 발생: ${error.message}<br>식단을 다시 확인하거나 잠시 후 시도해주세요.`;
     }
 }
