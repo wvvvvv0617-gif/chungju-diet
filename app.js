@@ -7,7 +7,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// [2] 기상청 실시간 날씨 기능
+// [2] 기상청 실시간 날씨
 const WEATHER_API_KEY = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae";
 const NX = 76; 
 const NY = 114;
@@ -38,17 +38,16 @@ async function fetchRealtimeWeather() {
             if (tmpItem) document.getElementById('realtime-temp').innerText = tmpItem.fcstValue + "°";
             if (popItem) document.getElementById('precipitation').innerText = popItem.fcstValue + "%";
         }
-    } catch (error) { console.error("날씨 오류:", error); }
+    } catch (error) { console.error("날씨 호출 오류:", error); }
 }
 
-// [3] AI 영양사 및 알레르기 분석 (최종 완성본)
+// [3] AI 영양사 및 알레르기 분석 (통합 완성본)
 async function askAI() {
     const outputDiv = document.getElementById('ai-output');
     if (!outputDiv) return;
 
     let currentMeal = "";
     
-    // 1. 식단 데이터 수집 (화면 요일 기준)
     try {
         const res = await fetch('data.json?v=' + Date.now());
         const menuData = await res.json();
@@ -62,10 +61,11 @@ async function askAI() {
 
         const mealData = menuData.meals ? menuData.meals[targetDay] : null;
         if (mealData) {
-            currentMeal = [mealData.breakfast, mealData.lunch, mealData.dinner]
-                .filter(m => m && m.length > 2 && !m.includes("식단 없음")).join(', ');
+            const menus = [mealData.breakfast, mealData.lunch, mealData.dinner]
+                .filter(m => m && m.length > 2 && !m.includes("식단 없음"));
+            currentMeal = menus.join(', ');
         }
-    } catch (e) { console.error("데이터 로드 실패:", e); }
+    } catch (e) { console.error("식단 로드 실패:", e); }
 
     if (!currentMeal || currentMeal.length < 3) {
         outputDiv.innerHTML = "❌ 분석할 식단 정보가 없습니다.";
@@ -75,8 +75,8 @@ async function askAI() {
     outputDiv.innerHTML = "✨ AI 영양사가 분석 중입니다...";
 
     try {
-        // [중요] 주소 끝에 슬래시를 절대 넣지 마세요.
-        const response = await fetch('https://gemini-proxy.wvvvvv0617.workers.dev', {
+        // [수정] 주소 끝에 슬래시(/)를 절대 넣지 않고 파라미터로 캐시 방지
+        const response = await fetch('https://gemini-proxy.wvvvvv0617.workers.dev?t=' + Date.now(), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -90,11 +90,11 @@ async function askAI() {
         if (data && data.candidates && data.candidates[0]) {
             let rawText = data.candidates[0].content.parts[0].text;
             
-            // 마크다운 제거 및 순수 JSON 추출
+            // AI 응답에서 마크다운 기호가 포함된 경우 순수 JSON만 추출
             const jsonMatch = rawText.match(/\{[\s\S]*\}/);
             const aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
 
-            // 알레르기 이모지 표시
+            // 기존 이모지 삭제 후 새로 추가
             document.querySelectorAll('.allergy-icon').forEach(icon => icon.remove());
             if (aiResponse.allergy_map) {
                 const menuItems = document.querySelectorAll('.bg-white.rounded-2xl span, li'); 
@@ -110,7 +110,7 @@ async function askAI() {
                 });
             }
 
-            // 영양 조언 표시
+            // 결과 조언 표시
             outputDiv.innerHTML = aiResponse.summary ? aiResponse.summary.replace(/\n/g, '<br>') : "분석 완료";
             outputDiv.style.textAlign = 'left';
         }
