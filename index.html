@@ -258,7 +258,7 @@
                 <div id="meals-container" class="flex-1 overflow-y-auto overscroll-contain pr-2 pb-4 space-y-10 custom-scrollbar" style="max-height: 50vh;"></div>
                 
                 <div id="meal-disclaimer" class="mt-6 space-y-1 hidden">
-                    <p class="text-[10px] text-slate-700 dark:text-slate-300 text-center leading-relaxed font-bold">표시된 영양 정보는 메뉴 기반 추정치이므로 참고용으로만 활용해 주세요.</p>
+                    <p class="text-[10px] text-slate-700 dark:text-slate-300 text-center leading-relaxed font-bold">표시된 영양 정보는 메뉴 기반 추정치이므로 참고용으로만 활용해주세요. <span class="text-indigo-600 dark:text-indigo-400">알레르기 정보에 대한 것은 AI가 분석한 것으로 정확하지 않을 수 있습니다. 자세한 정보는 식당에 문의하세요.</span></p>
                     <p class="text-[9px] text-slate-600 dark:text-slate-400 text-center leading-relaxed font-medium">본 서비스의 날씨 정보는 기상청 단기예보 API를 활용하며,<br>실제 기상 상황과 차이가 있을 수 있습니다.</p>
                 </div>
             </div>
@@ -349,23 +349,17 @@
         const mealLabels = { 'breakfast': 'BREAKFAST 🍳', 'lunch': 'LUNCH 🍱', 'dinner': 'DINNER 🌙' };
         let currentMenuData = null;
 
-        // ═══════════════════════════════════════════════════════════════
-        // 💡 핵심 헬퍼: 현재 시각이 "일요일 18:30 이전" 인지 판별
-        // ═══════════════════════════════════════════════════════════════
         function isSundayRestMode() {
             const d   = new Date();
-            const dow = d.getDay();                          // 0 = 일요일
+            const dow = d.getDay();
             const hm  = d.getHours() * 100 + d.getMinutes();
             return dow === 0 && hm < 1830;
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 💡 탐색 기준 월요일 계산
-        // ═══════════════════════════════════════════════════════════════
         function getThisWeekMonday(referenceDate) {
             const d = new Date(referenceDate);
             const dow = d.getDay();
-            const diffToMon = dow === 0 ? -6 : 1 - dow; // 일요일이면 -6일, 아니면 월요일(1)과의 차이
+            const diffToMon = dow === 0 ? -6 : 1 - dow;
             d.setDate(d.getDate() + diffToMon);
             d.setHours(0, 0, 0, 0);
             return d;
@@ -488,26 +482,19 @@
             document.getElementById('greeting').innerText     = status.greetingText;
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 💡 화살표 상태 제어 로직 (수정됨)
-        // ═══════════════════════════════════════════════════════════════
         function updateArrowButtons(targetDate) {
             const btnPrev = document.getElementById('btn-prev');
             const btnNext = document.getElementById('btn-next');
 
-            // 기본 해제
             btnPrev.classList.remove('arrow-disabled');
             btnNext.classList.remove('arrow-disabled');
 
-            // 1. 일요일 18:30 이전: 양쪽 모두 비활성화
             if (isSundayRestMode()) {
                 btnPrev.classList.add('arrow-disabled');
                 btnNext.classList.add('arrow-disabled');
                 return;
             }
 
-            // 2. 현재 탐색중인 날짜의 요일 기준 범위 제한
-            // 일요일 18:30 이후라면 targetDate는 '다음 주'의 기준일 수 있음
             const mon = getThisWeekMonday(targetDate);
             const sun = new Date(mon);
             sun.setDate(mon.getDate() + 6);
@@ -516,11 +503,9 @@
             const monTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
             const sunTime = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate()).getTime();
 
-            // 월요일이면 왼쪽(이전) 비활성화
             if (tTime <= monTime) {
                 btnPrev.classList.add('arrow-disabled');
             }
-            // 일요일이면 오른쪽(다음) 비활성화
             if (tTime >= sunTime) {
                 btnNext.classList.add('arrow-disabled');
             }
@@ -557,18 +542,15 @@
                           || currentMenuData.meals?.[dayNameKR]
                           || null;
 
-            // --- AI 버튼 제어 로직 (개선형) ---
             const aiBtn = document.querySelector('#ai-advice-section button');
             const aiOutput = document.getElementById('ai-output');
             
-            // 실제 식단 데이터가 하나라도 있는지 확인
             const hasAnyMeal = mealData && ['breakfast', 'lunch', 'dinner'].some(key => {
                 const menu = mealData[key];
                 return menu && !NO_MEAL_KEYWORDS.some(kw => menu.includes(kw));
             });
 
             if (isRest || !hasAnyMeal) {
-                // 주말, 공휴일이거나 식단 데이터가 없는 경우
                 aiBtn.innerText = "😴 오늘은 AI도 쉬어갑니다";
                 aiBtn.classList.add('bg-slate-400', 'dark:bg-slate-600', 'cursor-not-allowed');
                 aiBtn.classList.remove('bg-indigo-700', 'dark:bg-indigo-600', 'hover:bg-indigo-800', 'active:scale-95');
@@ -576,7 +558,6 @@
                     aiOutput.innerText = "보여드릴 식단이 없어서 AI가 조언을 드릴 수 없어요.\n맛있는 음식을 자유롭게 드시며\n즐거운 에너지를 충전해보세요! ✨";
                 };
             } else {
-                // 식단이 있는 평일인 경우
                 aiBtn.innerText = "💡 AI에게 식단 조언 듣기";
                 aiBtn.classList.remove('bg-slate-400', 'dark:bg-slate-600', 'cursor-not-allowed');
                 aiBtn.classList.add('bg-indigo-700', 'dark:bg-indigo-600', 'hover:bg-indigo-800', 'active:scale-95');
@@ -585,9 +566,7 @@
                 };
                 aiOutput.innerText = "오늘의 영양 섭취는 어떨까요?\n아래 버튼을 눌러 조언을 받아보세요!";
             }
-            // --------------------------------
 
-            // ... (아래는 기존의 날짜 표시 및 식단 리스트 렌더링 코드 그대로 유지)
             let displayDateStr = targetDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
             if (mealData && mealData.date_text) {
                 const match = mealData.date_text.match(/(\d{1,2})\.(\d{1,2})/);
@@ -603,7 +582,6 @@
             applySlideAnimation(direction);
 
             if (isRest) {
-                // ... (이후 기존 rest 화면 처리 코드 동일)
                 document.getElementById('meal-content').classList.add('hidden');
                 document.getElementById('weekend-message').classList.remove('hidden');
                 document.getElementById('main-card').classList.add('rest-bg');
@@ -650,9 +628,12 @@
                         const items = rawMenu.split(/,\s*/).filter(i => i.trim());
                         html += `<ul class="grid grid-cols-1 gap-2 mb-4">
                                     ${items.map(m => `
-                                        <li class="meal-item-card flex items-center gap-3 p-3.5 bg-white dark:bg-slate-700 rounded-2xl text-slate-950 dark:text-white font-black border border-slate-300 dark:border-slate-600 shadow-sm">
-                                            <span class="w-2.5 h-2.5 bg-indigo-600 dark:bg-yellow-400 rounded-full flex-shrink-0"></span>
-                                            ${m}
+                                        <li class="meal-item-card flex items-center justify-between p-3.5 bg-white dark:bg-slate-700 rounded-2xl text-slate-950 dark:text-white font-black border border-slate-300 dark:border-slate-600 shadow-sm">
+                                            <div class="flex items-center gap-3">
+                                                <span class="w-2.5 h-2.5 bg-indigo-600 dark:bg-yellow-400 rounded-full flex-shrink-0"></span>
+                                                <span class="menu-name-text">${m}</span>
+                                            </div>
+                                            <div class="allergy-icon-container"></div>
                                         </li>`).join('')}
                                  </ul>`;
 
@@ -732,7 +713,6 @@
             const tempDate = new Date(viewDate);
             tempDate.setDate(tempDate.getDate() + offset);
             
-            // 탐색 범위 재확인 (월~일)
             const mon = getThisWeekMonday(viewDate);
             const sun = new Date(mon);
             sun.setDate(mon.getDate() + 6);
@@ -784,13 +764,10 @@
                 const todayDow = now.getDay();
                 const todayHM  = now.getHours() * 100 + now.getMinutes();
 
-                // 초기 viewDate 설정 로직
                 if (todayDow === 0 && todayHM >= 1830) {
-                    // 일요일 18:30 이후: 다음 주 월요일로 자동 이동하여 식단 표시
                     viewDate = new Date(now);
                     viewDate.setDate(now.getDate() + 1); 
                 } else {
-                    // 그 외: 오늘 날짜 표시 (18:30 이후면 내일 날짜)
                     viewDate = new Date(now);
                     viewDate.setDate(now.getDate() + status.targetDayOffset);
                 }
