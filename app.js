@@ -41,46 +41,46 @@ async function fetchRealtimeWeather() {
     } catch (error) { console.error("날씨 호출 오류:", error); }
 }
 
-// [3] AI 영양사 및 알레르기 분석 (알레르기 이모지 상세화 버전)
+// [3] AI 영양사 및 알레르기 분석 (모든 메뉴 분석 및 매칭 강화 버전)
 async function askAI() {
     const outputDiv = document.getElementById('ai-output');
     if (!outputDiv) return;
 
-    let currentMeal = "";
-    
+    let menuNames = [];
     try {
         const menuItems = document.querySelectorAll('.menu-name-text');
         if (menuItems.length > 0) {
-            currentMeal = Array.from(menuItems).map(el => el.innerText).join(', ');
+            // 현재 화면에 표시된 메뉴 이름들을 배열로 수집
+            menuNames = Array.from(menuItems).map(el => el.innerText.trim());
         }
     } catch (e) { console.error("데이터 수집 실패:", e); }
 
-    if (!currentMeal || currentMeal.length < 3) {
+    if (menuNames.length === 0) {
         outputDiv.innerHTML = "❌ 분석할 식단 정보가 없습니다.";
         return;
     }
 
-    outputDiv.innerHTML = "✨ AI 영양사가 분석 중입니다...";
+    const currentMeal = menuNames.join(', ');
+    outputDiv.innerHTML = "✨ AI 영양사가 현재 식단을 분석 중입니다...";
 
     try {
         const workerUrl = 'https://gemini-proxy.wvvvvv0617.workers.dev';
         
-        // 22종 알레르기 유발 물질 및 대응 이모지 가이드라인 포함
+        // AI에게 모든 메뉴를 개별적으로 분석하도록 지시 (프롬프트 강화)
         const systemInstruction = `
-            당신은 학교 영양사입니다. 다음 식단을 분석하고 영양 조언과 알레르기 정보를 제공하세요.
-            [분석할 식단]: ${currentMeal}
+            당신은 학교 영양사입니다. 다음 [식단 리스트]의 **모든 메뉴**를 하나도 빠짐없이 분석하세요.
+            [식단 리스트]: ${currentMeal}
 
             [작성 지침]:
-            1. 학교 안에는 '매점'만 있으며 스낵류, 음료, 냉동식품 위주입니다. 과일 등 신선식품 구매는 어렵다는 점을 반영해 매점 제품으로 영양을 보충할 방법을 조언하세요.
-            2. 식후 활동으로 '걷기, 러닝, 근력 운동' 중 하나를 상황에 맞춰 추천하세요.
+            1. 제공된 식단 리스트의 **각 메뉴명을 키(key)**로 하여 알레르기 성분이 있으면 해당 이모지를, 없으면 빈 문자열("")을 넣으세요.
+            2. 학교 매점 제품(스낵, 음료 등)으로 보충할 영양 조언과 상황에 맞는 운동(걷기, 러닝, 근력 운동 중 하나)을 추천하세요.
             3. 답변 마지막은 "알레르기에 대한 내용은 식단에 알레르기 정보를 표기해놓았으니 확인 바랍니다."로 끝내세요.
 
-            [알레르기 이모지 매핑 가이드]:
-            메뉴에 아래 성분이 포함된 경우 반드시 해당 이모지를 사용하세요 (⚠️ 대신 사용):
-            - 난류: 🥚, 우유: 🥛, 메밀: 🌾, 땅콩: 🥜, 대두(콩): 🫘, 밀: 🌾, 고등어: 🐟, 게: 🦀, 새우: 🦐, 돼지고기: 🐷, 복숭아: 🍑, 토마토: 🍅, 아황산류: 🧪, 호두: 🥜, 닭고기: 🍗, 쇠고기: 🐮, 오징어: 🦑, 조개류(굴, 전복, 홍합 포함): 🐚, 잣: 🌲
+            [알레르기 이모지 가이드]:
+            난류: 🥚, 우유: 🥛, 메밀: 🌾, 땅콩: 🥜, 대두: 🫘, 밀: 🌾, 고등어: 🐟, 게: 🦀, 새우: 🦐, 돼지고기: 🐷, 복숭아: 🍑, 토마토: 🍅, 아황산류: 🧪, 호두: 🥜, 닭고기: 🍗, 쇠고기: 🐮, 오징어: 🦑, 조개류: 🐚, 잣: 🌲
 
             [출력 형식]: 반드시 아래 JSON 형식으로만 답변하세요.
-            {"allergy_map": {"메뉴명": "해당이모지"}, "summary": "영양분석 및 조언(운동 포함)"}
+            {"allergy_map": {"메뉴명": "이모지"}, "summary": "영양 조언 및 운동 추천"}
         `;
 
         const response = await fetch(workerUrl, {
@@ -99,20 +99,27 @@ async function askAI() {
             const jsonMatch = rawText.match(/\{[\s\S]*\}/);
             const aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
 
-            // 기존 이모지 초기화
+            // 기존 이모지 초기화 (중복 표시 방지)
             document.querySelectorAll('.allergy-icon').forEach(icon => icon.remove());
             
             if (aiResponse.allergy_map) {
                 const mealCards = document.querySelectorAll('.meal-item-card'); 
                 mealCards.forEach(card => {
                     const nameText = card.querySelector('.menu-name-text').innerText.trim();
-                    // AI가 준 이모지가 있을 경우에만 표시
-                    if (aiResponse.allergy_map[nameText]) {
+                    
+                    // 유연한 매칭: AI가 준 키값이 현재 메뉴명에 포함되거나 그 반대인 경우 매칭
+                    const matchingKey = Object.keys(aiResponse.allergy_map).find(key => 
+                        nameText.includes(key) || key.includes(nameText)
+                    );
+
+                    const emojiStr = matchingKey ? aiResponse.allergy_map[matchingKey] : "";
+
+                    if (emojiStr && emojiStr.trim() !== "") {
                         const iconContainer = card.querySelector('.allergy-icon-container');
                         if (iconContainer) {
                             const icon = document.createElement('span');
                             icon.className = 'allergy-icon ml-2 text-base';
-                            icon.innerText = aiResponse.allergy_map[nameText];
+                            icon.innerText = emojiStr;
                             iconContainer.appendChild(icon);
                         }
                     }
@@ -123,4 +130,13 @@ async function askAI() {
     } catch (error) {
         outputDiv.innerHTML = `❌ 오류: ${error.message}<br>잠시 후 다시 시도해주세요.`;
     }
+}
+
+// [4] 날짜 변경 시 결과를 초기화하는 함수 (화살표 클릭 이벤트에 이 함수를 연결하세요)
+function clearAIResults() {
+    const outputDiv = document.getElementById('ai-output');
+    if (outputDiv) {
+        outputDiv.innerHTML = "✨ 분석 버튼을 누르면 AI 영양사가 분석을 시작합니다.";
+    }
+    document.querySelectorAll('.allergy-icon').forEach(icon => icon.remove());
 }
