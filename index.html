@@ -257,9 +257,15 @@
             <div id="meal-content" class="flex-1 flex flex-col min-h-0">
                 <div id="meals-container" class="flex-1 overflow-y-auto overscroll-contain pr-2 pb-4 space-y-10 custom-scrollbar" style="max-height: 50vh;"></div>
                 
-                <div id="meal-disclaimer" class="mt-6 space-y-1 hidden">
-                    <p class="text-[10px] text-slate-700 dark:text-slate-300 text-center leading-relaxed font-bold">표시된 영양 정보는 메뉴 기반 추정치이므로 참고용으로만 활용해주세요. <span class="text-indigo-600 dark:text-indigo-400">알레르기 정보에 대한 것은 AI가 분석한 것으로 정확하지 않을 수 있습니다. 자세한 정보는 식당에 문의하세요.</span></p>
-                    <p class="text-[9px] text-slate-600 dark:text-slate-400 text-center leading-relaxed font-medium">본 서비스의 날씨 정보는 기상청 단기예보 API를 활용하며,<br>실제 기상 상황과 차이가 있을 수 있습니다.</p>
+                <!-- 수정됨: 하단 안내 문구 줄바꿈 및 알레르기 주의사항 추가 -->
+                <div id="meal-disclaimer" class="mt-6 space-y-2 hidden">
+                    <p class="text-[10px] text-slate-700 dark:text-slate-300 text-center leading-relaxed font-bold">
+                        표시된 영양 정보는 메뉴 기반 추정치이므로 참고용으로만 활용해주세요.
+                    </p>
+                    <p class="text-[10px] text-indigo-600 dark:text-indigo-400 text-center leading-relaxed font-bold">
+                        알레르기 정보는 AI가 분석한 것으로 실제와 다를 수 있으니 정확하지 않을 수 있습니다.<br>
+                        자세한 정보는 식당에 문의하시기 바랍니다.
+                    </p>
                 </div>
             </div>
 
@@ -526,8 +532,13 @@
             weekendMsg.classList.add(animClass);
         }
 
+        // 수정됨: renderDayMenu에서 리스트 구조 변경 및 요일 변경 시 AI 출력 초기화
         function renderDayMenu(targetDate, direction = 1) {
             if (!currentMenuData) return;
+
+            // 요일이나 날짜 변경 시 AI 분석 텍스트 초기화
+            const aiOutput = document.getElementById('ai-output');
+            aiOutput.innerText = "오늘의 영양 섭취는 어떨까요?\n아래 버튼을 눌러 조언을 받아보세요!";
 
             const dayNameKR        = week[targetDate.getDay()];
             const targetDow        = targetDate.getDay();
@@ -543,7 +554,6 @@
                           || null;
 
             const aiBtn = document.querySelector('#ai-advice-section button');
-            const aiOutput = document.getElementById('ai-output');
             
             const hasAnyMeal = mealData && ['breakfast', 'lunch', 'dinner'].some(key => {
                 const menu = mealData[key];
@@ -564,7 +574,6 @@
                 aiBtn.onclick = () => {
                     if (typeof askAI === 'function') askAI();
                 };
-                aiOutput.innerText = "오늘의 영양 섭취는 어떨까요?\n아래 버튼을 눌러 조언을 받아보세요!";
             }
 
             let displayDateStr = targetDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
@@ -626,6 +635,7 @@
 
                     if (!isNoMeal) {
                         const items = rawMenu.split(/,\s*/).filter(i => i.trim());
+                        // 수정됨: justify-between과 allergy-icon-container 추가
                         html += `<ul class="grid grid-cols-1 gap-2 mb-4">
                                     ${items.map(m => `
                                         <li class="meal-item-card flex items-center justify-between p-3.5 bg-white dark:bg-slate-700 rounded-2xl text-slate-950 dark:text-white font-black border border-slate-300 dark:border-slate-600 shadow-sm">
@@ -633,7 +643,7 @@
                                                 <span class="w-2.5 h-2.5 bg-indigo-600 dark:bg-yellow-400 rounded-full flex-shrink-0"></span>
                                                 <span class="menu-name-text">${m}</span>
                                             </div>
-                                            <div class="allergy-icon-container"></div>
+                                            <div class="allergy-icon-container flex gap-1"></div>
                                         </li>`).join('')}
                                  </ul>`;
 
