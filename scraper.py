@@ -232,14 +232,32 @@ def main():
             final_data["meals"] = meal_result
             final_data["target_date"] = first_monday_date if first_monday_date else target_date
             print(f"🍱 식단 갱신 성공 / target_date = {final_data['target_date']}")
-    except Exception as e:
-        print(f"❌ 식단 크롤링 실패: {e}")
+        except Exception as e:
+            print(f"❌ 식단 크롤링 실패: {e}")
 
-    final_data["weather"] = get_weather(final_data.get("weather", {"temp": "N/A", "rain": "N/A"}))
+        existing_weather = final_data.get("weather", {"temp": "N/A", "rain": "N/A"})
+    last_update_text = existing_weather.get("last_update")
+
+    should_update_weather = True
+
+    if last_update_text:
+        try:
+            last_update = datetime.strptime(last_update_text, "%Y-%m-%d %H:%M")
+            now_kst = get_kst_now()
+
+            # 마지막 날씨 갱신 후 3시간이 지나지 않았으면 기존 날씨 유지
+            if now_kst - last_update < timedelta(hours=3):
+                should_update_weather = False
+        except Exception:
+            should_update_weather = True
+
+    if should_update_weather:
+        final_data["weather"] = get_weather(existing_weather)
+    else:
+        final_data["weather"] = existing_weather
+        print("🌦️ 날씨는 최근 갱신값을 유지합니다.")
 
     with open(data_path, "w", encoding="utf-8") as f:
         json.dump(final_data, f, ensure_ascii=False, indent=2)
-    print("🚀 모든 작업이 완료되었습니다!")
 
-if __name__ == "__main__":
-    main()
+    print("🚀 모든 작업이 완료되었습니다!")
