@@ -46,6 +46,7 @@ async function askAI() {
     const outputDiv = document.getElementById('ai-output');
     if (!outputDiv) return;
 
+    // 화면에 보이는 식단 카드들만 가져오기
     const visibleCards = Array.from(document.querySelectorAll('.meal-item-card'))
                               .filter(card => card.offsetParent !== null);
 
@@ -69,13 +70,25 @@ async function askAI() {
         });
 
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || `서버 오류 ${response.status}`);
+
+        // [추가] 할당량 초과 및 서버 에러 상세 처리
+        if (!response.ok) {
+            if (response.status === 429) {
+                throw new Error("오늘 AI 사용 할당량이 초과되었습니다. 내일 다시 시도해주세요.");
+            }
+            // 구글 API에서 보내준 상세 에러 메시지가 있다면 사용
+            const errorDetail = data.error?.message || data.error || `서버 오류 ${response.status}`;
+            throw new Error(errorDetail);
+        }
 
         if (data && data.candidates && data.candidates[0]) {
             let rawText = data.candidates[0].content.parts[0].text;
+            
+            // JSON 형식만 추출 (AI가 앞뒤에 설명을 붙일 경우 대비)
             const jsonMatch = rawText.match(/\{[\s\S]*\}/);
             const aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
 
+            // 알레르기 아이콘 매핑 로직
             visibleCards.forEach(card => {
                 const oldIconGroup = card.querySelector('.allergy-icon-group');
                 if (oldIconGroup) oldIconGroup.remove();
@@ -93,7 +106,6 @@ async function askAI() {
                         const group = document.createElement('div');
                         group.className = 'allergy-icon-group flex gap-1';
 
-                        // 해당 메뉴의 모든 알레르기 정보를 팝업용 텍스트로 미리 만듦
                         const fullAllergyInfo = allergyDataList
                             .map(item => `${item.emoji}:${item.name} (${item.code}번)`)
                             .join('\n');
@@ -103,7 +115,6 @@ async function askAI() {
                             icon.className = 'allergy-icon cursor-pointer bg-gray-100 rounded px-1 transition-transform active:scale-95';
                             icon.innerText = item.emoji;
                             
-                            // 어떤 이모지를 눌러도 해당 메뉴의 전체 정보를 보여줌
                             icon.onclick = (e) => {
                                 e.stopPropagation();
                                 alert(fullAllergyInfo);
@@ -116,10 +127,14 @@ async function askAI() {
                 }
             });
 
+            // 결과 텍스트 출력
             outputDiv.innerHTML = aiResponse.summary ? aiResponse.summary.replace(/\n/g, '<br>') : "분석 완료";
+        } else {
+            throw new Error("AI가 분석 데이터를 보내지 못했습니다.");
         }
     } catch (error) {
-        console.error("AI 호출 오류:", error);
+        console.error("AI 호출 오류 상세:", error);
+        // 사용자에게 에러 원인을 구체적으로 노출
         outputDiv.innerHTML = `❌ 오류: ${error.message}<br>잠시 후 다시 시도해주세요.`;
     }
 }
