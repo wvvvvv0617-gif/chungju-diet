@@ -106,6 +106,32 @@ async function askAI() {
             throw new Error(errorDetail);
         }
 
+        // HTTP 상태는 200이어도 Gemini 오류가 JSON 안에 들어오는 경우 처리
+        if (data?.error) {
+            if (
+                data.error.code === 429 ||
+                data.error.status === "RESOURCE_EXHAUSTED" ||
+                data.error.message?.includes("quota") ||
+                data.error.message?.includes("Quota")
+            ) {
+                throw new Error("오늘 AI 영양사 호출 횟수를 모두 소진하였습니다.");
+            }
+
+            if (data.error.code === 400 || data.error.status === "INVALID_ARGUMENT") {
+                throw new Error("식단 정보를 분석할 수 없습니다. 식단 내용을 확인한 뒤 다시 시도해주세요.");
+            }
+
+            if (data.error.code === 404 || data.error.status === "NOT_FOUND") {
+                throw new Error("AI 분석 서버를 찾을 수 없습니다. 관리자에게 문의해주세요.");
+            }
+
+            if (data.error.code >= 500) {
+                throw new Error("AI 분석 서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            }
+
+            throw new Error(data.error.message || "AI 분석 중 알 수 없는 오류가 발생했습니다.");
+        }
+
         if (data && data.candidates && data.candidates[0]) {
             let rawText = data.candidates[0].content.parts[0].text;
             
