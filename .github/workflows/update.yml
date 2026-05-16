@@ -26,12 +26,16 @@ jobs:
       run: python scraper.py
       env:
         KMA_API_KEY: ${{ secrets.KMA_API_KEY }}
+
+    - name: Inject Weather API Key
+      run: |
+        sed -i "s|__KMA_API_KEY__|${{ secrets.KMA_API_KEY }}|g" app.js
       
     - name: Commit data.json
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
-        git add data.json
+        git add data.json app.js
         # 변경 사항이 없을 경우 에러 없이 통과
         git commit -m "auto update: $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "no changes"
         git push
