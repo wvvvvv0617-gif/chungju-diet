@@ -41,12 +41,11 @@ async function fetchRealtimeWeather() {
     } catch (error) { console.error("날씨 호출 오류:", error); }
 }
 
-// [3] AI 영양사 분석 (프론트엔드 최적화 버전)
+// [3] AI 영양사 분석
 async function askAI() {
     const outputDiv = document.getElementById('ai-output');
     if (!outputDiv) return;
 
-    // 1. 현재 화면에 실제로 보이는(Visible) 메뉴 카드들만 수집
     const visibleCards = Array.from(document.querySelectorAll('.meal-item-card'))
                               .filter(card => card.offsetParent !== null);
 
@@ -55,7 +54,6 @@ async function askAI() {
         return;
     }
 
-    // 2. 메뉴 이름만 추출하여 쉼표로 연결
     const menuNames = visibleCards.map(card => card.querySelector('.menu-name-text').innerText.trim());
     const currentMeal = menuNames.join(', ');
     
@@ -64,52 +62,58 @@ async function askAI() {
     try {
         const workerUrl = 'https://gemini-proxy.wvvvvv0617.workers.dev';
         
-        // 3. Worker 서버로 식단 데이터 전송 (지시문은 Worker에서 처리함)
         const response = await fetch(workerUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                mealData: currentMeal // 식단 데이터만 깔끔하게 전달
-            })
+            body: JSON.stringify({ mealData: currentMeal })
         });
 
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || `서버 오류 ${response.status}`);
 
-        // 4. AI 응답 처리 (JSON 파싱)
         if (data && data.candidates && data.candidates[0]) {
             let rawText = data.candidates[0].content.parts[0].text;
-            // JSON 형식만 추출하는 정규식
             const jsonMatch = rawText.match(/\{[\s\S]*\}/);
             const aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
 
-            // 5. 알레르기 이모지 업데이트
+            // 알레르기 표시 로직 수정
             visibleCards.forEach(card => {
-                // 기존 아이콘 제거
-                const oldIcon = card.querySelector('.allergy-icon');
-                if (oldIcon) oldIcon.remove();
+                const oldIconGroup = card.querySelector('.allergy-icon-group');
+                if (oldIconGroup) oldIconGroup.remove();
 
                 const nameText = card.querySelector('.menu-name-text').innerText.trim();
                 
-                // AI 응답의 allergy_map에서 현재 메뉴와 일치하는 키 찾기
                 const matchingKey = Object.keys(aiResponse.allergy_map).find(key => 
                     nameText.includes(key) || key.includes(nameText)
                 );
 
-                const emojiStr = matchingKey ? aiResponse.allergy_map[matchingKey] : "";
+                const allergyDataList = matchingKey ? aiResponse.allergy_map[matchingKey] : [];
 
-                if (emojiStr && emojiStr.trim() !== "") {
+                if (allergyDataList.length > 0) {
                     const iconContainer = card.querySelector('.allergy-icon-container');
                     if (iconContainer) {
-                        const icon = document.createElement('span');
-                        icon.className = 'allergy-icon ml-2 text-base';
-                        icon.innerText = emojiStr;
-                        iconContainer.appendChild(icon);
+                        const group = document.createElement('div');
+                        group.className = 'allergy-icon-group flex gap-1';
+
+                        allergyDataList.forEach(item => {
+                            const icon = document.createElement('span');
+                            // 커서 모양을 포인터로 변경하고 클릭 이벤트 추가
+                            icon.className = 'allergy-icon cursor-pointer bg-gray-100 rounded px-1 transition-transform active:scale-90';
+                            icon.innerText = item.emoji;
+                            
+                            // 클릭 시 한국어 성분명과 번호 표시
+                            icon.onclick = (e) => {
+                                e.stopPropagation();
+                                alert(`알레르기 성분: ${item.name} (${item.code}번)`);
+                            };
+
+                            group.appendChild(icon);
+                        });
+                        iconContainer.appendChild(group);
                     }
                 }
             });
 
-            // 6. 요약 텍스트 출력
             outputDiv.innerHTML = aiResponse.summary ? aiResponse.summary.replace(/\n/g, '<br>') : "분석 완료";
         }
     } catch (error) {
@@ -118,18 +122,14 @@ async function askAI() {
     }
 }
 
-// [4] 날짜 변경 시 결과를 초기화하는 함수
-// 요일 이동 버튼(화살표)을 클릭할 때 이 함수가 실행되도록 연결되어 있어야 합니다.
 function clearAIResults() {
     const outputDiv = document.getElementById('ai-output');
     if (outputDiv) {
         outputDiv.innerHTML = "✨ 분석 버튼을 누르면 AI 영양사가 분석을 시작합니다.";
     }
-    // 모든 카드에서 기존 알레르기 아이콘 제거
-    document.querySelectorAll('.allergy-icon').forEach(icon => icon.remove());
+    document.querySelectorAll('.allergy-icon-group').forEach(group => group.remove());
 }
 
-// 초기 실행 (필요 시)
 window.addEventListener('DOMContentLoaded', () => {
     fetchRealtimeWeather();
 });
