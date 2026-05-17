@@ -122,9 +122,15 @@
             border-color: #334155 !important;
         }
 
-        .dark .daily-total-card {
-            background: linear-gradient(135deg, #111827 0%, #1e293b 100%) !important;
-            border-color: #475569 !important;
+        /* [수정] 하루 총 섭취량 전용 테마 스타일 추가 */
+        .daily-total-accent {
+            background-color: #f5f7ff !important; /* 라이트 모드: 연보라/블루 톤 */
+            border-color: #e0e7ff !important;
+        }
+
+        .dark .daily-total-accent {
+            background: #1e293b !important; /* 다크 모드: 차분한 네이비/슬레이트 (너무 밝지 않게) */
+            border-color: #334155 !important;
         }
 
         .dark #display-date-tag {
@@ -248,14 +254,16 @@
     <main class="p-5 relative z-20 mt-4 space-y-6">
         <section id="main-card" class="rounded-[32px] p-6 overflow-hidden min-h-[420px] flex flex-col transition-all duration-500">
             <div id="card-header" class="flex justify-between items-center mb-6">
-                <button id="btn-prev" onclick="changeDay(-1)" class="w-10 h-10 flex items-center justify-center bg-slate-200 text-slate-700 rounded-full dark:bg-slate-800 dark:text-white active:scale-90 transition-all shadow-sm border border-slate-300 dark:border-slate-600">
+                <!-- [수정] 날짜 변경 시 loadSavedAI() 호출 추가 -->
+                <button id="btn-prev" onclick="changeDay(-1); loadSavedAI();" class="w-10 h-10 flex items-center justify-center bg-slate-200 text-slate-700 rounded-full dark:bg-slate-800 dark:text-white active:scale-90 transition-all shadow-sm border border-slate-300 dark:border-slate-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
                 </button>
                 <div class="flex flex-col items-center gap-1">
                     <span id="display-date-tag" class="text-base font-black text-slate-950 dark:text-slate-100"></span>
                     <span id="display-day-tag" class="text-[11px] text-blue-800 font-black bg-blue-200 px-3 py-1 rounded-md dark:bg-indigo-600 dark:text-white tracking-wide border border-blue-300 dark:border-transparent"></span>
                 </div>
-                <button id="btn-next" onclick="changeDay(1)" class="w-10 h-10 flex items-center justify-center bg-slate-200 text-slate-700 rounded-full dark:bg-slate-800 dark:text-white active:scale-90 transition-all shadow-sm border border-slate-300 dark:border-slate-600">
+                <!-- [수정] 날짜 변경 시 loadSavedAI() 호출 추가 -->
+                <button id="btn-next" onclick="changeDay(1); loadSavedAI();" class="w-10 h-10 flex items-center justify-center bg-slate-200 text-slate-700 rounded-full dark:bg-slate-800 dark:text-white active:scale-90 transition-all shadow-sm border border-slate-300 dark:border-slate-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
                 </button>
             </div>
@@ -684,7 +692,7 @@
                             rawMenu && rawMenu.includes(keyword) && keyword !== "식단 없음" && keyword !== "식단없음"
                         );
                         const emptyMsg = isSpecialDay ? rawMenu : "등록된 식단 정보가 없습니다.";
-                        html += `<div class="meal-item-card p-6 text-center font-black text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-700 rounded-2xl border border-slate-300 dark:border-slate-600 shadow-sm">${emptyMsg}</div>`;
+                        html += `<div class="meal-item-card p-6 text-center font-black text-slate-950 dark:text-slate-100 bg-white dark:bg-slate-700 rounded-2xl border border-slate-300 dark:border-slate-600 shadow-sm">${emptyMsg}</div>`;
                     }
                     html += `</div>`;
                     container.innerHTML += html;
@@ -697,13 +705,14 @@
                     const totalFatPercent   = Math.min((totalNutrition.fat      / 54)   * 100, 100);
                     const totalSugarPercent = Math.min((totalNutrition.sugar    / 100)  * 100, 100);
 
+                    // [수정] 하루 총 섭취량 컨테이너에 daily-total-accent 클래스 적용
                     container.innerHTML += `
                     <div class="animate-fadeIn">
                         <div class="flex items-center gap-2 mb-3">
                             <span class="bg-violet-200 text-violet-900 px-3 py-1 rounded-full text-[11px] font-black tracking-widest uppercase dark:bg-violet-600 dark:text-white border border-violet-300 dark:border-violet-400">TODAY 📊</span>
                             <h2 class="text-2xl font-black text-slate-950 dark:text-white">하루 총 섭취량</h2>
                         </div>
-                        <div class="daily-total-card bg-slate-100 dark:bg-slate-900 p-5 rounded-[24px] border border-slate-200 dark:border-slate-700 shadow-inner">
+                        <div class="daily-total-card daily-total-accent p-5 rounded-[24px] border border-slate-200 dark:border-slate-700 shadow-inner">
                             <h3 class="text-[11px] font-black text-slate-800 mb-1 uppercase tracking-widest text-center dark:text-yellow-400">Daily Nutrition Total</h3>
                             <p class="text-[10px] text-slate-800 dark:text-slate-200 text-center mb-4 font-bold">오늘 식단 기준 추정치 · 권장 섭취량 대비</p>
                             <div class="space-y-4">
