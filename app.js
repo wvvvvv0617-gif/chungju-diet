@@ -67,7 +67,7 @@ async function askAI() {
     if (savedData) {
         setTimeout(() => {
             renderAIResults(JSON.parse(savedData), visibleCards);
-        }, 1200);
+        }, 2000);
         return;
     }
 
