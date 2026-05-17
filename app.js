@@ -77,111 +77,36 @@ async function askAI() {
         });
 
         let data = null;
-
         try {
             data = await response.json();
         } catch (jsonError) {
             data = null;
         }
 
-        // 상태 코드별 오류 메시지 처리
         if (!response.ok) {
-            if (response.status === 429) {
-                throw new Error("오늘 AI 영양사 호출 횟수를 모두 소진하였습니다.");
-            }
-
-            if (response.status === 400) {
-                throw new Error("식단 정보를 분석할 수 없습니다. 식단 내용을 확인한 뒤 다시 시도해주세요.");
-            }
-
-            if (response.status === 404) {
-                throw new Error("AI 분석 서버를 찾을 수 없습니다. 관리자에게 문의해주세요.");
-            }
-
-            if (response.status >= 500) {
-                throw new Error("AI 분석 서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
-            }
-
-            const errorDetail = data?.error?.message || data?.error || `알 수 없는 오류가 발생했습니다. 오류 코드: ${response.status}`;
+            if (response.status === 429) throw new Error("오늘 AI 영양사 호출 횟수를 모두 소진하였습니다.");
+            if (response.status === 400) throw new Error("식단 정보를 분석할 수 없습니다.");
+            if (response.status === 404) throw new Error("AI 분석 서버를 찾을 수 없습니다.");
+            if (response.status >= 500) throw new Error("AI 분석 서버에 문제가 발생했습니다.");
+            const errorDetail = data?.error?.message || data?.error || `알 수 없는 오류: ${response.status}`;
             throw new Error(errorDetail);
         }
 
-        // HTTP 상태는 200이어도 Gemini 오류가 JSON 안에 들어오는 경우 처리
         if (data?.error) {
-            if (
-                data.error.code === 429 ||
-                data.error.status === "RESOURCE_EXHAUSTED" ||
-                data.error.message?.includes("quota") ||
-                data.error.message?.includes("Quota")
-            ) {
-                throw new Error("오늘 AI 영양사 호출 횟수를 모두 소진하였습니다.");
-            }
-
-            if (data.error.code === 400 || data.error.status === "INVALID_ARGUMENT") {
-                throw new Error("식단 정보를 분석할 수 없습니다. 식단 내용을 확인한 뒤 다시 시도해주세요.");
-            }
-
-            if (data.error.code === 404 || data.error.status === "NOT_FOUND") {
-                throw new Error("AI 분석 서버를 찾을 수 없습니다. 관리자에게 문의해주세요.");
-            }
-
-            if (data.error.code >= 500) {
-                throw new Error("AI 분석 서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
-            }
-
-            throw new Error(data.error.message || "AI 분석 중 알 수 없는 오류가 발생했습니다.");
+            if (data.error.code === 429 || data.error.message?.includes("quota")) throw new Error("오늘 AI 영양사 호출 횟수를 소진하였습니다.");
+            throw new Error(data.error.message || "AI 분석 중 오류가 발생했습니다.");
         }
 
         if (data && data.candidates && data.candidates[0]) {
             let rawText = data.candidates[0].content.parts[0].text;
-            
-            // JSON 형식만 추출 (AI가 앞뒤에 설명을 붙일 경우 대비)
             const jsonMatch = rawText.match(/\{[\s\S]*\}/);
             const aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
 
-            // 알레르기 아이콘 매핑 로직
-            visibleCards.forEach(card => {
-                const oldIconGroup = card.querySelector('.allergy-icon-group');
-                if (oldIconGroup) oldIconGroup.remove();
+            // ✅ 추가: 분석 결과를 로컬 저장소에 저장 (식단 내용을 키값으로 사용)
+            localStorage.setItem(`ai_cache_${currentMeal}`, JSON.stringify(aiResponse));
 
-                const nameText = card.querySelector('.menu-name-text').innerText.trim();
-                const matchingKey = Object.keys(aiResponse.allergy_map).find(key => 
-                    nameText.includes(key) || key.includes(nameText)
-                );
-
-                const allergyDataList = matchingKey ? aiResponse.allergy_map[matchingKey] : [];
-
-                if (allergyDataList.length > 0) {
-                    const iconContainer = card.querySelector('.allergy-icon-container');
-
-                    if (iconContainer) {
-                        const group = document.createElement('div');
-                        group.className = 'allergy-icon-group flex gap-1';
-
-                        const fullAllergyInfo = allergyDataList
-                            .map(item => `${item.emoji}:${item.name} (${item.code}번)`)
-                            .join('\n');
-
-                        allergyDataList.forEach(item => {
-                            const icon = document.createElement('span');
-                            icon.className = 'allergy-icon cursor-pointer bg-gray-100 rounded px-1 transition-transform active:scale-95';
-                            icon.innerText = item.emoji;
-                            
-                            icon.onclick = (e) => {
-                                e.stopPropagation();
-                                alert(fullAllergyInfo);
-                            };
-
-                            group.appendChild(icon);
-                        });
-
-                        iconContainer.appendChild(group);
-                    }
-                }
-            });
-
-            // 결과 텍스트 출력
-            outputDiv.innerHTML = aiResponse.summary ? aiResponse.summary.replace(/\n/g, '<br>') : "분석 완료";
+            // 화면에 렌더링
+            renderAIResults(aiResponse, visibleCards);
         } else {
             throw new Error("AI가 분석 데이터를 보내지 못했습니다.");
         }
@@ -191,16 +116,83 @@ async function askAI() {
     }
 }
 
-function clearAIResults() {
+// ✅ 새로 추가: 화면에 AI 결과를 그려주는 함수 (저장된 데이터를 불러올 때도 사용)
+function renderAIResults(aiResponse, visibleCards) {
     const outputDiv = document.getElementById('ai-output');
 
+    // 알레르기 아이콘 매핑
+    visibleCards.forEach(card => {
+        const oldIconGroup = card.querySelector('.allergy-icon-group');
+        if (oldIconGroup) oldIconGroup.remove();
+
+        const nameText = card.querySelector('.menu-name-text').innerText.trim();
+        const matchingKey = Object.keys(aiResponse.allergy_map).find(key => 
+            nameText.includes(key) || key.includes(nameText)
+        );
+
+        const allergyDataList = matchingKey ? aiResponse.allergy_map[matchingKey] : [];
+
+        if (allergyDataList.length > 0) {
+            const iconContainer = card.querySelector('.allergy-icon-container');
+            if (iconContainer) {
+                const group = document.createElement('div');
+                group.className = 'allergy-icon-group flex gap-1';
+                const fullAllergyInfo = allergyDataList
+                    .map(item => `${item.emoji}:${item.name} (${item.code}번)`)
+                    .join('\n');
+
+                allergyDataList.forEach(item => {
+                    const icon = document.createElement('span');
+                    icon.className = 'allergy-icon cursor-pointer bg-gray-100 rounded px-1 transition-transform active:scale-95';
+                    icon.innerText = item.emoji;
+                    icon.onclick = (e) => {
+                        e.stopPropagation();
+                        alert(fullAllergyInfo);
+                    };
+                    group.appendChild(icon);
+                });
+                iconContainer.appendChild(group);
+            }
+        }
+    });
+
+    // 요약 텍스트 출력
+    if (outputDiv) {
+        outputDiv.innerHTML = aiResponse.summary ? aiResponse.summary.replace(/\n/g, '<br>') : "분석 완료";
+    }
+}
+
+// ✅ 새로 추가: 날짜 이동 시 저장된 데이터를 확인하고 불러오는 함수
+function loadSavedAI() {
+    const visibleCards = Array.from(document.querySelectorAll('.meal-item-card'))
+                              .filter(card => card.offsetParent !== null);
+    
+    if (visibleCards.length === 0) return;
+
+    const menuNames = visibleCards.map(card => card.querySelector('.menu-name-text').innerText.trim());
+    const currentMeal = menuNames.join(', ');
+
+    const savedData = localStorage.getItem(`ai_cache_${currentMeal}`);
+
+    if (savedData) {
+        // 이전에 분석한 데이터가 있다면 즉시 화면에 표시
+        renderAIResults(JSON.parse(savedData), visibleCards);
+    } else {
+        // 없다면 초기 상태로 복구
+        clearAIResults();
+    }
+}
+
+function clearAIResults() {
+    const outputDiv = document.getElementById('ai-output');
     if (outputDiv) {
         outputDiv.innerHTML = "✨ 분석 버튼을 누르면 AI 영양사가 분석을 시작합니다.";
     }
-
     document.querySelectorAll('.allergy-icon-group').forEach(group => group.remove());
 }
 
 window.addEventListener('DOMContentLoaded', () => {
     fetchRealtimeWeather();
+    // ✅ 앱 실행 시 현재 날짜 식단에 대해 저장된 데이터가 있는지 확인
+    loadSavedAI();
 });
