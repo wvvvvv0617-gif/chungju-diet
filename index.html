@@ -122,14 +122,13 @@
             border-color: #334155 !important;
         }
 
-        /* [수정] 하루 총 섭취량 전용 테마 스타일 추가 */
         .daily-total-accent {
-            background-color: #f5f7ff !important; /* 라이트 모드: 연보라/블루 톤 */
+            background-color: #f5f7ff !important;
             border-color: #e0e7ff !important;
         }
 
         .dark .daily-total-accent {
-            background: #1e293b !important; /* 다크 모드: 차분한 네이비/슬레이트 (너무 밝지 않게) */
+            background: #1e293b !important;
             border-color: #334155 !important;
         }
 
@@ -215,11 +214,22 @@
         }
     </style>
 </head>
-<body class="max-w-md mx-auto min-h-screen bg-slate-100 dark:bg-slate-950 shadow-2xl pb-10 dark:shadow-none">
+<body class="max-w-md mx-auto min-h-screen bg-slate-100 dark:bg-slate-950 shadow-2xl pb-10 dark:shadow-none pt-[calc(44px+env(safe-area-inset-top))]">
+
+    <!-- [추가] 상단 고정 네비게이션 바 -->
+    <nav class="fixed top-0 left-0 right-0 z-[100] bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 max-w-md mx-auto">
+        <div style="height: env(safe-area-inset-top);"></div>
+        <div class="px-5 h-[44px] flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-[11px] font-black text-indigo-700 dark:text-indigo-400 tracking-tight">한국폴리텍대학 충주캠퍼스 식단</span>
+            </div>
+            <div class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Smart Meal</div>
+        </div>
+    </nav>
 
     <header id="main-header" class="bg-gradient-to-br from-indigo-600 to-blue-500 text-white rounded-b-[50px] shadow-xl relative z-10 transition-all duration-700">
-        <div style="height: env(safe-area-inset-top); min-height: 20px;"></div>
-        <div class="p-8 pt-4">
+        <!-- 기존 safe-area 여백은 body의 pt로 이동되어 제거 또는 최소화 -->
+        <div class="p-8 pt-6">
             <div class="flex justify-between items-start">
                 <div>
                     <p id="current-date" class="text-white text-sm font-black mb-1"></p>
@@ -254,7 +264,6 @@
     <main class="p-5 relative z-20 mt-4 space-y-6">
         <section id="main-card" class="rounded-[32px] p-6 overflow-hidden min-h-[420px] flex flex-col transition-all duration-500">
             <div id="card-header" class="flex justify-between items-center mb-6">
-                <!-- [수정] 날짜 변경 시 loadSavedAI() 호출 추가 -->
                 <button id="btn-prev" onclick="changeDay(-1); loadSavedAI();" class="w-10 h-10 flex items-center justify-center bg-slate-200 text-slate-700 rounded-full dark:bg-slate-800 dark:text-white active:scale-90 transition-all shadow-sm border border-slate-300 dark:border-slate-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
                 </button>
@@ -262,7 +271,6 @@
                     <span id="display-date-tag" class="text-base font-black text-slate-950 dark:text-slate-100"></span>
                     <span id="display-day-tag" class="text-[11px] text-blue-800 font-black bg-blue-200 px-3 py-1 rounded-md dark:bg-indigo-600 dark:text-white tracking-wide border border-blue-300 dark:border-transparent"></span>
                 </div>
-                <!-- [수정] 날짜 변경 시 loadSavedAI() 호출 추가 -->
                 <button id="btn-next" onclick="changeDay(1); loadSavedAI();" class="w-10 h-10 flex items-center justify-center bg-slate-200 text-slate-700 rounded-full dark:bg-slate-800 dark:text-white active:scale-90 transition-all shadow-sm border border-slate-300 dark:border-slate-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
                 </button>
@@ -314,9 +322,16 @@
 
         <section id="ai-advice-section" class="mt-8 bg-white rounded-[40px] p-8 border-2 border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
             <div class="text-center">
-                <div class="inline-block p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-[28px] mb-4 shadow-inner">
-                    <span class="text-3xl filter drop-shadow-sm">🧐🥑</span>
+                <div class="inline-block p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-[24px] mb-4 shadow-inner">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center overflow-hidden rounded-[18px]">
+                        <img 
+                            src="영양사 이모지.png" 
+                            alt="AI 영양사" 
+                            class="w-full h-full object-cover"
+                        />
+                    </div>
                 </div>
+                
                 <h4 class="text-base font-black text-slate-950 dark:text-yellow-300 mb-4">AI 영양사 식단 분석</h4>
                 
                 <div id="ai-output" class="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-[24px] text-[15px] text-slate-800 dark:text-slate-100 font-medium leading-7 border border-dashed border-slate-300 dark:border-slate-600 mb-6 whitespace-pre-wrap break-words">오늘의 영양 섭취는 어떨까요?
@@ -705,7 +720,6 @@
                     const totalFatPercent   = Math.min((totalNutrition.fat      / 54)   * 100, 100);
                     const totalSugarPercent = Math.min((totalNutrition.sugar    / 100)  * 100, 100);
 
-                    // [수정] 하루 총 섭취량 컨테이너에 daily-total-accent 클래스 적용
                     container.innerHTML += `
                     <div class="animate-fadeIn">
                         <div class="flex items-center gap-2 mb-3">
