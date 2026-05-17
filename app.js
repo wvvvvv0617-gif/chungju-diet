@@ -61,13 +61,15 @@ async function askAI() {
     const menuNames = visibleCards.map(card => card.querySelector('.menu-name-text').innerText.trim());
     const currentMeal = menuNames.join(', ');
     
+    outputDiv.innerHTML = "✨ AI 영양사가 분석 중입니다...";
+
     const savedData = localStorage.getItem(`ai_cache_${currentMeal}`);
     if (savedData) {
-        renderAIResults(JSON.parse(savedData), visibleCards);
+        setTimeout(() => {
+            renderAIResults(JSON.parse(savedData), visibleCards);
+        }, 1200);
         return;
     }
-
-    outputDiv.innerHTML = "✨ AI 영양사가 분석 중입니다...";
 
     try {
         const workerUrl = 'https://gemini-proxy.wvvvvv0617.workers.dev';
