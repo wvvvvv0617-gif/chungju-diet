@@ -281,7 +281,7 @@
                     <p id="rest-subtitle" class="text-lg text-slate-800 dark:text-slate-100 leading-relaxed font-black"></p>
                 </div>
                 <div class="bg-white px-8 py-4 rounded-2xl border-2 border-indigo-200 shadow-md dark:bg-slate-800 dark:border-indigo-500">
-                    <p id="return-msg" class="text-base font-black text-indigo-700 dark:text-indigo-300"></p>
+                    <p id="return-msg" class="text-base font-black text-indigo-700 dark:text-indigo-300 leading-relaxed"></p>
                 </div>
             </div>
         </section>
@@ -606,7 +606,7 @@
                 }
 
                 if (isTargetSunday && isSundayRestMode()) {
-                    document.getElementById('return-msg').innerText = "오늘 저녁 6시 30분 이후 다음 주 식단이 업데이트됩니다!";
+                    document.getElementById('return-msg').innerText = "오늘 저녁 6시 30분 이후<br>다음 주 식단이 업데이트됩니다!";
                 } else {
                     document.getElementById('return-msg').innerText = "평일에 다시 만나요!";
                 }
