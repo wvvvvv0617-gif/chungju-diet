@@ -1,4 +1,3 @@
-// [1] 서비스 워커 등록
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
@@ -7,7 +6,6 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// [2] 기상청 실시간 날씨 (기존 유지)
 const WEATHER_API_KEY = "e45e99f92f1e612fe4190678af2e64592c0fffa1eb08bb1291215d9c3ae01aae";
 const NX = 76; 
 const NY = 114;
@@ -48,12 +46,10 @@ async function fetchRealtimeWeather() {
     }
 }
 
-// [3] AI 영양사 분석
 async function askAI() {
     const outputDiv = document.getElementById('ai-output');
     if (!outputDiv) return;
 
-    // 화면에 보이는 식단 카드들만 가져오기
     const visibleCards = Array.from(document.querySelectorAll('.meal-item-card'))
                               .filter(card => card.offsetParent !== null);
 
@@ -65,6 +61,12 @@ async function askAI() {
     const menuNames = visibleCards.map(card => card.querySelector('.menu-name-text').innerText.trim());
     const currentMeal = menuNames.join(', ');
     
+    const savedData = localStorage.getItem(`ai_cache_${currentMeal}`);
+    if (savedData) {
+        renderAIResults(JSON.parse(savedData), visibleCards);
+        return;
+    }
+
     outputDiv.innerHTML = "✨ AI 영양사가 분석 중입니다...";
 
     try {
@@ -102,10 +104,8 @@ async function askAI() {
             const jsonMatch = rawText.match(/\{[\s\S]*\}/);
             const aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
 
-            // ✅ 추가: 분석 결과를 로컬 저장소에 저장 (식단 내용을 키값으로 사용)
             localStorage.setItem(`ai_cache_${currentMeal}`, JSON.stringify(aiResponse));
 
-            // 화면에 렌더링
             renderAIResults(aiResponse, visibleCards);
         } else {
             throw new Error("AI가 분석 데이터를 보내지 못했습니다.");
@@ -116,11 +116,9 @@ async function askAI() {
     }
 }
 
-// ✅ 새로 추가: 화면에 AI 결과를 그려주는 함수 (저장된 데이터를 불러올 때도 사용)
 function renderAIResults(aiResponse, visibleCards) {
     const outputDiv = document.getElementById('ai-output');
 
-    // 알레르기 아이콘 매핑
     visibleCards.forEach(card => {
         const oldIconGroup = card.querySelector('.allergy-icon-group');
         if (oldIconGroup) oldIconGroup.remove();
@@ -156,31 +154,18 @@ function renderAIResults(aiResponse, visibleCards) {
         }
     });
 
-    // 요약 텍스트 출력
     if (outputDiv) {
         outputDiv.innerHTML = aiResponse.summary ? aiResponse.summary.replace(/\n/g, '<br>') : "분석 완료";
     }
 }
 
-// ✅ 새로 추가: 날짜 이동 시 저장된 데이터를 확인하고 불러오는 함수
 function loadSavedAI() {
     const visibleCards = Array.from(document.querySelectorAll('.meal-item-card'))
                               .filter(card => card.offsetParent !== null);
     
     if (visibleCards.length === 0) return;
 
-    const menuNames = visibleCards.map(card => card.querySelector('.menu-name-text').innerText.trim());
-    const currentMeal = menuNames.join(', ');
-
-    const savedData = localStorage.getItem(`ai_cache_${currentMeal}`);
-
-    if (savedData) {
-        // 이전에 분석한 데이터가 있다면 즉시 화면에 표시
-        renderAIResults(JSON.parse(savedData), visibleCards);
-    } else {
-        // 없다면 초기 상태로 복구
-        clearAIResults();
-    }
+    clearAIResults();
 }
 
 function clearAIResults() {
@@ -193,6 +178,5 @@ function clearAIResults() {
 
 window.addEventListener('DOMContentLoaded', () => {
     fetchRealtimeWeather();
-    // ✅ 앱 실행 시 현재 날짜 식단에 대해 저장된 데이터가 있는지 확인
     loadSavedAI();
 });
