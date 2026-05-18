@@ -1,8 +1,8 @@
 {
   "weather": {
     "temp": "22",
-    "rain": "0",
-    "last_update": "2026-05-18 08:15"
+    "rain": "20",
+    "last_update": "2026-05-18 21:48"
   },
   "meals": {
     "월": {
@@ -96,7 +96,7 @@
       "date_text": "목요일",
       "breakfast": "쌀밥\r, 북어무국\r, 두부달걀부침\r, 매콤어묵볶음\r, 참나물겉절이\r, 배추김치",
       "lunch": "비빔국수\r, 쌀밥\r, 탕수육\r, 단무지\r, 배추김치",
-      "dinner": "쌀밥\r, 시래기된장국\r, 고추장닭볶음\r, 청포묵김가루무침\r, 양념깻잎무침\r, 배추김치",
+      "dinner": "쌀밥\r, 시래기된장국\r, 고추장닭볶음\r, 메밀전병\r, 양념깻잎무침\r, 배추김치",
       "nutrition": {
         "breakfast": {
           "carbs": 88,
@@ -113,11 +113,11 @@
           "calories": 802
         },
         "dinner": {
-          "carbs": 95,
-          "protein": 40,
-          "fat": 30,
-          "sugar": 16,
-          "calories": 913
+          "carbs": 92,
+          "protein": 31,
+          "fat": 41,
+          "sugar": 15,
+          "calories": 978
         }
       }
     },
