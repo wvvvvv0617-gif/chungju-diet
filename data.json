@@ -125,7 +125,7 @@
       "date_text": "금요일",
       "breakfast": "쌀밥\r, 맑은콩나물국\r, 매콤돈육찜\r, 아삭이고추된장무침\r, 도시락김\r, 배추김치",
       "lunch": "쌀밥\r, 떡만두국\r, 꽈리고추달걀장조림\r, 실곤약채소무침\r, 요거트\r, 배추김치",
-      "dinner": "(학교식당 공사로 간편식 제공)\r, 컵밥\r, 음료",
+      "dinner": "(학교식당 공사로 간편식 제공)\r, 컵밥\r, 음료\r, 도시락김",
       "nutrition": {
         "breakfast": {
           "carbs": 80,
@@ -142,16 +142,16 @@
           "calories": 698
         },
         "dinner": {
-          "carbs": 90,
-          "protein": 18,
-          "fat": 9,
-          "sugar": 21,
-          "calories": 621
+          "carbs": 88,
+          "protein": 13,
+          "fat": 12,
+          "sugar": 26,
+          "calories": 595
         }
       }
     }
   },
   "target_date": "2026-05-22",
   "mealsByDate": {},
-  "is_weekend": false
+  "is_weekend": true
 }
