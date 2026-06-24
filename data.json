@@ -1,8 +1,8 @@
 {
   "weather": {
-    "temp": "23",
-    "rain": "20",
-    "last_update": "2026-06-24 18:50"
+    "temp": "19",
+    "rain": "0",
+    "last_update": "2026-06-25 00:24"
   },
   "meals": {
     "월": {
@@ -151,7 +151,7 @@
       }
     }
   },
-  "target_date": "2026-06-24",
+  "target_date": "2026-06-25",
   "mealsByDate": {},
   "is_weekend": false
 }
