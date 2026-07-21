@@ -1,22 +1,22 @@
 {
   "weather": {
-    "temp": "26",
-    "rain": "0",
-    "last_update": "2026-07-21 08:14"
+    "temp": "28",
+    "rain": "60",
+    "last_update": "2026-07-21 12:45"
   },
   "meals": {
     "월": {
       "date_text": "월요일",
-      "breakfast": "식단 없음",
+      "breakfast": "(간편식)햇반컵반,도시락김,음료",
       "lunch": "쌀밥\r, 뼈없는감자탕\r, 돈육청경채볶음\r, 춘권튀김\r, 근대고추장무침\r, 배추김치",
       "dinner": "달걀볶음밥\r, 소고기떡국\r, 치즈떡갈비스테이크\r, 오복채무침\r, 음료\r, 배추김치",
       "nutrition": {
         "breakfast": {
-          "carbs": 0,
-          "protein": 0,
-          "fat": 0,
-          "sugar": 0,
-          "calories": 0
+          "carbs": 54,
+          "protein": 14,
+          "fat": 15,
+          "sugar": 24,
+          "calories": 521
         },
         "lunch": {
           "carbs": 100,
