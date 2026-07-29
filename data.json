@@ -1,8 +1,8 @@
 {
   "weather": {
-    "temp": "28",
+    "temp": "31",
     "rain": "20",
-    "last_update": "2026-07-29 10:09"
+    "last_update": "2026-07-29 13:30"
   },
   "meals": {
     "월": {
@@ -66,7 +66,7 @@
     "수": {
       "date_text": "수요일",
       "breakfast": "식단 없음",
-      "lunch": "잡곡밥\r, 냉도토리묵국\r, 순살닭갈비&우동사리\r, 치즈달걀말이\r, 매콤감자조림\r, 열무김치",
+      "lunch": "잡곡밥\r, 냉도토리묵국\r, 순살닭갈비&우동사리\r, 치즈달걀말이\r, 매콤감자조림\r, 열무김치\r, 요거트",
       "dinner": "식단 없음",
       "nutrition": {
         "breakfast": {
@@ -77,11 +77,11 @@
           "calories": 0
         },
         "lunch": {
-          "carbs": 89,
-          "protein": 41,
-          "fat": 26,
-          "sugar": 17,
-          "calories": 874
+          "carbs": 99,
+          "protein": 35,
+          "fat": 28,
+          "sugar": 37,
+          "calories": 892
         },
         "dinner": {
           "carbs": 0,
@@ -95,7 +95,7 @@
     "목": {
       "date_text": "목요일",
       "breakfast": "식단 없음",
-      "lunch": "비빔국수\r, 쌀밥\r, 소고기육전\r, 부추양파무침\r, 허니버터고구마맛탕\r, 배추김치",
+      "lunch": "비빔국수\r, 쌀밥\r, 소고기육전\r, 오리엔탈숙주샐러드\r, 바싹돼지불고기\r, 김가루도토리묵무침\r, 배추김치",
       "dinner": "식단 없음",
       "nutrition": {
         "breakfast": {
@@ -107,10 +107,10 @@
         },
         "lunch": {
           "carbs": 89,
-          "protein": 32,
-          "fat": 37,
-          "sugar": 13,
-          "calories": 922
+          "protein": 38,
+          "fat": 38,
+          "sugar": 11,
+          "calories": 968
         },
         "dinner": {
           "carbs": 0,
