@@ -1,8 +1,8 @@
 {
   "weather": {
-    "temp": "31",
-    "rain": "20",
-    "last_update": "2026-07-29 13:30"
+    "temp": "30",
+    "rain": "0",
+    "last_update": "2026-07-29 16:30"
   },
   "meals": {
     "월": {
@@ -124,7 +124,7 @@
     "금": {
       "date_text": "금요일",
       "breakfast": "식단 없음",
-      "lunch": "현미시래기밥\r, 청국장찌개\r, 버섯소불고기\r, 두부달걀부침\r, 오이도라지무침\r, 깍두기",
+      "lunch": "현미시래기밥&양념장\r, 청국장찌개\r, 버섯소불고기\r, 두부달걀부침\r, 오이도라지무침\r, 깍두기",
       "dinner": "식단 없음",
       "nutrition": {
         "breakfast": {
@@ -135,11 +135,11 @@
           "calories": 0
         },
         "lunch": {
-          "carbs": 93,
-          "protein": 36,
-          "fat": 39,
-          "sugar": 16,
-          "calories": 970
+          "carbs": 106,
+          "protein": 40,
+          "fat": 46,
+          "sugar": 12,
+          "calories": 1099
         },
         "dinner": {
           "carbs": 0,
