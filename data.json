@@ -95,7 +95,7 @@
     "목": {
       "date_text": "목요일",
       "breakfast": "식단 없음",
-      "lunch": "잡곡밥\r, 미역냉국\r, 고추장닭볶음\r, 오징어초무침\r, 콩나물잡채\r, 배추김치",
+      "lunch": "잡곡밥\r, 미역냉국\r, 고추장닭볶음\r, 오징어초무침\r, 콩나물잡채\r, 배추김치\r, 바나나맛우유",
       "dinner": "식단 없음",
       "nutrition": {
         "breakfast": {
@@ -106,11 +106,11 @@
           "calories": 0
         },
         "lunch": {
-          "carbs": 78,
-          "protein": 40,
-          "fat": 23,
-          "sugar": 12,
-          "calories": 797
+          "carbs": 86,
+          "protein": 39,
+          "fat": 25,
+          "sugar": 23,
+          "calories": 844
         },
         "dinner": {
           "carbs": 0,
