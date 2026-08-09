@@ -151,7 +151,7 @@
       }
     }
   },
-  "target_date": "2026-08-09",
+  "target_date": "2026-08-10",
   "mealsByDate": {},
-  "is_weekend": true
+  "is_weekend": false
 }
