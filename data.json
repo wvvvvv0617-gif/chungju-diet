@@ -8,7 +8,7 @@
     "월": {
       "date_text": "월요일",
       "breakfast": "식단 없음",
-      "lunch": "잡곡밥\r, 미니콩국수\r, 갈치무조림\r, 돈가스\r, 느타리쑥갓고추장무침\r, 배추김치",
+      "lunch": "잡곡밥\r, 미니콩국수\r, 갈치무조림\r, 돈가스\r, 느타리쑥갓고추장무침\r, 배추김치\r, 바나나맛우유",
       "dinner": "식단 없음",
       "nutrition": {
         "breakfast": {
@@ -19,11 +19,11 @@
           "calories": 0
         },
         "lunch": {
-          "carbs": 87,
-          "protein": 35,
-          "fat": 38,
-          "sugar": 10,
-          "calories": 919
+          "carbs": 103,
+          "protein": 43,
+          "fat": 46,
+          "sugar": 28,
+          "calories": 1097
         },
         "dinner": {
           "carbs": 0,
