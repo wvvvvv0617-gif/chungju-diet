@@ -37,7 +37,7 @@
     "화": {
       "date_text": "화요일",
       "breakfast": "식단 없음",
-      "lunch": "잡곡밥\r, 얼큰버섯만두국\r, 돈수육&쌈채소&쌈장\r, 파채콩나물부추무침\r, 요거트\r, 배추김치",
+      "lunch": "잡곡밥\r, 얼큰버섯만두국\r, 돈수육&쌈채소&쌈장\r, 파채콩나물부추무침\r, 요거트\r, 배추김치\r, 명이나물절임",
       "dinner": "식단 없음",
       "nutrition": {
         "breakfast": {
@@ -48,11 +48,11 @@
           "calories": 0
         },
         "lunch": {
-          "carbs": 103,
-          "protein": 17,
-          "fat": 12,
-          "sugar": 33,
-          "calories": 690
+          "carbs": 90,
+          "protein": 16,
+          "fat": 15,
+          "sugar": 29,
+          "calories": 649
         },
         "dinner": {
           "carbs": 0,
