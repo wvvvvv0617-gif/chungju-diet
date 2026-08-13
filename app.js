@@ -58,7 +58,11 @@ async function askAI() {
         return;
     }
 
-    const menuNames = visibleCards.map(card => card.querySelector('.menu-name-text').innerText.trim());
+    const menuNames = visibleCards.map(card => {
+        const nameEl = card.querySelector('.menu-name-text');
+        return nameEl ? nameEl.innerText.trim() : '';
+    }).filter(Boolean);
+
     const currentMeal = menuNames.join(', ');
     
     outputDiv.innerHTML = "✨ AI 영양사가 분석 중입니다...";
@@ -66,8 +70,12 @@ async function askAI() {
     const savedData = localStorage.getItem(`ai_cache_${currentMeal}`);
     if (savedData) {
         setTimeout(() => {
-            renderAIResults(JSON.parse(savedData), visibleCards);
-        }, 2500);
+            try {
+                renderAIResults(JSON.parse(savedData), visibleCards);
+            } catch (e) {
+                localStorage.removeItem(`ai_cache_${currentMeal}`);
+            }
+        }, 500);
         return;
     }
 
@@ -101,17 +109,29 @@ async function askAI() {
             throw new Error(data.error.message || "AI 분석 중 오류가 발생했습니다.");
         }
 
-        if (data && data.candidates && data.candidates[0]) {
+        // 🌟 [수정/보완] 응답 데이터 처리 유연화 (Worker 정제 버전 & Gemini 원본 버전 모두 지원)
+        let aiResponse = null;
+
+        if (typeof data === 'object' && data !== null && (data.summary || data.allergy_map)) {
+            // Worker가 이미 JSON 파싱해서 보낸 경우
+            aiResponse = data;
+        } else if (data && data.candidates && data.candidates[0]) {
+            // Worker가 Gemini 원본 응답을 그대로 보낸 경우
             let rawText = data.candidates[0].content.parts[0].text;
             const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-            const aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
+            aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
+        } else if (typeof data === 'string') {
+            const jsonMatch = data.match(/\{[\s\S]*\}/);
+            aiResponse = JSON.parse(jsonMatch ? jsonMatch[0] : data);
+        }
 
+        if (aiResponse) {
             localStorage.setItem(`ai_cache_${currentMeal}`, JSON.stringify(aiResponse));
-
             renderAIResults(aiResponse, visibleCards);
         } else {
             throw new Error("AI가 분석 데이터를 보내지 못했습니다.");
         }
+
     } catch (error) {
         console.error("AI 호출 오류 상세:", error);
         outputDiv.innerHTML = error.message;
@@ -125,14 +145,20 @@ function renderAIResults(aiResponse, visibleCards) {
         const oldIconGroup = card.querySelector('.allergy-icon-group');
         if (oldIconGroup) oldIconGroup.remove();
 
-        const nameText = card.querySelector('.menu-name-text').innerText.trim();
-        const matchingKey = Object.keys(aiResponse.allergy_map).find(key => 
-            nameText.includes(key) || key.includes(nameText)
-        );
+        const nameEl = card.querySelector('.menu-name-text');
+        if (!nameEl) return;
+        const nameText = nameEl.innerText.trim();
 
-        const allergyDataList = matchingKey ? aiResponse.allergy_map[matchingKey] : [];
+        // 🌟 [핵심 수정] allergy_map 유효성 검사 (Null Safe)
+        let allergyDataList = [];
+        if (aiResponse && aiResponse.allergy_map && typeof aiResponse.allergy_map === 'object') {
+            const matchingKey = Object.keys(aiResponse.allergy_map).find(key => 
+                nameText.includes(key) || key.includes(nameText)
+            );
+            allergyDataList = matchingKey ? (aiResponse.allergy_map[matchingKey] || []) : [];
+        }
 
-        if (allergyDataList.length > 0) {
+        if (Array.isArray(allergyDataList) && allergyDataList.length > 0) {
             const iconContainer = card.querySelector('.allergy-icon-container');
             if (iconContainer) {
                 const group = document.createElement('div');
@@ -157,7 +183,9 @@ function renderAIResults(aiResponse, visibleCards) {
     });
 
     if (outputDiv) {
-        outputDiv.innerHTML = aiResponse.summary ? aiResponse.summary.replace(/\n/g, '<br>') : "분석 완료";
+        outputDiv.innerHTML = (aiResponse && aiResponse.summary) 
+            ? aiResponse.summary.replace(/\n/g, '<br>') 
+            : "분석 완료";
     }
 }
 
