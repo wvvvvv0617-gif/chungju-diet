@@ -8,7 +8,7 @@
     "월": {
       "date_text": "월요일",
       "breakfast": "식단 없음",
-      "lunch": "대체공휴일",
+      "lunch": "식단 없음",
       "dinner": "식단 없음",
       "nutrition": {
         "breakfast": {
@@ -19,11 +19,11 @@
           "calories": 0
         },
         "lunch": {
-          "carbs": 50,
-          "protein": 14,
-          "fat": 13,
-          "sugar": 3,
-          "calories": 464
+          "carbs": 0,
+          "protein": 0,
+          "fat": 0,
+          "sugar": 0,
+          "calories": 0
         },
         "dinner": {
           "carbs": 0,
