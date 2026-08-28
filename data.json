@@ -153,5 +153,5 @@
   },
   "target_date": "2026-08-28",
   "mealsByDate": {},
-  "is_weekend": false
+  "is_weekend": true
 }
