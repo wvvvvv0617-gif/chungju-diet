@@ -1,15 +1,15 @@
 {
   "weather": {
-    "temp": "19",
+    "temp": "26",
     "rain": "0",
-    "last_update": "2026-09-29 08:56"
+    "last_update": "2026-09-29 14:44"
   },
   "meals": {
     "월": {
       "date_text": "월요일",
       "breakfast": "[기숙사생 대상](간편식)햇반컵반\r, 도시락김\r, 음료",
       "lunch": "쌀밥\r, 김치수제비국\r, 가자미구이\r, 백순대볶음&들깨초장\r, 연근조림\r, 깍두기",
-      "dinner": "얼갈이고추장칼국수\r, 구운주먹밥\r, 무생채무침\r, 배추김치",
+      "dinner": "얼갈이고추장칼국수\r, 구운주먹밥\r, 무생채무침\r, 배추김치\r, 요구르트",
       "nutrition": {
         "breakfast": {
           "carbs": 58,
@@ -26,11 +26,11 @@
           "calories": 599
         },
         "dinner": {
-          "carbs": 92,
-          "protein": 14,
-          "fat": 13,
-          "sugar": 11,
-          "calories": 621
+          "carbs": 88,
+          "protein": 16,
+          "fat": 11,
+          "sugar": 33,
+          "calories": 603
         }
       }
     },
