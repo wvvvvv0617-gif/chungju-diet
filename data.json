@@ -1,157 +1,157 @@
 {
   "weather": {
-    "temp": "16",
+    "temp": "14",
     "rain": "0",
-    "last_update": "2026-10-10 08:15"
+    "last_update": "2026-10-11 00:22"
   },
   "meals": {
     "월": {
       "date_text": "월요일",
-      "breakfast": "식단 없음",
-      "lunch": "식단 없음",
-      "dinner": "식단 없음",
+      "breakfast": "훈제오리김치볶음밥\r, 유부우동국\r, 연두부&양념장\r, 오복채무침\r, 도시락김",
+      "lunch": "쌀밥\r, 꽃게된장국\r, 소불고기\r, 김치전\r, 모듬콩조림\r, 깍두기",
+      "dinner": "멸치국수\r, 쌀밥\r, 돈가스\r, 아삭이고추된장무침\r, 배추김치",
       "nutrition": {
         "breakfast": {
-          "carbs": 0,
-          "protein": 0,
-          "fat": 0,
-          "sugar": 0,
-          "calories": 0
+          "carbs": 79,
+          "protein": 13,
+          "fat": 19,
+          "sugar": 19,
+          "calories": 634
         },
         "lunch": {
-          "carbs": 0,
-          "protein": 0,
-          "fat": 0,
-          "sugar": 0,
-          "calories": 0
+          "carbs": 109,
+          "protein": 44,
+          "fat": 41,
+          "sugar": 15,
+          "calories": 1093
         },
         "dinner": {
-          "carbs": 0,
-          "protein": 0,
-          "fat": 0,
-          "sugar": 0,
-          "calories": 0
+          "carbs": 91,
+          "protein": 35,
+          "fat": 45,
+          "sugar": 12,
+          "calories": 999
         }
       }
     },
     "화": {
       "date_text": "화요일",
-      "breakfast": "참치김치덮밥\r, 달걀국\r, 메추리알조림\r, 단무지\r, 음료",
-      "lunch": "들깨옹심이칼국수\r, 쌀밥\r, 주꾸미채소무침\r, 음료\r, 배추김치",
-      "dinner": "쌀밥\r, 해물순두부국\r, 간장돈육찜\r, 청경채겉절이\r, 도시락김\r, 배추김치",
+      "breakfast": "쌀밥\r, 닭곰탕\r, 너비아니구이\r, 양념깻잎무침\r, 음료\r, 배추김치",
+      "lunch": "나물비빔밥\r, 청국장찌개\r, 돈육고추장볶음\r, 찹쌀참깨도너츠\r, 깍두기",
+      "dinner": "쌀밥\r, 어묵국\r, 낙지채소볶음\r, 유부겨자무침\r, 요구르트\r, 배추김치",
       "nutrition": {
         "breakfast": {
-          "carbs": 103,
-          "protein": 15,
-          "fat": 8,
-          "sugar": 33,
-          "calories": 636
+          "carbs": 87,
+          "protein": 38,
+          "fat": 20,
+          "sugar": 29,
+          "calories": 781
         },
         "lunch": {
-          "carbs": 97,
-          "protein": 14,
-          "fat": 9,
-          "sugar": 26,
-          "calories": 616
+          "carbs": 90,
+          "protein": 34,
+          "fat": 30,
+          "sugar": 15,
+          "calories": 877
         },
         "dinner": {
-          "carbs": 83,
-          "protein": 44,
-          "fat": 22,
-          "sugar": 4,
-          "calories": 794
+          "carbs": 93,
+          "protein": 13,
+          "fat": 12,
+          "sugar": 31,
+          "calories": 639
         }
       }
     },
     "수": {
       "date_text": "수요일",
-      "breakfast": "쌀밥\r, 조갯살미역국\r, 돈채버섯볶음\r, 달걀프라이\r, 마늘종지무침\r, 배추김치",
-      "lunch": "쌀밥\r, 김치콩나물국\r, 청양크림햄버그스테이크\r, 두부양념조림\r, 오리엔탈치커리무침\r, 깍두기",
-      "dinner": "쌀밥\r, 북어감자국\r, 돈육고추장볶음\r, 해물부추전\r, 무생채무침\r, 배추김치",
+      "breakfast": "쌀밥\r, 누룽지(숭늉)\r, 꽈리고추돈육장조림\r, 해물완자전\r, 도시락김\r, 배추김치",
+      "lunch": "쌀밥\r, 시래기된장국\r, 순살닭갈비\r, 매콤어묵볶음\r, 참나물무침\r, 배추김치",
+      "dinner": "쌀밥\r, 알탕\r, 두부달걀부침\r, 매콤감자조림\r, 음료\r, 배추김치",
       "nutrition": {
         "breakfast": {
-          "carbs": 84,
-          "protein": 14,
-          "fat": 13,
-          "sugar": 13,
-          "calories": 603
+          "carbs": 91,
+          "protein": 39,
+          "fat": 44,
+          "sugar": 12,
+          "calories": 1008
         },
         "lunch": {
-          "carbs": 81,
-          "protein": 41,
-          "fat": 23,
-          "sugar": 13,
-          "calories": 779
+          "carbs": 83,
+          "protein": 34,
+          "fat": 24,
+          "sugar": 11,
+          "calories": 793
         },
         "dinner": {
-          "carbs": 98,
-          "protein": 37,
-          "fat": 43,
-          "sugar": 10,
-          "calories": 1028
+          "carbs": 106,
+          "protein": 15,
+          "fat": 23,
+          "sugar": 37,
+          "calories": 789
         }
       }
     },
     "목": {
       "date_text": "목요일",
-      "breakfast": "쌀밥\r, 청국장찌개\r, 분홍소시지전\r, 숙주무침\r, 땅콩조림\r, 깍두기",
-      "lunch": "쌀밥\r, 육개장\r, 갈치구이\r, 콩나물잡채\r, 근대고추장무침\r, 배추김치",
-      "dinner": "유니짜장면\r, 쌀밥\r, 소떡소떡\r, 단무지\r, 배추김치",
+      "breakfast": "쌀밥\r, 근대된장국\r, 소고기그린빈볶음\r, 물만두찜\r, 무말랭이무침\r, 배추김치",
+      "lunch": "쌀밥\r, 크림스프\r, 로제스파게티\r, &치킨텐더\r, 양상추샐러드\r, 배추김치",
+      "dinner": "쌀밥\r, 김치수제비국\r, 매콤돈육찜\r, 달걀장조림\r, 요구르트\r, 깍두기",
       "nutrition": {
         "breakfast": {
-          "carbs": 106,
-          "protein": 12,
-          "fat": 28,
-          "sugar": 13,
-          "calories": 806
+          "carbs": 84,
+          "protein": 32,
+          "fat": 24,
+          "sugar": 16,
+          "calories": 788
         },
         "lunch": {
-          "carbs": 93,
-          "protein": 15,
-          "fat": 10,
-          "sugar": 15,
-          "calories": 616
+          "carbs": 90,
+          "protein": 12,
+          "fat": 33,
+          "sugar": 2,
+          "calories": 821
         },
         "dinner": {
-          "carbs": 79,
-          "protein": 18,
-          "fat": 8,
-          "sugar": 2,
-          "calories": 554
+          "carbs": 92,
+          "protein": 30,
+          "fat": 21,
+          "sugar": 34,
+          "calories": 766
         }
       }
     },
     "금": {
       "date_text": "금요일",
-      "breakfast": "식단 없음",
-      "lunch": "식단 없음",
-      "dinner": "식단 없음",
+      "breakfast": "쌀밥\r, 북어콩나물국\r, 마파두부\r, 비엔나소시지볶음\r, 도시락김\r, 배추김치",
+      "lunch": "쌀밥\r, 조갯살미역국\r, 돈육부대햄볶음\r, 청포묵김가루무침\r, 건새우마늘종볶음\r, 깍두기",
+      "dinner": "순대국밥\r, 쌀밥\r, 오이부추무침\r, 깍두기\r, 요구르트",
       "nutrition": {
         "breakfast": {
-          "carbs": 0,
-          "protein": 0,
-          "fat": 0,
-          "sugar": 0,
-          "calories": 0
+          "carbs": 89,
+          "protein": 17,
+          "fat": 10,
+          "sugar": 15,
+          "calories": 601
         },
         "lunch": {
-          "carbs": 0,
-          "protein": 0,
-          "fat": 0,
-          "sugar": 0,
-          "calories": 0
+          "carbs": 86,
+          "protein": 42,
+          "fat": 22,
+          "sugar": 11,
+          "calories": 800
         },
         "dinner": {
-          "carbs": 0,
-          "protein": 0,
-          "fat": 0,
-          "sugar": 0,
-          "calories": 0
+          "carbs": 100,
+          "protein": 12,
+          "fat": 13,
+          "sugar": 29,
+          "calories": 661
         }
       }
     }
   },
-  "target_date": "2026-10-10",
+  "target_date": "2026-10-11",
   "mealsByDate": {},
   "is_weekend": true
 }
