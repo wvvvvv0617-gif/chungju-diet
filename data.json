@@ -1,8 +1,8 @@
 {
   "weather": {
-    "temp": "16",
+    "temp": "14",
     "rain": "60",
-    "last_update": "2026-10-20 21:13"
+    "last_update": "2026-10-21 02:13"
   },
   "meals": {
     "월": {
@@ -151,7 +151,7 @@
       }
     }
   },
-  "target_date": "2026-10-20",
+  "target_date": "2026-10-21",
   "mealsByDate": {},
   "is_weekend": false
 }
