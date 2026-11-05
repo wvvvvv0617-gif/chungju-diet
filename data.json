@@ -1,8 +1,8 @@
 {
   "weather": {
-    "temp": "12",
-    "rain": "60",
-    "last_update": "2026-11-05 11:30"
+    "temp": "10",
+    "rain": "0",
+    "last_update": "2026-11-05 18:50"
   },
   "meals": {
     "월": {
@@ -95,7 +95,7 @@
     "목": {
       "date_text": "목요일",
       "breakfast": "쌀밥\r, 북어콩나물국\r, 돈채피망볶음\r, 매콤감자조림\r, 요구르트\r, 배추김치",
-      "lunch": "쌀밥\r, 참치추어탕\r, 꽈리고추달걀장조림\r, 실곤약채소무침\r, 건새우마늘종볶음\r, 배추김치",
+      "lunch": "쌀밥\r, 참치추어탕\r, 꽈리고추달걀장조림\r, 실곤약채소무침\r, 건새우마늘종볶음\r, 배추김치\r, 치커리양상추샐러드",
       "dinner": "쌀밥\r, 소고기미역국\r, 고추장닭볶음\r, 만두탕수\r, 음료\r, 배추김치",
       "nutrition": {
         "breakfast": {
@@ -106,11 +106,11 @@
           "calories": 646
         },
         "lunch": {
-          "carbs": 98,
-          "protein": 12,
+          "carbs": 82,
+          "protein": 15,
           "fat": 11,
-          "sugar": 13,
-          "calories": 630
+          "sugar": 10,
+          "calories": 575
         },
         "dinner": {
           "carbs": 114,
